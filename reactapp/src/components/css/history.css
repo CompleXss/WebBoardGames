@@ -1,0 +1,56 @@
+.container {
+
+}
+
+table {
+    box-sizing: border-box;
+    border-collapse: collapse;
+
+    margin-left: auto;
+    margin-right: auto;
+    width: calc(100% - 20px);
+
+    background-color: #1b1b1b;
+    border-radius: 10px;
+}
+
+table * {
+    padding: 10px;
+
+    text-align: center;
+}
+
+table thead {
+    border-bottom: 1px solid white;
+    text-align: center;
+}
+
+table thead td {
+    position: relative;
+}
+
+table td:nth-of-type(n) {
+    border-right: 1px solid white;
+}
+
+/* table thead td:nth-of-type(n)::after {
+    content: '';
+    background-color: red;
+
+    position: absolute;
+    width: 2px;
+    top: 3px;
+    bottom: 3px;
+} */
+
+table td:last-of-type {
+    border-right: none;
+}
+
+table tbody td:nth-of-type(1) {
+    text-align: start;
+}
+
+table tbody td:nth-of-type(4) {
+    text-align: end;
+}

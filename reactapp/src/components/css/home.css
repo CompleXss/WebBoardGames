@@ -1,0 +1,33 @@
+h1 {
+    text-align: center;
+    vertical-align: middle;
+}
+
+.gamesContainer {
+    display: block;
+    width: fit-content;
+    
+    justify-content: flex-start;
+    flex-wrap: wrap;
+    
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.game {
+    display: inline-block;
+    width: 200px;
+    height: 120px;
+    text-align: center;
+
+    box-shadow: #171717 0px 0px 10px;
+    border-radius: 10px;
+    margin: 16px;
+    padding: 16px;
+    background-color: #171717;
+}
+
+.game:hover {
+    background-color: #252525;
+    transition: all 0.1s ease-in-out;
+}
