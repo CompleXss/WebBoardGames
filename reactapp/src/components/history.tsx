@@ -7,7 +7,8 @@ export class History extends Component {
         console.log('history')
         return (
             <div className="container">
-                <h1>History page, hi</h1>
+                <h1>Твоя история игр</h1>
+                <br/>
                 <table>
                     <thead>
                         <tr>
