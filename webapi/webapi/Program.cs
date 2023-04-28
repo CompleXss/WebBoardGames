@@ -1,10 +1,6 @@
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
-using Microsoft.IdentityModel.Tokens;
 using Swashbuckle.AspNetCore.SwaggerGen;
-using System.Text;
 using webapi.Data;
 using webapi.Endpoints;
 using webapi.Repositories;
@@ -24,29 +20,8 @@ builder.Services.AddTransient<CheckersUserRepository>();
 builder.Services.AddTransient<AuthService>();
 
 // Configure Authentication & Authorization
-builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(options =>
-{
-	options.TokenValidationParameters = new TokenValidationParameters
-	{
-		ValidIssuer = config["Jwt:Issuer"],
-		ValidAudience = config["Jwt:Audience"],
-		IssuerSigningKey = new SymmetricSecurityKey
-			(Encoding.UTF8.GetBytes(config["Jwt:Key"]!)),
-		ValidateIssuer = true,
-		ValidateAudience = true,
-		ValidateLifetime = true,
-		ClockSkew = TimeSpan.Zero,
-		ValidateIssuerSigningKey = true,
-	};
-});
-
-builder.Services.AddAuthorization(options =>
-{
-	options.FallbackPolicy = new AuthorizationPolicyBuilder()
-		.AddAuthenticationSchemes(JwtBearerDefaults.AuthenticationScheme)
-		.RequireAuthenticatedUser()
-		.Build();
-});
+builder.Services.ConfigureAuthentication(config);
+builder.Services.ConfigureAuthorization();
 
 // Configure CORS
 builder.Services.AddCORSPolicy();

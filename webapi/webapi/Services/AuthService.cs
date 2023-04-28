@@ -9,7 +9,7 @@ namespace webapi.Services;
 
 public class AuthService
 {
-	private static readonly TimeSpan accessTokenLifetime = TimeSpan.FromSeconds(20);
+	private static readonly TimeSpan accessTokenLifetime = TimeSpan.FromMinutes(600); // TODO: 1 minute
 	private static readonly TimeSpan refreshTokenLifetime = TimeSpan.FromDays(60);
 
 	private readonly IConfiguration config;
@@ -100,7 +100,7 @@ public class AuthService
 		return validationResult.SecurityToken as JwtSecurityToken;
 	}
 
-	public RefreshToken CreateRefreshToken()
+	public static RefreshToken CreateRefreshToken()
 	{
 		return new RefreshToken
 		{

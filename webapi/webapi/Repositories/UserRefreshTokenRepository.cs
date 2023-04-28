@@ -8,12 +8,10 @@ namespace webapi.Repositories;
 public class UserRefreshTokenRepository
 {
 	private readonly AppDbContext context;
-	private readonly AuthService auth;
 
-	public UserRefreshTokenRepository(AppDbContext context, AuthService auth)
+	public UserRefreshTokenRepository(AppDbContext context)
 	{
 		this.context = context;
-		this.auth = auth;
 	}
 
 	public async Task<UserRefreshToken?> GetAsync(long userID, string refreshToken)
@@ -23,7 +21,7 @@ public class UserRefreshTokenRepository
 	{
 		try
 		{
-			var token = auth.CreateRefreshToken();
+			var token = AuthService.CreateRefreshToken();
 
 			await context.UserRefreshTokens.AddAsync(new UserRefreshToken
 			{
@@ -54,7 +52,7 @@ public class UserRefreshTokenRepository
 	{
 		try
 		{
-			var newToken = auth.CreateRefreshToken();
+			var newToken = AuthService.CreateRefreshToken();
 			context.UserRefreshTokens.Remove(userToken);
 			await context.SaveChangesAsync();
 
