@@ -15,10 +15,12 @@ public static class AuthEndpoint
 		app.MapPost("/auth/refresh", RefreshAsync).AllowAnonymous();
 	}
 
-	// create user
 	// TODO: улетает в exception, если в body не было юзера
 	internal static async Task<IResult> RegisterAsync(UsersRepository users, AuthService auth, UserDto request)
 	{
+		if (request is null)
+			return Results.BadRequest("Invalid user data.");
+
 		if (await users.GetAsync(request.Name) is not null)
 			return Results.BadRequest($"User with this name ({request.Name}) already exists.");
 

@@ -11,7 +11,9 @@ public static class UserEndpoints
 			.AllowAnonymous()
 			.Produces<List<User>>();
 
-		app.MapGet("/users/{username}", GetAsync);
+		app.MapGet("/users/{username}", GetAsync)
+			.Produces<User>();
+
 		app.MapDelete("/users/{username}", DeleteAsync);
 	}
 
