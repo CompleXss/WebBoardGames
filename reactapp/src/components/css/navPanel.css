@@ -13,18 +13,19 @@ nav {
 nav a {
     display: inline-block;
     box-sizing: border-box;
-    color: whitesmoke;
     text-decoration: none;
     font-size: 1.2em;
+    color: whitesmoke;
+    transition: color 0.1s ease-in-out;
 
     padding: 16px 20px;
     margin: 6px 3px;
     border-radius: 10px;
-    /* background-color: darkkhaki; */
 }
 
 nav a:hover {
     color: var(--orange);
+    transition: color 0.1s ease-in-out;
 }
 
 nav a::after {
@@ -42,37 +43,11 @@ nav a::after {
     width: auto;
     height: 3px;
     border-radius: 10px;
-    background: #fddb3a;
+    background: var(--orange);
 }
 
 nav a:hover::after {
     transform: scaleX(1);
     transform-origin: left;
     transition: transform 0.3s ease-in-out;
-}
-
-/* 
-nav a::before {
-    display: none;
-    position: relative;
-    border-radius: 100%;
-    top: 15px;
-    left: 50%;
-
-    height: 6px;
-    width: 6px;
-    content: '';
-    background: red;
-}
-
-nav a:hover::before {
-    display: inline-block;
-} */
-
-nav a:first-of-type {
-    background-color: dimgray;
-}
-
-nav a:last-of-type {
-    background-color: darkkhaki;
 }
