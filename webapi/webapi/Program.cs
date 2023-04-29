@@ -17,6 +17,7 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 builder.Services.AddTransient<UsersRepository>();
 builder.Services.AddTransient<UserRefreshTokenRepository>();
 builder.Services.AddTransient<CheckersUserRepository>();
+builder.Services.AddTransient<CheckersHistoryRepository>();
 builder.Services.AddTransient<AuthService>();
 
 // Configure Authentication & Authorization
@@ -51,8 +52,13 @@ app.UseAuthorization();
 
 
 app.MapAuthEndpoints();
-app.MapUserEndpoints();
+app.MapUsersEndpoints();
+app.MapPlayHistoryEndpoints();
 
 
 
 app.Run();
+
+
+
+// TODO: добавить фильтры

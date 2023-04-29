@@ -3,9 +3,9 @@ using webapi.Repositories;
 
 namespace webapi.Endpoints;
 
-public static class UserEndpoints
+public static class UsersEndpoints
 {
-	public static void MapUserEndpoints(this WebApplication app)
+	public static void MapUsersEndpoints(this WebApplication app)
 	{
 		app.MapGet("/users", GetAllAsync)
 			.AllowAnonymous()
@@ -28,7 +28,7 @@ public static class UserEndpoints
 
 		return user != null
 			? Results.Json(user)
-			: Results.NotFound("User not found.");
+			: Results.NotFound($"User '{username}' not found.");
 	}
 
 	internal static async Task<IResult> DeleteAsync(UsersRepository users, string username)
@@ -36,7 +36,7 @@ public static class UserEndpoints
 		bool deleted = await users.DeleteAsync(username);
 
 		return deleted
-			? Results.Ok($"User \"{username}\" was deleted.")
-			: Results.BadRequest($"Can not delete user \"{username}\".");
+			? Results.Ok($"User '{username}' was deleted.")
+			: Results.BadRequest($"Can not delete user '{username}'.");
 	}
 }

@@ -1,4 +1,6 @@
-﻿namespace webapi.Models;
+﻿using System.Text.Json.Serialization;
+
+namespace webapi.Models;
 
 public partial class CheckersUser
 {
@@ -8,5 +10,6 @@ public partial class CheckersUser
 
 	public long WinCount { get; set; }
 
+	[JsonIgnore]
 	public virtual User User { get; set; } = null!;
 }

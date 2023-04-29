@@ -4,6 +4,7 @@ using System.Security.Cryptography;
 using System.IdentityModel.Tokens.Jwt;
 using Microsoft.IdentityModel.Tokens;
 using webapi.Models;
+using webapi.Repositories;
 
 namespace webapi.Services;
 
@@ -12,11 +13,13 @@ public class AuthService
 	private static readonly TimeSpan accessTokenLifetime = TimeSpan.FromMinutes(600); // TODO: 1 minute
 	private static readonly TimeSpan refreshTokenLifetime = TimeSpan.FromDays(60);
 
+	private readonly UserRefreshTokenRepository repo;
 	private readonly IConfiguration config;
 
-	public AuthService(IConfiguration config)
+	public AuthService(IConfiguration config, UserRefreshTokenRepository userRefreshTokenRepo)
 	{
 		this.config = config;
+		this.repo = userRefreshTokenRepo;
 	}
 
 
@@ -100,7 +103,24 @@ public class AuthService
 		return validationResult.SecurityToken as JwtSecurityToken;
 	}
 
-	public static RefreshToken CreateRefreshToken()
+	public async Task<UserRefreshToken?> FindUserRefreshTokenAsync(long userId, string refreshToken)
+		=> await repo.GetAsync(userId, refreshToken);
+
+	public async Task<RefreshToken?> CreateRefreshTokenAsync(long userID)
+	{
+		var token = CreateRefreshToken();
+		return await repo.AddRefreshTokenAsync(userID, token);
+	}
+
+	public async Task<RefreshToken?> UpdateUserRefreshTokenAsync(UserRefreshToken userRefreshToken)
+	{
+		var token = CreateRefreshToken();
+		return await repo.UpdateRefreshTokenAsync(userRefreshToken, token);
+	}
+
+
+
+	private static RefreshToken CreateRefreshToken()
 	{
 		return new RefreshToken
 		{

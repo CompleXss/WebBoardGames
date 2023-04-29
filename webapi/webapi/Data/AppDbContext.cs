@@ -5,6 +5,8 @@ namespace webapi.Data;
 
 public partial class AppDbContext : DbContext
 {
+	public const string DATETIME_STRING_FORMAT = "yyyy-MM-dd HH:mm:ss";
+
 	public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
 	{
 		Database.EnsureCreated();

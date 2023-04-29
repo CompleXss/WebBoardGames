@@ -12,15 +12,12 @@ public static class AuthEndpoint
 	{
 		app.MapPost("/auth/register", RegisterAsync).AllowAnonymous();
 		app.MapPost("/auth/login", LoginAsync).AllowAnonymous();
-		app.MapPost("/auth/refresh", RefreshAsync).AllowAnonymous();
+		app.MapPost("/auth/refresh", RefreshTokenAsync).AllowAnonymous();
 	}
 
 	// TODO: улетает в exception, если в body не было юзера
 	internal static async Task<IResult> RegisterAsync(UsersRepository users, AuthService auth, UserDto request)
 	{
-		if (request is null)
-			return Results.BadRequest("Invalid user data.");
-
 		if (await users.GetAsync(request.Name) is not null)
 			return Results.BadRequest($"User with this name ({request.Name}) already exists.");
 
@@ -28,28 +25,31 @@ public static class AuthEndpoint
 		bool created = await users.AddAsync(user);
 
 		if (!created)
-			return Results.BadRequest($"Can not create user \"{request.Name}\".");
+			return Results.BadRequest($"Can not create user '{request.Name}'.");
 
 		var accessToken = auth.CreateAccessToken(user);
+		var refreshToken = await auth.CreateRefreshTokenAsync(user.Id);
+
 		return Results.Created($"/users/{user.Name}", new
 		{
 			user,
-			accessToken
+			accessToken,
+			refreshToken
 		});
 	}
 
-	internal static async Task<IResult> LoginAsync(UsersRepository users, UserRefreshTokenRepository userTokens, AuthService auth, UserDto request)
+	internal static async Task<IResult> LoginAsync(UsersRepository users, AuthService auth, UserDto request)
 	{
 		var user = await users.GetAsync(request.Name);
 
 		if (user is null || !AuthService.VerifyPasswordHash(request.Password, user.PasswordHash, user.PasswordSalt))
-			return Results.NotFound("Username or password is invalid.");
+			return Results.NotFound("Invalid username or password.");
 
 		var accessToken = auth.CreateAccessToken(user);
-		var refreshToken = await userTokens.AddRefreshTokenAsync(user.Id);
+		var refreshToken = await auth.CreateRefreshTokenAsync(user.Id);
 
 		if (refreshToken is null)
-			return Results.BadRequest("Can not create refresh token.");
+			return Results.Problem("Can not create refresh token.");
 
 		return Results.Ok(new
 		{
@@ -58,35 +58,40 @@ public static class AuthEndpoint
 		});
 	}
 
-	internal static async Task<IResult> RefreshAsync(HttpContext context, UserRefreshTokenRepository userTokens, AuthService auth)
+	internal static async Task<IResult> RefreshTokenAsync(HttpContext context, AuthService auth)
 	{
-		//var accessToken_str = await context.GetTokenAsync("access_token");
-		var accessToken_str = context.Request.Headers[HeaderNames.Authorization].ToString().Replace("Bearer ", "");
-		var oldAccessToken = await auth.ValidateAccessToken_DontCheckExpireDate(accessToken_str);
-		if (oldAccessToken is null)
+		//var providedAccessToken_str = await context.GetTokenAsync("access_token");
+
+		var providedAccessToken_str = context.Request.Headers[HeaderNames.Authorization].ToString().Replace("Bearer ", "");
+		var providedAccessToken = await auth.ValidateAccessToken_DontCheckExpireDate(providedAccessToken_str);
+		if (providedAccessToken is null)
 			return Results.Unauthorized();
 
-		long userID = long.Parse(oldAccessToken.Claims.FirstOrDefault(x => x.Type == JwtRegisteredClaimNames.Sub)!.Value);
-		string userName = oldAccessToken.Claims.FirstOrDefault(x => x.Type == JwtRegisteredClaimNames.Name)!.Value;
+		long userID = long.Parse(providedAccessToken.Claims.FirstOrDefault(x => x.Type == JwtRegisteredClaimNames.Sub)!.Value);
+		string userName = providedAccessToken.Claims.FirstOrDefault(x => x.Type == JwtRegisteredClaimNames.Name)!.Value;
 
-		if (!context.Request.Cookies.TryGetValue("refresh_token", out var oldRefreshToken) || oldRefreshToken is null)
+		if (!context.Request.Cookies.TryGetValue("refresh_token", out var providedRefreshToken) || providedRefreshToken is null)
 			return Results.BadRequest("Provided Refresh Token is null.");
 
 
 
-		var userToken = await userTokens.GetAsync(userID, oldRefreshToken);
-		if (userToken is null)
-			return Results.BadRequest("Invalid Refresh Token.");
+		// Get user's active refresh token
+		var activeUserRefreshToken = await auth.FindUserRefreshTokenAsync(userID, providedRefreshToken);
+		if (activeUserRefreshToken is null)
+		{
+			// Something fishy is going on here
+			// Database does not contain provided user-refreshToken pair, so someone is probably trying to fool me
 
-		if (userToken.RefreshToken != oldRefreshToken)
-			return Results.BadRequest("Invalid Refresh Token.");
+			// TODO: invalidate all user's refresh tokens
+			return Results.BadRequest("Invalid refresh token. Suspicious activity detected.");
+		}
 
-		if (DateTime.Parse(userToken.TokenExpires) < DateTime.UtcNow)
+		if (DateTime.Parse(activeUserRefreshToken.TokenExpires) < DateTime.UtcNow)
 			return Results.BadRequest("Refresh Token expired.");
 
-		var refreshToken = await userTokens.UpdateRefreshTokenAsync(userToken);
+		var refreshToken = await auth.UpdateUserRefreshTokenAsync(activeUserRefreshToken);
 		if (refreshToken is null)
-			return Results.BadRequest("Invalid Refresh Token.");
+			return Results.Problem("Can not update refresh token.");
 
 		var accessToken = auth.CreateAccessToken(userID, userName);
 

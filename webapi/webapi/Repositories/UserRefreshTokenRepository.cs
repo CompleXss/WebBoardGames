@@ -1,7 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using webapi.Data;
 using webapi.Models;
-using webapi.Services;
 
 namespace webapi.Repositories;
 
@@ -17,18 +16,16 @@ public class UserRefreshTokenRepository
 	public async Task<UserRefreshToken?> GetAsync(long userID, string refreshToken)
 		=> await context.UserRefreshTokens.FirstOrDefaultAsync(x => x.UserId == userID && x.RefreshToken == refreshToken);
 
-	public async Task<RefreshToken?> AddRefreshTokenAsync(long userID)
+	public async Task<RefreshToken?> AddRefreshTokenAsync(long userID, RefreshToken token)
 	{
 		try
 		{
-			var token = AuthService.CreateRefreshToken();
-
 			await context.UserRefreshTokens.AddAsync(new UserRefreshToken
 			{
 				UserId = userID,
 				RefreshToken = token.Token,
-				TokenCreated = token.TokenCreated.ToString("yyyy-MM-dd HH:mm:ss"),
-				TokenExpires = token.TokenExpires.ToString("yyyy-MM-dd HH:mm:ss"),
+				TokenCreated = token.TokenCreated.ToString(AppDbContext.DATETIME_STRING_FORMAT),
+				TokenExpires = token.TokenExpires.ToString(AppDbContext.DATETIME_STRING_FORMAT),
 			});
 
 			return await context.SaveChangesAsync() > 0 ? token : null;
@@ -39,27 +36,17 @@ public class UserRefreshTokenRepository
 		}
 	}
 
-	public async Task<RefreshToken?> UpdateRefreshTokenAsync(long userID, string oldToken)
-	{
-		var userToken = await GetAsync(userID, oldToken);
-		if (userToken is null)
-			return null;
-
-		return await UpdateRefreshTokenAsync(userToken);
-	}
-
-	public async Task<RefreshToken?> UpdateRefreshTokenAsync(UserRefreshToken userToken)
+	public async Task<RefreshToken?> UpdateRefreshTokenAsync(UserRefreshToken userToken, RefreshToken newToken)
 	{
 		try
 		{
-			var newToken = AuthService.CreateRefreshToken();
 			context.UserRefreshTokens.Remove(userToken);
 			await context.SaveChangesAsync();
 
 			// update entry
 			userToken.RefreshToken = newToken.Token;
-			userToken.TokenCreated = newToken.TokenCreated.ToString("yyyy-MM-dd HH:mm:ss");
-			userToken.TokenExpires = newToken.TokenExpires.ToString("yyyy-MM-dd HH:mm:ss");
+			userToken.TokenCreated = newToken.TokenCreated.ToString(AppDbContext.DATETIME_STRING_FORMAT);
+			userToken.TokenExpires = newToken.TokenExpires.ToString(AppDbContext.DATETIME_STRING_FORMAT);
 
 			await context.UserRefreshTokens.AddAsync(userToken);
 			return await context.SaveChangesAsync() > 0 ? newToken : null;

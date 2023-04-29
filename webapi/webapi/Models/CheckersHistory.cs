@@ -1,4 +1,6 @@
-﻿namespace webapi.Models;
+﻿using System.Text.Json.Serialization;
+
+namespace webapi.Models;
 
 public partial class CheckersHistory
 {
@@ -12,5 +14,6 @@ public partial class CheckersHistory
 
 	public string DateTimeEnd { get; set; } = null!;
 
+	[JsonIgnore]
 	public virtual User User { get; set; } = null!;
 }
