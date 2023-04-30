@@ -8,6 +8,8 @@ public partial class CheckersHistory
 
 	public long UserId { get; set; }
 
+	public string EnemyName { get; set; } = null!;
+
 	public long IsWin { get; set; }
 
 	public string DateTimeStart { get; set; } = null!;

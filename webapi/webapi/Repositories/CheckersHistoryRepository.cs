@@ -22,6 +22,7 @@ public class CheckersHistoryRepository
 		{
 			UserId = historyDto.UserId,
 			IsWin = Convert.ToInt64(historyDto.IsWin),
+			EnemyName = historyDto.EnemyName,
 			DateTimeStart = historyDto.DateTimeStart.ToString(AppDbContext.DATETIME_STRING_FORMAT),
 			DateTimeEnd = historyDto.DateTimeEnd.ToString(AppDbContext.DATETIME_STRING_FORMAT)
 		});
