@@ -32,7 +32,9 @@ export default function History() {
     let games = Object.keys(history).map((Name, gameIndex) => {
         switch (Name) {
             case 'checkers':
-                return <div className='table_wrapper'> {mapCheckers(history[Name], gameIndex)} </div>;
+                return <div className='table_wrapper' key={'Game ' + gameIndex}>
+                    {mapCheckers(history[Name])}
+                </div>;
 
             default:
                 return <h1 style={{ color: 'red' }} key={gameIndex}>Unknown game</h1>

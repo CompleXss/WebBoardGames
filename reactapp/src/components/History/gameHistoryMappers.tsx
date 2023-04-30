@@ -1,10 +1,10 @@
 import { CheckersData } from "./gameHistoryTypes";
 import { getDatesDiff_string } from "../../DateHelper";
 
-export function mapCheckers(history: CheckersData[], gameIndex: number) {
+export function mapCheckers(history: CheckersData[]) {
     if (history.length === 0) return null
 
-    return <table key={'Game ' + gameIndex}>
+    return <table>
         <caption>Шашки</caption>
         <thead>
             <tr>
