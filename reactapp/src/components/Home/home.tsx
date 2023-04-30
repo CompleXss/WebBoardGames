@@ -3,23 +3,24 @@ import './home.css'
 export default function Home() {
     return (
         <div className="home">
-            <h1>Some cool game text</h1>
+            <h1>Во что сыграем сегодня?</h1>
 
             <div className="gamesContainer">
-                <div className="game">
-                    <p>Some 1 game text</p>
+                <div className="game checkers">
+                    <label>Шашки</label>
                 </div>
 
-                <div className="game">
-                    <p>Some 2 game text</p>
+                <div className="game chess">
+                    <label>Шахматы</label>
                 </div>
 
-                <div className="game">
-                    <p>Some 3 game text</p>
+                <div className="game monopoly">
+                    <label>Монополия</label>
                 </div>
             </div>
 
-            <h1>Some text again</h1>
+            <br />
+            <h1>Статистика?</h1>
 
             <p>11111111111</p>
             <p>22222222222</p>

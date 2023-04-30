@@ -4,30 +4,68 @@ h1 {
 }
 
 .gamesContainer {
-    display: block;
-    width: fit-content;
-    
-    justify-content: flex-start;
+    display: flex;
+    width: 100%;
+    justify-content: center;
+    flex-direction: row;
     flex-wrap: wrap;
-    
-    margin-left: auto;
-    margin-right: auto;
 }
 
 .game {
-    display: inline-block;
-    width: 200px;
-    height: 120px;
-    text-align: center;
+    display: inline-flex;
+    justify-content: center;
+    position: relative;
+    width: 260px;
+    height: 150px;
 
-    box-shadow: #171717 0px 0px 10px;
-    border-radius: 10px;
+    background-color: black;
+    box-shadow: #151515 0px 0px 10px;
+    border-radius: 16px;
     margin: 16px;
     padding: 16px;
-    background-color: #171717;
 }
 
-.game:hover {
-    background-color: #252525;
+.game label {
+    font-size: 1.6em;
+    font-weight: bold;
+    text-shadow: black 1px 1px 8px;
+
+    margin-top: auto;
+    margin-bottom: 16px;
+}
+
+.checkers::before {
+    background: url(/images/checkers.jpg)
+}
+
+.chess::before {
+    background: url(/images/chess.jpg)
+}
+
+.monopoly::before {
+    background: url(/images/monopoly.jpg);
+}
+
+.game::before {
+    content: '';
+    position: absolute;
+    background-repeat: no-repeat;
+    background-size: cover;
+    background-position: top;
+    border-radius: 16px;
+    opacity: 0.35;
+    
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+}
+
+.game * {
+    position: relative;
+}
+
+.game:hover::before {
+    opacity: 0.55;
     transition: all 0.1s ease-in-out;
 }

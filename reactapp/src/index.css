@@ -1,6 +1,8 @@
 @import url("https://fonts.googleapis.com/css2?family=Montserrat");
 
 :root {
+  --background: #171717;
+  --foreground: #272727;
   --orange: #fddb3a;
   --win-color: green;
   --loose-color: red;
@@ -10,7 +12,7 @@ body {
   margin: 0;
   padding: 0;
   color: whitesmoke;
-  background: #272727;
+  background: var(--foreground);
   
   font-family: -apple-system, BlinkMacSystemFont, 'Montserrat', 'Segoe UI', 'Roboto', 'Oxygen',
     'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
