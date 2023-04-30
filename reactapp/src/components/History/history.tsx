@@ -1,15 +1,10 @@
 import { useEffect, useState } from 'react'
-import './css/history.css'
-import { getDatesDiff_string } from '../DateHelper'
+import './history.css'
+import { getDatesDiff_string } from '../../DateHelper'
+import { CheckersData } from './historyGameTypes'
 
 interface GameHistory {
     [Name: string]: CheckersData[] // | OtherGameData[]
-}
-
-interface CheckersData {
-    isWin: number,
-    dateTimeStart: Date,
-    dateTimeEnd: Date
 }
 
 export default function History() {

@@ -1,5 +1,5 @@
 import { NavLink } from "react-router-dom";
-import './css/navPanel.css'
+import './navPanel.css'
 
 export default function NavPanel() {
     return (

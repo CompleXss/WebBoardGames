@@ -1,4 +1,4 @@
-import './css/leaderboard.css'
+import './leaderboard.css'
 
 export default function Leaderboard() {
     return (
