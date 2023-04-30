@@ -1,5 +1,5 @@
-.container {
-
+.table_wrapper {
+    overflow-x: auto;
 }
 
 table {
@@ -9,14 +9,14 @@ table {
     margin-left: auto;
     margin-right: auto;
     width: 94%;
-    max-width: 1200px;
+    max-width: 1000px;
 
     background-color: #1b1b1b;
     border-radius: 10px;
 }
 
 table td {
-    padding: 12px 24px;
+    padding: 12px;
     text-align: center;
 }
 
@@ -33,3 +33,7 @@ table td:last-of-type {
     border-right: none;
 }
 
+table caption {
+    font-size: 2em;
+    margin: 10px;
+}
