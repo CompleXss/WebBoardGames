@@ -3,7 +3,7 @@ import './css/history.css'
 import { getDatesDiff_string } from '../DateHelper'
 
 interface GameHistory {
-    [Name: string]: CheckersData[]
+    [Name: string]: CheckersData[] // | OtherGameData[]
 }
 
 interface CheckersData {
@@ -31,38 +31,40 @@ export default function History() {
         dataFetch()
     }, [])
 
-    const games = Object.keys(history).map(Name =>
-        history[Name].map(data =>
+    let games: JSX.Element[] = [];
+    Object.keys(history).forEach(Name =>
+        games.push(...history[Name].map(data =>
             <tr>
                 <td>{Name === 'checkers' ? 'Шашки' : Name}</td>
-                <td>{data.isWin === 1 ? 'Победа' : 'Поражение'}</td>
+                <td style={{ background: data.isWin ? 'var(--win-color)' : 'var(--loose-color)' }}>
+                    {data.isWin ? 'Победа' : 'Поражение'}
+                </td>
                 <td>{getDatesDiff_string(data.dateTimeStart, data.dateTimeEnd)}</td>
                 <td>{data.dateTimeStart.toLocaleString()}</td>
             </tr>
-        )
+        ))
     )
 
-    
+
 
     return (
         <div className="container">
             <h1>Твоя история игр</h1>
             <h1>{loading ? 'Гружу' : 'Отдыхаю'}</h1>
             <br />
-            <table>
-                <thead>
-                    <tr>
-                        <td>Игра</td>
-                        <td>Победа / Поражение</td>
-                        <td>Время игры</td>
-                        <td>Дата начала</td>
-                    </tr>
-                </thead>
+            {games.length > 0 ?
+                <table>
+                    <thead>
+                        <tr>
+                            <td>Игра</td>
+                            <td>Победа / Поражение</td>
+                            <td>Время игры</td>
+                            <td>Дата начала</td>
+                        </tr>
+                    </thead>
 
-                <tbody>
-                    {games}
-
-                    {/* <tr>
+                    <tbody>
+                        {/* <tr>
                         <td>Шашки</td>
                         <td>Победа</td>
                         <td>9:10</td>
@@ -89,10 +91,10 @@ export default function History() {
                         <td>20:00</td>
                         <td>20.10.2018 00:00</td>
                     </tr> */}
-                </tbody>
-            </table>
-        </div>
+                    </tbody>
+                </table>
+                : <h1> No data</h1>
+            }
+        </div >
     )
 }
-
-// TODO: сделать красивое "дня, день, дней......."
