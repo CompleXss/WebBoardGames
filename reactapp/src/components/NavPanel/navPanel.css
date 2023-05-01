@@ -1,25 +1,31 @@
 nav {
     position: sticky;
-    display: block;
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+
+    overflow: hidden;
     box-sizing: border-box;
     text-align: center;
-    top: 0;
     width: 100%;
+    top: 0;
 
-    padding: 12px 6px;
-    background-color: #171717;
+    padding: 18px 6px;
+    background-color: var(--background);
+    z-index: 1;
 }
 
 nav a {
     display: inline-block;
     box-sizing: border-box;
     text-decoration: none;
-    font-size: 1.2em;
+    font-size: 1.3em;
     color: whitesmoke;
     transition: color 0.1s ease-in-out;
 
     padding: 16px 20px;
-    margin: 6px 3px;
+    margin: 3px 3px;
     border-radius: 10px;
 }
 
@@ -28,6 +34,7 @@ nav a:hover {
     transition: color 0.1s ease-in-out;
 }
 
+/* Underline */
 nav a::after {
     display: flex;
     position: relative;
@@ -50,4 +57,55 @@ nav a:hover::after {
     transform: scaleX(1);
     transform-origin: left;
     transition: transform 0.3s ease-in-out;
+}
+
+/* Burger */
+.burger {
+    display: none;
+    position: absolute;
+    width: 50px;
+    height: 50px;
+    cursor: pointer;
+
+    background: url(/images/burger-menu.svg) no-repeat;
+    background-position: center;
+    background-size: contain;
+    border: none;
+    border-radius: 10px;
+    padding: 0;
+
+    top: 14px;
+    left: 16px;
+}
+
+
+
+@media all and (max-width: 600px) {
+    .burger {
+        display: block;
+    }
+
+    nav a:not(:first-of-type) {
+        opacity: 0;
+        transition: opacity 0.3s ease-in-out;
+    }
+
+    nav.open a {
+        opacity: 1;
+        transition: opacity 0.3s ease-in-out;
+    }
+
+    nav {
+        flex-direction: column;
+        justify-content: flex-start;
+
+        height: 78px;
+        padding: 6px 6px;
+        transition: all 0.3s ease-in-out;
+    }
+
+    nav.open {
+        height: 276px;
+        transition: all 0.3s ease-in-out;
+    }
 }
