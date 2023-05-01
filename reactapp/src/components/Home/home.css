@@ -21,7 +21,7 @@ h1 {
     text-decoration: none;
 
     background-color: black;
-    box-shadow: #151515 0px 0px 10px;
+    box-shadow: #151515 0px 0px 12px;
     border-radius: 16px;
     margin: 16px;
     padding: 16px;
@@ -73,6 +73,6 @@ h1 {
 }
 
 .game:active::before {
-    opacity: 0.7;
+    opacity: 0.65;
     transition: all 0.05s ease-in-out;
- }
+}
