@@ -1,3 +1,4 @@
+import { NavLink } from 'react-router-dom'
 import './home.css'
 
 export default function Home() {
@@ -6,17 +7,17 @@ export default function Home() {
             <h1>Во что сыграем сегодня?</h1>
 
             <div className="gamesContainer">
-                <div className="game checkers">
-                    <label>Шашки</label>
-                </div>
+                <NavLink className="game checkers" to={'/'}>
+                    <p>Шашки</p>
+                </NavLink>
 
-                <div className="game chess">
-                    <label>Шахматы</label>
-                </div>
+                <NavLink className="game chess" to={'/'}>
+                    <p>Шахматы</p>
+                </NavLink>
 
-                <div className="game monopoly">
-                    <label>Монополия</label>
-                </div>
+                <NavLink className="game monopoly" to={'/'}>
+                    <p>Монополия</p>
+                </NavLink>
             </div>
 
             <br />
