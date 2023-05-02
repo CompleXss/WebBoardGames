@@ -7,7 +7,7 @@ export default function Home() {
             <h1>Во что сыграем сегодня?</h1>
 
             <div className="gamesContainer">
-                <NavLink className="game checkers" to={'/'}>
+                <NavLink className="game checkers" to={'/play/checkers'}>
                     <p>Шашки</p>
                 </NavLink>
 

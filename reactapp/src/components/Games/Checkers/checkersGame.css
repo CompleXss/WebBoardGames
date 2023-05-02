@@ -1,0 +1,68 @@
+.checkersContainer {
+    display: grid;
+    flex-direction: column;
+    align-self: center;
+    justify-content: center;
+    align-items: center;
+
+    grid-template-rows: max(50px, 10%) 1fr max(50px, 10%);
+    grid-template-columns: 100%;
+
+    gap: 0;
+    flex-grow: 1;
+    height: 100%;
+    width: 100%;
+
+    background-color: yellowgreen;
+}
+
+.boardContainer {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+
+    height: 100%;
+    max-height: 100vw;
+    width: 100%;
+}
+
+.board {
+    display: grid;
+    box-sizing: border-box;
+    grid-template-columns: repeat(8, 1fr);
+    grid-template-rows: repeat(8, 1fr);
+    padding: 10px;
+
+    aspect-ratio: 1 / 1;
+    height: 100%;
+    max-width: 100%;
+
+    background-color: gray;
+}
+
+.board .cell {
+    aspect-ratio: 1 / 1;
+    gap: 0;
+}
+
+.board .cell.black {
+    background-color: black;
+}
+
+.board .cell.white {
+    background-color: white;
+}
+
+
+
+.enemyZone {
+    height: 100%;
+    width: 100%;
+    background-color: aqua;
+}
+
+.myZone {
+    height: 100%;
+    width: 100%;
+    background-color: aqua;
+}
