@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { GameHistory } from './gameHistoryTypes'
 import { mapCheckers } from './gameHistoryMappers'
+import ENDPOINTS from '../../utilities/Api_Endpoints'
 import './history.css'
 
 export default function History() {
@@ -11,7 +12,7 @@ export default function History() {
 
     useEffect(() => {
         const fetchData = () => {
-            fetch('http://localhost:5042/history/33')
+            fetch(ENDPOINTS.GET_HISTORY_URL)
                 .then(response => response.json())
                 .then(data => {
                     setHistory(data)
@@ -19,7 +20,7 @@ export default function History() {
                 .catch((err) => {
                     setHistory({})
                     setError(err?.message)
-                    console.log('Error: ' + err?.message)
+                    console.log(err)
                 })
                 .finally(() => setLoading(false))
         }
