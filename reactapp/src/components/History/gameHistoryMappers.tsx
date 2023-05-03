@@ -1,5 +1,5 @@
 import { CheckersData } from "./gameHistoryTypes";
-import { getDatesDiff_string } from "../../DateHelper";
+import { getDatesDiff_string } from "../../utilities/DateHelper";
 
 export function mapCheckers(history: CheckersData[]) {
     if (history.length === 0) return null
