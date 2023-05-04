@@ -19,28 +19,28 @@ export default function CheckersGame() {
     const [gameData, setGameData] = useState<GameData | null>(null)
     const navigate = useNavigate()
 
-    useEffect(() => {
-        const fetchData = () => {
-            fetch(ENDPOINTS.GET_CHECKERS_GAME_URL)
-                .then(response => response.ok ? response.json() : null)
-                .then(json => {
-                    if (json === null) {
-                        navigate('/lobby/checkers')
-                        return
-                    }
-                    let data = json as GameData;
-                    setGameData(data)
-                })
-                .catch((err) => {
-                    console.log(err)
-                })
-                .finally(() => setLoading(false))
-        }
+    // useEffect(() => {
+    //     const fetchData = () => {
+    //         fetch(ENDPOINTS.GET_CHECKERS_GAME_URL)
+    //             .then(response => response.ok ? response.json() : null)
+    //             .then(json => {
+    //                 if (json === null) {
+    //                     navigate('/lobby/checkers')
+    //                     return
+    //                 }
+    //                 let data = json as GameData;
+    //                 setGameData(data)
+    //             })
+    //             .catch((err) => {
+    //                 console.log(err)
+    //             })
+    //             .finally(() => setLoading(false))
+    //     }
 
-        console.log(1)
-        setLoading(true)
-        fetchData()
-    }, [navigate])
+    //     console.log(1)
+    //     setLoading(true)
+    //     fetchData()
+    // }, [navigate])
 
 
 

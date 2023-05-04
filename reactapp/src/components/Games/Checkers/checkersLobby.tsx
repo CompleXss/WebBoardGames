@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react"
 import ENDPOINTS from "../../../utilities/Api_Endpoints"
 import { useNavigate } from "react-router-dom"
+import './checkersLobby.css'
 
 export default function CheckersLobby() {
     const [loading, setLoading] = useState(true)
@@ -24,5 +25,8 @@ export default function CheckersLobby() {
     }, [navigate])
 
     return loading ? <div></div> :
-        <div>Hay</div>
+        <div id="lobbyWrapper">
+            <button>Создать игру</button>
+            <button>Подключиться к другому игроку</button>
+        </div>
 }
