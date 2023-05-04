@@ -24,7 +24,7 @@ export default function NavPanel() {
             <NavLink to={'/history'} onClick={hideBurger}> History </NavLink>
             <NavLink to={'/leaderboard'} onClick={hideBurger}> Leaderboard </NavLink>
             <NavLink to={'/about'} onClick={hideBurger}> About </NavLink>
-            <button className="burger" onClick={openBurger}></button>
+            <button className='burger' onClick={openBurger}></button>
         </nav>
     )
 }
