@@ -20,6 +20,8 @@ builder.Services.AddTransient<CheckersUserRepository>();
 builder.Services.AddTransient<CheckersHistoryRepository>();
 builder.Services.AddTransient<AuthService>();
 
+builder.Services.AddSingleton<CheckersService>();
+
 // Configure Authentication & Authorization
 builder.Services.ConfigureAuthentication(config);
 builder.Services.ConfigureAuthorization();
@@ -54,6 +56,7 @@ app.UseAuthorization();
 app.MapAuthEndpoints();
 app.MapUsersEndpoints();
 app.MapPlayHistoryEndpoints();
+app.MapPlayEndpoints();
 
 
 

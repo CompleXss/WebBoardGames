@@ -6,6 +6,7 @@ import History from './components/History/history';
 import Leaderboard from './components/LeaderBoard/leaderboard';
 import About from './components/About/about';
 import Footer from './components/Footer/footer';
+import CheckersLobby from './components/Games/Checkers/checkersLobby';
 import CheckersGame from './components/Games/Checkers/checkersGame';
 import './App.css'
 
@@ -21,6 +22,7 @@ export default function App() {
             <Route path='/history' element={<History />} />
             <Route path='/leaderboard' element={<Leaderboard />} />
             <Route path='/about' element={<About />} />
+            <Route path='/lobby/checkers' element={<CheckersLobby />} />
             <Route path='/play/checkers' element={<CheckersGame />} />
             <Route path='*' element={<Navigate to={'/'} replace={true} />} />
           </Routes>
