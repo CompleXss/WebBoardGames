@@ -39,24 +39,26 @@ export default function Login() {
         setIsLogin(!isLogin)
     }
 
-    return <div id="loginWrapper">
-        <div id='loginHeaderWrapper'>
-            <h1 id='dummyHeader'>dummy</h1>
-            <h1 id='loginHeader'>Авторизация</h1>
-            <h1 id='registerHeader'>Регистрация</h1>
-        </div>
-        <div className='inputContainer'>
-            <input id='loginName' name='name' type='text' placeholder='Имя пользователя' maxLength={32} />
-            <input id='loginPassword' name='password' type='password' placeholder='Пароль' maxLength={64} />
-            <p id='loginWarningText' hidden>Введите имя и пароль</p>
-            <div className='btnContainer'>
-                <button id='dummyBtn'>dummy</button>
-                <button id='loginBtn' onClick={() => getInputAnd(login)}>Войти</button>
-                <button id='registerBtn' onClick={() => getInputAnd(register)}>Зарегистрироваться</button>
+    return <div id='loginContainer'>
+        <div id='loginWrapper'>
+            <div id='loginHeaderWrapper'>
+                <h1 id='dummyHeader'>dummy</h1>
+                <h1 id='loginHeader'>Авторизация</h1>
+                <h1 id='registerHeader'>Регистрация</h1>
             </div>
-        </div>
+            <div className='inputContainer'>
+                <input id='loginName' name='name' type='text' placeholder='Имя пользователя' maxLength={32} />
+                <input id='loginPassword' name='password' type='password' placeholder='Пароль' maxLength={64} />
+                <p id='loginWarningText' hidden>Введите имя и пароль</p>
+                <div className='btnContainer'>
+                    <button id='dummyBtn'>dummy</button>
+                    <button id='loginBtn' onClick={() => getInputAnd(login)}>Войти</button>
+                    <button id='registerBtn' onClick={() => getInputAnd(register)}>Зарегистрироваться</button>
+                </div>
+            </div>
 
-        <p id='loginSwitchMode' onClick={switchMode}>{switchModeText}</p>
+            <p id='loginSwitchMode' onClick={switchMode}>{switchModeText}</p>
+        </div>
     </div>
 }
 
