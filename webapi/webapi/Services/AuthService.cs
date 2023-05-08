@@ -10,8 +10,8 @@ namespace webapi.Services;
 
 public class AuthService
 {
-	private static readonly TimeSpan accessTokenLifetime = TimeSpan.FromMinutes(600); // TODO: 1 minute
-	private static readonly TimeSpan refreshTokenLifetime = TimeSpan.FromDays(60);
+	public static readonly TimeSpan accessTokenLifetime = TimeSpan.FromMinutes(1);
+	public static readonly TimeSpan refreshTokenLifetime = TimeSpan.FromDays(60);
 
 	private readonly UserRefreshTokenRepository repo;
 	private readonly IConfiguration config;
@@ -83,7 +83,7 @@ public class AuthService
 		return new JwtSecurityTokenHandler().WriteToken(token);
 	}
 
-	public async Task<JwtSecurityToken?> ValidateAccessToken_DontCheckExpireDate(string accessToken)
+	public async Task<JwtSecurityToken?> ValidateAccessToken_DontCheckExpireDate(string? accessToken)
 	{
 		if (accessToken is null)
 			return null;

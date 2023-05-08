@@ -1,22 +1,24 @@
-﻿using Microsoft.Net.Http.Headers;
-using System.IdentityModel.Tokens.Jwt;
+﻿using System.IdentityModel.Tokens.Jwt;
 using webapi.Models;
 using webapi.Repositories;
 using webapi.Services;
+using SameSiteMode = Microsoft.AspNetCore.Http.SameSiteMode;
 
 namespace webapi.Endpoints;
 
 public static class AuthEndpoint
 {
+	private const string REFRESH_TOKEN_PATH = "/auth/refresh";
+
 	public static void MapAuthEndpoints(this WebApplication app)
 	{
 		app.MapPost("/auth/register", RegisterAsync).AllowAnonymous();
 		app.MapPost("/auth/login", LoginAsync).AllowAnonymous();
-		app.MapPost("/auth/refresh", RefreshTokenAsync).AllowAnonymous();
+		app.MapGet(REFRESH_TOKEN_PATH, RefreshTokenAsync).AllowAnonymous();
 	}
 
 	// TODO: улетает в exception, если в body не было юзера
-	internal static async Task<IResult> RegisterAsync(UsersRepository users, AuthService auth, UserDto request)
+	internal static async Task<IResult> RegisterAsync(HttpResponse response, UsersRepository users, AuthService auth, UserDto request)
 	{
 		if (await users.GetAsync(request.Name) is not null)
 			return Results.BadRequest($"User with this name ({request.Name}) already exists.");
@@ -27,42 +29,28 @@ public static class AuthEndpoint
 		if (!created)
 			return Results.BadRequest($"Can not create user '{request.Name}'.");
 
-		var accessToken = auth.CreateAccessToken(user);
-		var refreshToken = await auth.CreateRefreshTokenAsync(user.Id);
+		var errorResult = await AddNewTokenPairToCookies(response, auth, user.Id, user.Name);
+		if (errorResult is not null) return errorResult;
 
-		return Results.Created($"/users/{user.Name}", new
-		{
-			user,
-			accessToken,
-			refreshToken
-		});
+		return Results.Created($"/users/{user.Name}", user);
 	}
 
-	internal static async Task<IResult> LoginAsync(UsersRepository users, AuthService auth, UserDto request)
+	internal static async Task<IResult> LoginAsync(HttpResponse response, UsersRepository users, AuthService auth, UserDto request)
 	{
 		var user = await users.GetAsync(request.Name);
 
 		if (user is null || !AuthService.VerifyPasswordHash(request.Password, user.PasswordHash, user.PasswordSalt))
 			return Results.NotFound("Invalid username or password.");
 
-		var accessToken = auth.CreateAccessToken(user);
-		var refreshToken = await auth.CreateRefreshTokenAsync(user.Id);
+		var errorResult = await AddNewTokenPairToCookies(response, auth, user.Id, user.Name);
+		if (errorResult is not null) return errorResult;
 
-		if (refreshToken is null)
-			return Results.Problem("Can not create refresh token.");
-
-		return Results.Ok(new
-		{
-			accessToken,
-			refreshToken,
-		});
+		return Results.Ok();
 	}
 
 	internal static async Task<IResult> RefreshTokenAsync(HttpContext context, AuthService auth)
 	{
-		//var providedAccessToken_str = await context.GetTokenAsync("access_token");
-
-		var providedAccessToken_str = context.Request.Headers[HeaderNames.Authorization].ToString().Replace("Bearer ", "");
+		var providedAccessToken_str = context.Request.Cookies["access_token"];
 		var providedAccessToken = await auth.ValidateAccessToken_DontCheckExpireDate(providedAccessToken_str);
 		if (providedAccessToken is null)
 			return Results.Unauthorized();
@@ -70,7 +58,8 @@ public static class AuthEndpoint
 		long userID = long.Parse(providedAccessToken.Claims.FirstOrDefault(x => x.Type == JwtRegisteredClaimNames.Sub)!.Value);
 		string userName = providedAccessToken.Claims.FirstOrDefault(x => x.Type == JwtRegisteredClaimNames.Name)!.Value;
 
-		if (!context.Request.Cookies.TryGetValue("refresh_token", out var providedRefreshToken) || providedRefreshToken is null)
+		var providedRefreshToken = context.Request.Cookies["refresh_token"];
+		if (providedRefreshToken is null)
 			return Results.BadRequest("Provided Refresh Token is null.");
 
 
@@ -94,11 +83,44 @@ public static class AuthEndpoint
 			return Results.Problem("Can not update refresh token.");
 
 		var accessToken = auth.CreateAccessToken(userID, userName);
+		WriteTokenPairIntoCookies(context.Response, accessToken, refreshToken);
 
-		return Results.Ok(new
+		return Results.Ok();
+	}
+
+
+
+	/// <returns> Error result or null if no error occured. </returns>
+	internal static async Task<IResult?> AddNewTokenPairToCookies(HttpResponse response, AuthService auth, long userID, string username)
+	{
+		var refreshToken = await auth.CreateRefreshTokenAsync(userID);
+		if (refreshToken is null)
+			return Results.Problem("Can not create refresh token.");
+
+		var accessToken = auth.CreateAccessToken(userID, username);
+		WriteTokenPairIntoCookies(response, accessToken, refreshToken);
+
+		return null;
+	}
+
+	internal static void WriteTokenPairIntoCookies(HttpResponse response, string accessToken, RefreshToken refreshToken)
+	{
+		response.Cookies.Append("access_token", accessToken, new CookieOptions()
 		{
-			accessToken,
-			refreshToken,
+			Path = "/",
+			SameSite = SameSiteMode.Strict,
+			Secure = true,
+			HttpOnly = true,
+			Expires = refreshToken.TokenExpires,
+		});
+
+		response.Cookies.Append("refresh_token", refreshToken.Token, new CookieOptions()
+		{
+			Path = REFRESH_TOKEN_PATH,
+			SameSite = SameSiteMode.Strict,
+			Secure = true,
+			HttpOnly = true,
+			Expires = refreshToken.TokenExpires,
 		});
 	}
 }

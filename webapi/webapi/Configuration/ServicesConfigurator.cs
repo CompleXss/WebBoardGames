@@ -17,6 +17,7 @@ public static class ServicesConfigurator
 					builder
 					.AllowAnyMethod()
 					.AllowAnyHeader()
+					.AllowCredentials()
 					.WithOrigins("http://localhost:3000");
 				});
 		});
@@ -37,6 +38,15 @@ public static class ServicesConfigurator
 				ValidateLifetime = true,
 				ClockSkew = TimeSpan.Zero,
 				ValidateIssuerSigningKey = true,
+			};
+
+			options.Events = new JwtBearerEvents()
+			{
+				OnMessageReceived = context =>
+				{
+					context.Token = context.Request.Cookies["access_token"];
+					return Task.CompletedTask;
+				}
 			};
 		});
 	}

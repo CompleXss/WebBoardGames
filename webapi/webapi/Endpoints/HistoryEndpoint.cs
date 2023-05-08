@@ -7,7 +7,7 @@ public static class PlayHistoryEndpoint
 {
 	public static void MapPlayHistoryEndpoints(this WebApplication app)
 	{
-		app.MapGet("/history/{userId}", GetUserHistory).AllowAnonymous();
+		app.MapGet("/history/{userId}", GetUserHistory);
 		app.MapPost("/history", AddUserHistory);
 	}
 
