@@ -9,7 +9,7 @@ axios.interceptors.request.clear()
 axios.interceptors.response.clear()
 
 // error => try refresh token pair if 401
-axios.interceptors.response.use(response => response, error => {
+axios.interceptors.response.use(response => response, async error => {
     if (!error.response || error.response.status !== 401) {
         return Promise.reject(error)
     }
@@ -18,7 +18,7 @@ axios.interceptors.response.use(response => response, error => {
     if (!config._retry) {
         config._retry = true
         console.log('refreshing tokens...')
-        return refreshTokenPair(config)
+        return (await refreshTokenPair(config)) ?? Promise.reject(error)
     }
 
     // there was a retry already
@@ -31,12 +31,16 @@ axios.interceptors.response.use(response => response, error => {
 
 
 
-async function refreshTokenPair(config: AxiosRequestConfig<any>) {
-    let response = await axios.get(ENDPOINTS.GET_REFRESH_TOKEN_URL, config)
+async function refreshTokenPair(config: any) {
+    try {
+        const response = await axios.get(ENDPOINTS.GET_REFRESH_TOKEN_URL, config)
+        
+        if (response.status === 200) {
+            return axios(config)
+        }
 
-    return response.status === 200
-        ? axios(config)
-        : response
+    } catch (e) {
+    }
 }
 
 export function setNavigateFunc(navigate: NavigateFunction) {
