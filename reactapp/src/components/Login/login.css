@@ -33,13 +33,15 @@
 
 #loginWrapper h1 {
     transition: all 0.3s ease-in-out;
+    align-self: center;
 }
 
 #loginWrapper #loginHeaderWrapper {
     display: flex;
     justify-content: center;
     position: relative;
-    align-self: flex-end;
+    align-self: center;
+    height: 100%;
     width: 100%;
 }
 
@@ -157,4 +159,5 @@
     width: 100%;
     margin: 0;
     margin-left: 12px;
+    opacity: 0;
 }

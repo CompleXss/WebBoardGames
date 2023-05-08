@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import ENDPOINTS from '../../../utilities/Api_Endpoints';
-import './checkersGame.css'
 import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
+import './checkersGame.css'
 
 interface Point {
     x: number,
@@ -21,8 +22,8 @@ export default function CheckersGame() {
 
     // useEffect(() => {
     //     const fetchData = () => {
-    //         fetch(ENDPOINTS.GET_CHECKERS_GAME_URL)
-    //             .then(response => response.ok ? response.json() : null)
+    //         axios.get(ENDPOINTS.GET_CHECKERS_GAME_URL)
+    //             .then(response => response.status === 200 ? response.data : null)
     //             .then(json => {
     //                 if (json === null) {
     //                     navigate('/lobby/checkers')

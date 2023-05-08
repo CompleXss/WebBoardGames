@@ -1,3 +1,4 @@
+import axios from 'axios'
 import { useEffect, useState } from 'react'
 import { NavLink } from 'react-router-dom'
 import ENDPOINTS from '../../utilities/Api_Endpoints'
@@ -17,42 +18,42 @@ export default function Home() {
     const [chessUrl, setChessUrl] = useState('/')
     const [monopolyUrl, setMonopolyUrl] = useState('/')
 
-    useEffect(() => {
-        const fetchData = () => {
-            fetch(ENDPOINTS.GET_ACTIVE_GAME_URL)
-                .then(response => response.ok ? response.json() : null)
-                .then(json => {
-                    setDefaultLinks()
+    // useEffect(() => {
+    //     const fetchData = () => {
+    //         axios.get(ENDPOINTS.GET_ACTIVE_GAME_URL)
+    //             .then(response => response.status === 200 ? response.data : null)
+    //             .then(json => {
+    //                 setDefaultLinks()
 
-                    let activeGame = json as ActiveGame
-                    if (activeGame === null) { // response is not ok
-                        return
-                    }
+    //                 let activeGame = json as ActiveGame
+    //                 if (activeGame === null) { // response is not ok
+    //                     return
+    //                 }
 
-                    switch (activeGame.GameType) {
-                        case 'checkers':
-                            setCheckersIDLink(activeGame.ID)
-                            break;
-                        case 'chess':
-                            setChessIDLink(activeGame.ID)
-                            break;
-                        case 'monopoly':
-                            setMonopolyIDLink(activeGame.ID)
-                            break;
+    //                 switch (activeGame.GameType) {
+    //                     case 'checkers':
+    //                         setCheckersIDLink(activeGame.ID)
+    //                         break;
+    //                     case 'chess':
+    //                         setChessIDLink(activeGame.ID)
+    //                         break;
+    //                     case 'monopoly':
+    //                         setMonopolyIDLink(activeGame.ID)
+    //                         break;
 
-                        default:
-                            break;
-                    }
-                })
-                .catch((err) => {
-                    setDefaultLinks()
-                    console.log(err)
-                })
-        }
+    //                     default:
+    //                         break;
+    //                 }
+    //             })
+    //             .catch((err) => {
+    //                 setDefaultLinks()
+    //                 console.log(err)
+    //             })
+    //     }
 
-        setEmptyLinks()
-        fetchData()
-    }, [])
+    //     setEmptyLinks()
+    //     fetchData()
+    // }, [])
 
     
 
