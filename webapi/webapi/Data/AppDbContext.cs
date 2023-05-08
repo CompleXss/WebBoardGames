@@ -60,11 +60,12 @@ public partial class AppDbContext : DbContext
 
 		modelBuilder.Entity<UserRefreshToken>(entity =>
 		{
-			entity.HasKey(e => new { e.UserId, e.RefreshToken });
+			entity.HasKey(e => new { e.UserId, e.DeviceId });
 
 			entity.ToTable("User_RefreshToken");
 
 			entity.Property(e => e.UserId).HasColumnName("UserID");
+			entity.Property(e => e.DeviceId).HasColumnName("DeviceID");
 
 			entity.HasOne(d => d.User).WithMany(p => p.UserRefreshTokens)
 				.HasForeignKey(d => d.UserId)

@@ -103,13 +103,13 @@ public class AuthService
 		return validationResult.SecurityToken as JwtSecurityToken;
 	}
 
-	public async Task<UserRefreshToken?> FindUserRefreshTokenAsync(long userId, string refreshToken)
-		=> await repo.GetAsync(userId, refreshToken);
+	public async Task<UserRefreshToken?> FindUserRefreshTokenAsync(long userId, string deviceID)
+		=> await repo.GetAsync(userId, deviceID);
 
-	public async Task<RefreshToken?> CreateRefreshTokenAsync(long userID)
+	public async Task<RefreshToken?> CreateRefreshTokenAsync(long userID, string deviceID)
 	{
 		var token = CreateRefreshToken();
-		return await repo.AddRefreshTokenAsync(userID, token);
+		return await repo.AddRefreshTokenAsync(userID, deviceID, token);
 	}
 
 	public async Task<RefreshToken?> UpdateUserRefreshTokenAsync(UserRefreshToken userRefreshToken)

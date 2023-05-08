@@ -13,20 +13,27 @@ public class UserRefreshTokenRepository
 		this.context = context;
 	}
 
-	public async Task<UserRefreshToken?> GetAsync(long userID, string refreshToken)
-		=> await context.UserRefreshTokens.FirstOrDefaultAsync(x => x.UserId == userID && x.RefreshToken == refreshToken);
+	public async Task<UserRefreshToken?> GetAsync(long userID, string deviceID)
+		=> await context.UserRefreshTokens.FindAsync(userID, deviceID);
 
-	public async Task<RefreshToken?> AddRefreshTokenAsync(long userID, RefreshToken token)
+	public async Task<RefreshToken?> AddRefreshTokenAsync(long userID, string deviceID, RefreshToken token)
 	{
 		try
 		{
-			await context.UserRefreshTokens.AddAsync(new UserRefreshToken
+			var existingEntry = await context.UserRefreshTokens.FindAsync(userID, deviceID);
+			var entry = existingEntry ?? new UserRefreshToken()
 			{
 				UserId = userID,
-				RefreshToken = token.Token,
-				TokenCreated = token.TokenCreated.ToString(AppDbContext.DATETIME_STRING_FORMAT),
-				TokenExpires = token.TokenExpires.ToString(AppDbContext.DATETIME_STRING_FORMAT),
-			});
+				DeviceId = deviceID,
+			};
+
+			entry.RefreshToken = token.Token;
+			entry.TokenCreated = token.TokenCreated.ToString(AppDbContext.DATETIME_STRING_FORMAT);
+			entry.TokenExpires = token.TokenExpires.ToString(AppDbContext.DATETIME_STRING_FORMAT);
+
+			// if there was no entry, create new, otherwise update
+			if (existingEntry is null)
+				await context.UserRefreshTokens.AddAsync(entry);
 
 			return await context.SaveChangesAsync() > 0 ? token : null;
 		}
