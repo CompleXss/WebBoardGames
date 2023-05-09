@@ -23,7 +23,7 @@ public class UsersRepository
 		return await context.Users.ToListAsync();
 	}
 
-	public async Task<User?> GetAsync(long id) => await context.Users.FirstOrDefaultAsync(x => x.Id == id);
+	public async Task<User?> GetAsync(long id) => await context.Users.FindAsync(id);
 	public async Task<User?> GetAsync(string username) => await context.Users.FirstOrDefaultAsync(x => x.Name == username);
 
 
