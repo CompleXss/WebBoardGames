@@ -6,9 +6,8 @@ import ENDPOINTS from '../../utilities/Api_Endpoints'
 import './history.css'
 
 export default function History() {
-    const { data, isLoading, error: err } = useQuery('history', fetchData)
+    const { data, isLoading, isError } = useQuery('history', fetchData)
     const history = data as GameHistory
-    const error = (err as any)?.message
 
     let games = !history ? [] : Object.keys(history).map((Name, gameIndex) => {
         switch (Name) {
@@ -22,20 +21,19 @@ export default function History() {
         }
     })
 
+    if (isLoading) return <div></div>
+    if (isError) return <h1>Произошла ошибка!</h1>
+
     return (
         <div>
             <h1>Твоя история игр</h1>
             <br />
-            {isLoading && <h1>Loading... Please wait.</h1>}
-            {error && <h1>Error: {error}</h1>}
-            {!isLoading && !error &&
-                <div>
-                    {games.length > 0
-                        ? games
-                        : <h1> Your History is empty. <br /> Go play some games :) </h1>
-                    }
-                </div>
-            }
+            <div>
+                {games.length > 0
+                    ? games
+                    : <h1> Your History is empty. <br /> Go play some games :) </h1>
+                }
+            </div>
         </div>
     )
 }
