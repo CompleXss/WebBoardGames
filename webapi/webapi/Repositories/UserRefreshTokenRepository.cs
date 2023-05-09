@@ -16,6 +16,9 @@ public class UserRefreshTokenRepository
 	public async Task<UserRefreshToken?> GetAsync(long userID, string deviceID)
 		=> await context.UserRefreshTokens.FindAsync(userID, deviceID);
 
+	public async Task<int> GetUserDeviceCount(long userID)
+		=> await context.UserRefreshTokens.CountAsync(x => x.UserId == userID);
+
 	public async Task<RefreshToken?> AddRefreshTokenAsync(long userID, string deviceID, RefreshToken token)
 	{
 		try
@@ -61,6 +64,38 @@ public class UserRefreshTokenRepository
 		catch (Exception)
 		{
 			return null;
+		}
+	}
+
+	public async Task<bool> RemoveUserTokensExceptOneDevice(long userID, string deviceID)
+	{
+		try
+		{
+			var entriesToDelete = context.UserRefreshTokens.Where(x => x.UserId == userID && x.DeviceId != deviceID);
+			context.UserRefreshTokens.RemoveRange(entriesToDelete);
+			await context.SaveChangesAsync();
+
+			return true;
+		}
+		catch (Exception)
+		{
+			return false;
+		}
+	}
+
+	public async Task<bool> RemoveAllUserTokens(long userID)
+	{
+		try
+		{
+			var entriesToDelete = context.UserRefreshTokens.Where(x => x.UserId == userID);
+			context.UserRefreshTokens.RemoveRange(entriesToDelete);
+			await context.SaveChangesAsync();
+
+			return true;
+		}
+		catch (Exception)
+		{
+			return false;
 		}
 	}
 }

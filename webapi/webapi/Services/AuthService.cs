@@ -5,6 +5,7 @@ using System.IdentityModel.Tokens.Jwt;
 using Microsoft.IdentityModel.Tokens;
 using webapi.Models;
 using webapi.Repositories;
+using webapi.Configuration;
 
 namespace webapi.Services;
 
@@ -83,7 +84,42 @@ public class AuthService
 		return new JwtSecurityTokenHandler().WriteToken(token);
 	}
 
-	public async Task<JwtSecurityToken?> ValidateAccessToken_DontCheckExpireDate(string? accessToken)
+	public (long ID, string Name) GetUserInfoFromAccessToken(string accessToken)
+	{
+		var decodedToken = DecodeJwtToken(accessToken);
+		return GetUserInfoFromAccessToken(decodedToken);
+	}
+
+	public (long ID, string Name) GetUserInfoFromAccessToken(JwtSecurityToken accessToken)
+	{
+		long userID = long.Parse(accessToken.Claims.FirstOrDefault(x => x.Type == JwtRegisteredClaimNames.Sub)!.Value);
+		string userName = accessToken.Claims.FirstOrDefault(x => x.Type == JwtRegisteredClaimNames.Name)!.Value;
+
+		return (userID, userName);
+	}
+
+	public JwtSecurityToken DecodeJwtToken(string token)
+	{
+		var tokenHandler = new JwtSecurityTokenHandler();
+		return tokenHandler.ReadJwtToken(token);
+	}
+
+	/// <returns><see cref="JwtSecurityToken"/> if token is valid. Null if it's not.</returns>
+	public async Task<JwtSecurityToken?> ValidateAccessTokenAsync(string? accessToken)
+	{
+		if (accessToken is null)
+			return null;
+
+		var tokenHandler = new JwtSecurityTokenHandler();
+		var validationResult = await tokenHandler.ValidateTokenAsync(accessToken, ServicesConfigurator.GetJwtTokenValidationParameters(config));
+
+		return validationResult.IsValid
+			? validationResult.SecurityToken as JwtSecurityToken
+			: null;
+	}
+
+	/// <returns><see cref="JwtSecurityToken"/> if token is valid. Null if it's not.</returns>
+	public async Task<JwtSecurityToken?> ValidateAccessTokenAsync_DontCheckExpireDate(string? accessToken)
 	{
 		if (accessToken is null)
 			return null;
@@ -100,7 +136,9 @@ public class AuthService
 			ValidateIssuerSigningKey = true,
 		});
 
-		return validationResult.SecurityToken as JwtSecurityToken;
+		return validationResult.IsValid
+			? validationResult.SecurityToken as JwtSecurityToken
+			: null;
 	}
 
 	public async Task<UserRefreshToken?> FindUserRefreshTokenAsync(long userId, string deviceID)

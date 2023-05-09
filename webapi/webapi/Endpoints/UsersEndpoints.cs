@@ -1,5 +1,7 @@
-﻿using webapi.Models;
+﻿using Microsoft.AspNetCore.Authentication;
+using webapi.Models;
 using webapi.Repositories;
+using webapi.Services;
 
 namespace webapi.Endpoints;
 
@@ -11,7 +13,7 @@ public static class UsersEndpoints
 			.AllowAnonymous()
 			.Produces<List<User>>();
 
-		app.MapGet("/users/{username}", GetAsync)
+		app.MapGet("/user", GetAsync)
 			.Produces<User>();
 
 		app.MapDelete("/users/{username}", DeleteAsync);
@@ -22,12 +24,17 @@ public static class UsersEndpoints
 		return Results.Ok(await users.GetAllAsync());
 	}
 
-	internal static async Task<IResult> GetAsync(UsersRepository users, string username)
+	internal static async Task<IResult> GetAsync(HttpContext context, AuthService auth, UsersRepository users)
 	{
-		var user = await users.GetAsync(username);
+		var accessToken = await context.GetTokenAsync(AuthEndpoint.ACCESS_TOKEN_COOKIE_NAME);
+		if (accessToken is null) return Results.Unauthorized();
+
+		(long userID, string username) = auth.GetUserInfoFromAccessToken(accessToken);
+
+		var user = await users.GetAsync(userID);
 
 		return user != null
-			? Results.Json(user)
+			? Results.Ok(user)
 			: Results.NotFound($"User '{username}' not found.");
 	}
 

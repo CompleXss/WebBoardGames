@@ -1,4 +1,4 @@
-﻿using System.IdentityModel.Tokens.Jwt;
+﻿using Microsoft.AspNetCore.Authentication;
 using webapi.Models;
 using webapi.Repositories;
 using webapi.Services;
@@ -8,16 +8,21 @@ namespace webapi.Endpoints;
 
 public static class AuthEndpoint
 {
+	public const string ACCESS_TOKEN_COOKIE_NAME = "access_token";
+	public const string REFRESH_TOKEN_COOKIE_NAME = "refresh_token";
+	public const string DEVICE_ID_COOKIE_NAME = "device-guid";
 	private const string REFRESH_TOKEN_PATH = "/auth/refresh";
-	private const string ACCESS_TOKEN_COOKIE_NAME = "access_token";
-	private const string REFRESH_TOKEN_COOKIE_NAME = "refresh_token";
-	private const string DEVICE_ID_COOKIE_NAME = "device-guid";
 
 	public static void MapAuthEndpoints(this WebApplication app)
 	{
 		app.MapPost("/auth/register", RegisterAsync).AllowAnonymous();
 		app.MapPost("/auth/login", LoginAsync).AllowAnonymous();
+		app.MapPost("/auth/logout", LogoutAsync);
 		app.MapGet(REFRESH_TOKEN_PATH, RefreshTokenAsync).AllowAnonymous();
+
+		app.MapGet("/auth/isAuthorized", IsAuthorizedAsync).AllowAnonymous();
+		app.MapGet("/auth/deviceCount", GetLoginDeviceCountAsync);
+		app.MapDelete("/auth/anotherDevices-logout", LogoutFromAnotherDevicesAsync);
 	}
 
 	// TODO: улетает в exception, если в body не было юзера
@@ -51,15 +56,28 @@ public static class AuthEndpoint
 		return Results.Ok();
 	}
 
+	internal static async Task<IResult> LogoutAsync(HttpContext context, AuthService auth, UserRefreshTokenRepository repo)
+	{
+		var accessToken = await context.GetTokenAsync(ACCESS_TOKEN_COOKIE_NAME);
+		if (accessToken is null) return Results.Unauthorized();
+		(long userID, _) = auth.GetUserInfoFromAccessToken(accessToken);
+
+		if (!(await repo.RemoveAllUserTokens(userID)))
+			return Results.Problem();
+
+		DeleteTokenCookies(context.Response);
+
+		return Results.Ok();
+	}
+
 	internal static async Task<IResult> RefreshTokenAsync(HttpContext context, AuthService auth)
 	{
 		var providedAccessToken_str = context.Request.Cookies[ACCESS_TOKEN_COOKIE_NAME];
-		var providedAccessToken = await auth.ValidateAccessToken_DontCheckExpireDate(providedAccessToken_str);
+		var providedAccessToken = await auth.ValidateAccessTokenAsync_DontCheckExpireDate(providedAccessToken_str);
 		if (providedAccessToken is null)
 			return Results.Unauthorized();
 
-		long userID = long.Parse(providedAccessToken.Claims.FirstOrDefault(x => x.Type == JwtRegisteredClaimNames.Sub)!.Value);
-		string userName = providedAccessToken.Claims.FirstOrDefault(x => x.Type == JwtRegisteredClaimNames.Name)!.Value;
+		(long userID, string userName) = auth.GetUserInfoFromAccessToken(providedAccessToken);
 
 		var providedRefreshToken = context.Request.Cookies[REFRESH_TOKEN_COOKIE_NAME];
 		if (providedRefreshToken is null)
@@ -96,9 +114,47 @@ public static class AuthEndpoint
 			return Results.Problem("Can not update refresh token.");
 
 		var accessToken = auth.CreateAccessToken(userID, userName);
-		WriteTokenPairIntoCookies(context.Response, deviceID, accessToken, refreshToken);
+		AddCookiesToResponse(context.Response, deviceID, accessToken, refreshToken);
 
 		return Results.Ok();
+	}
+
+	internal static async Task<IResult> IsAuthorizedAsync(HttpRequest request, AuthService auth)
+	{
+		var accessToken = request.Cookies[ACCESS_TOKEN_COOKIE_NAME];
+		bool tokenIsValid = (await auth.ValidateAccessTokenAsync(accessToken)) is not null;
+
+		return Results.Ok(new
+		{
+			IsAuthorized = tokenIsValid,
+		});
+	}
+
+	internal static async Task<IResult> GetLoginDeviceCountAsync(HttpContext context, AuthService auth, UserRefreshTokenRepository repo)
+	{
+		var accessToken = await context.GetTokenAsync(ACCESS_TOKEN_COOKIE_NAME);
+		if (accessToken is null) return Results.Unauthorized();
+
+		(long userID, _) = auth.GetUserInfoFromAccessToken(accessToken);
+		var deviceCount = await repo.GetUserDeviceCount(userID);
+
+		return Results.Ok(deviceCount);
+	}
+
+	internal static async Task<IResult> LogoutFromAnotherDevicesAsync(HttpContext context, AuthService auth, UserRefreshTokenRepository repo)
+	{
+		var accessToken = await context.GetTokenAsync(ACCESS_TOKEN_COOKIE_NAME);
+		if (accessToken is null) return Results.Unauthorized();
+
+		var deviceID = context.Request.Cookies[DEVICE_ID_COOKIE_NAME];
+		if (deviceID is null) return Results.BadRequest("No DeviceID was provided.");
+
+		(long userID, _) = auth.GetUserInfoFromAccessToken(accessToken);
+		bool succeeded = await repo.RemoveUserTokensExceptOneDevice(userID, deviceID);
+
+		return succeeded
+			? Results.Ok()
+			: Results.Problem();
 	}
 
 
@@ -114,12 +170,12 @@ public static class AuthEndpoint
 			return Results.Problem("Can not create refresh token.");
 
 		var accessToken = auth.CreateAccessToken(userID, username);
-		WriteTokenPairIntoCookies(context.Response, deviceID, accessToken, refreshToken);
+		AddCookiesToResponse(context.Response, deviceID, accessToken, refreshToken);
 
 		return null;
 	}
 
-	internal static void WriteTokenPairIntoCookies(HttpResponse response, string deviceID, string accessToken, RefreshToken refreshToken)
+	internal static void AddCookiesToResponse(HttpResponse response, string deviceID, string accessToken, RefreshToken refreshToken)
 	{
 		response.Cookies.Append(DEVICE_ID_COOKIE_NAME, deviceID, new CookieOptions()
 		{
@@ -145,6 +201,27 @@ public static class AuthEndpoint
 			Secure = true,
 			HttpOnly = true,
 			Expires = refreshToken.TokenExpires,
+		});
+	}
+
+	internal static void DeleteTokenCookies(HttpResponse response)
+	{
+		response.Cookies.Append(ACCESS_TOKEN_COOKIE_NAME, "", new CookieOptions()
+		{
+			Path = "/",
+			SameSite = SameSiteMode.Strict,
+			Secure = true,
+			HttpOnly = true,
+			Expires = DateTime.UnixEpoch,
+		});
+
+		response.Cookies.Append(REFRESH_TOKEN_COOKIE_NAME, "", new CookieOptions()
+		{
+			Path = REFRESH_TOKEN_PATH,
+			SameSite = SameSiteMode.Strict,
+			Secure = true,
+			HttpOnly = true,
+			Expires = DateTime.UnixEpoch,
 		});
 	}
 }
