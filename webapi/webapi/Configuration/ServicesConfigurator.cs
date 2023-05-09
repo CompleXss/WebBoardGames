@@ -27,18 +27,7 @@ public static class ServicesConfigurator
 	{
 		services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(options =>
 		{
-			options.TokenValidationParameters = new TokenValidationParameters
-			{
-				ValidIssuer = config["Jwt:Issuer"],
-				ValidAudience = config["Jwt:Audience"],
-				IssuerSigningKey = new SymmetricSecurityKey
-					(Encoding.UTF8.GetBytes(config["Jwt:Key"]!)),
-				ValidateIssuer = true,
-				ValidateAudience = true,
-				ValidateLifetime = true,
-				ClockSkew = TimeSpan.Zero,
-				ValidateIssuerSigningKey = true,
-			};
+			options.TokenValidationParameters = GetJwtTokenValidationParameters(config);
 
 			options.Events = new JwtBearerEvents()
 			{
@@ -50,6 +39,21 @@ public static class ServicesConfigurator
 			};
 		});
 	}
+
+	public static TokenValidationParameters GetJwtTokenValidationParameters(IConfiguration config) => new()
+	{
+		ValidIssuer = config["Jwt:Issuer"],
+		ValidAudience = config["Jwt:Audience"],
+		IssuerSigningKey = new SymmetricSecurityKey
+					(Encoding.UTF8.GetBytes(config["Jwt:Key"]!)),
+		ValidateIssuer = true,
+		ValidateAudience = true,
+		ValidateLifetime = true,
+		ClockSkew = TimeSpan.Zero,
+		ValidateIssuerSigningKey = true,
+	};
+
+
 
 	public static void ConfigureAuthorization(this IServiceCollection services)
 	{
