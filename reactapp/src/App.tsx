@@ -1,8 +1,9 @@
 import React from 'react';
 import { Routes, Route, Navigate, useNavigate } from 'react-router-dom';
+import NavPanel from './components/NavPanel/navPanel';
 import Home from './components/Home/home';
 import Login from './components/Login/login';
-import NavPanel from './components/NavPanel/navPanel';
+import Profile from './components/Profile/profile';
 import History from './components/History/history';
 import Leaderboard from './components/LeaderBoard/leaderboard';
 import About from './components/About/about';
@@ -22,6 +23,7 @@ export default function App() {
         <Routes>
           <Route path='/' element={<Home />} />
           <Route path='/login' element={<Login />} />
+          <Route path='/profile' element={<Profile />} />
           <Route path='/history' element={<History />} />
           <Route path='/leaderboard' element={<Leaderboard />} />
           <Route path='/about' element={<About />} />

@@ -30,13 +30,13 @@ nav a {
     border-radius: 10px;
 }
 
-nav a:hover {
+nav a:not(:last-of-type):hover {
     color: var(--orange);
     transition: color 0.1s ease-in-out;
 }
 
 /* Underline */
-nav a::after {
+nav a:not(:last-of-type)::after {
     display: flex;
     position: relative;
     content: '';
@@ -54,7 +54,7 @@ nav a::after {
     background: var(--orange);
 }
 
-nav a:hover::after {
+nav a:not(:last-of-type):hover::after {
     transform: scaleX(1);
     transform-origin: left;
     transition: transform 0.3s ease-in-out;
@@ -81,7 +81,27 @@ nav a:hover::after {
 
 
 
-@media all and (max-width: 600px) {
+/* Profile button */
+nav a:last-of-type {
+    margin-left: 20px;
+    padding: 0 8px;
+}
+
+nav a .accountIcon {
+    width: 48px;
+    height: 48px;
+
+    fill: whitesmoke;
+    transition: color 0.1s ease-in-out;
+}
+
+nav a:hover .accountIcon {
+    fill: var(--orange);
+}
+
+
+
+@media all and (max-width: 650px) {
     .burger {
         display: block;
     }
@@ -89,6 +109,14 @@ nav a:hover::after {
     nav a:not(:first-of-type) {
         opacity: 0;
         transition: opacity 0.3s ease-in-out;
+    }
+
+    /* Profile button */
+    nav a:last-of-type {
+        position: absolute;
+        opacity: 1;
+        top: 14px;
+        right: 16px;
     }
 
     nav.open a {

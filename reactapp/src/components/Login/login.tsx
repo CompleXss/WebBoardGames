@@ -1,6 +1,7 @@
+import axios from 'axios'
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import axios from 'axios'
+import { useQuery } from 'react-query'
 import ENDPOINTS from '../../utilities/Api_Endpoints'
 import './login.css'
 
@@ -10,6 +11,19 @@ export default function Login() {
     const [switchModeText, setswitchModeText] = useState('Нет аккаунта? Регистрируйся')
     const [isLogin, setIsLogin] = useState(true)
     const navigate = useNavigate()
+    
+    const { isLoading } = useQuery('navPanel', isAuthorized, {
+        retry: false
+    })
+
+    async function isAuthorized() {
+        return axios.get(ENDPOINTS.GET_IS_AUTHORIZED)
+            .then(reponse => {
+                if (reponse.data.isAuthorized) {
+                    navigate('/profile')
+                }
+            })
+    }
 
     function switchMode() {
         let loginBtn = document.getElementById('loginBtn')
@@ -55,7 +69,7 @@ export default function Login() {
             if (response.status === 200) {
                 console.log(login + ' logged in')
                 showWarningText('Вход успешен!', 'green')
-                setTimeout(() => navigate('/'), 1500)
+                setTimeout(() => navigate('/'), 1000)
             }
         }).catch(e => {
             console.log(e)
@@ -73,7 +87,7 @@ export default function Login() {
             if (response.status === 201) {
                 console.log(login + ' registered')
                 showWarningText('Регистрация успешна!', 'green')
-                setTimeout(() => navigate('/'), 1500)
+                setTimeout(() => navigate('/'), 1000)
             }
         }).catch(e => {
             console.log(e)
@@ -82,6 +96,8 @@ export default function Login() {
     }
 
 
+
+    if (isLoading) return <div>Loading...</div>
 
     return <div id='loginContainer'>
         <div id='loginWrapper'>
