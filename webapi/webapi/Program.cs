@@ -6,9 +6,12 @@ using webapi.Endpoints;
 using webapi.Repositories;
 using webapi.Services;
 using webapi.Configuration;
+using webapi.Hubs;
 
 var builder = WebApplication.CreateBuilder(args);
 var config = builder.Configuration;
+
+builder.Services.AddSignalR();
 
 builder.Services.AddDbContext<AppDbContext>(options =>
 {
@@ -38,7 +41,7 @@ builder.Services.AddTransient<IConfigureOptions<SwaggerGenOptions>, ConfigureSwa
 
 var app = builder.Build();
 
-app.UseCors("CORSPolicy");
+app.UseCORSPolicy();
 
 if (app.Environment.IsDevelopment())
 {
@@ -56,7 +59,9 @@ app.UseAuthorization();
 app.MapAuthEndpoints();
 app.MapUsersEndpoints();
 app.MapPlayHistoryEndpoints();
-app.MapPlayEndpoints();
+
+// games
+app.MapLobbyEndpoints();
 
 
 

@@ -23,6 +23,11 @@ public static class ServicesConfigurator
 		});
 	}
 
+	public static void UseCORSPolicy(this WebApplication app)
+	{
+		app.UseCors("CORSPolicy");
+	}
+
 	public static void ConfigureAuthentication(this IServiceCollection services, IConfiguration config)
 	{
 		services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(options =>
