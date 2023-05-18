@@ -1,5 +1,7 @@
-﻿using webapi.Models;
+﻿using Microsoft.AspNetCore.Authentication;
+using webapi.Models;
 using webapi.Repositories;
+using webapi.Services;
 
 namespace webapi.Endpoints;
 
@@ -7,13 +9,18 @@ public static class PlayHistoryEndpoint
 {
 	public static void MapPlayHistoryEndpoints(this WebApplication app)
 	{
-		app.MapGet("/history/{userId}", GetUserHistory);
+		app.MapGet("/history", GetUserHistory);
 		app.MapPost("/history", AddUserHistory);
 	}
 
-	internal static async Task<IResult> GetUserHistory(CheckersHistoryRepository history, long userId)
+	internal static async Task<IResult> GetUserHistory(HttpContext context, AuthService auth, CheckersHistoryRepository history)
 	{
-		var checkersHistory = await history.GetAsync(userId);
+		var accessToken = await context.GetTokenAsync(AuthEndpoint.ACCESS_TOKEN_COOKIE_NAME);
+		if (accessToken is null) return Results.Unauthorized();
+
+		(long userID, _) = auth.GetUserInfoFromAccessToken(accessToken);
+
+		var checkersHistory = await history.GetAsync(userID);
 		// other histories...
 
 		return Results.Ok(new

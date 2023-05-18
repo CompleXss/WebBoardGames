@@ -13,9 +13,20 @@ public class AuthService
 {
 	public static readonly TimeSpan accessTokenLifetime = TimeSpan.FromMinutes(1);
 	public static readonly TimeSpan refreshTokenLifetime = TimeSpan.FromDays(60);
+	public static readonly TimeSpan deviceID_CookieLifetime = TimeSpan.FromDays(400);
 
 	private readonly UserRefreshTokenRepository repo;
 	private readonly IConfiguration config;
+
+	private JwtSecurityTokenHandler? tokenHandler;
+	private JwtSecurityTokenHandler TokenHandler
+	{
+		get
+		{
+			tokenHandler ??= new JwtSecurityTokenHandler();
+			return tokenHandler;
+		}
+	}
 
 	public AuthService(IConfiguration config, UserRefreshTokenRepository userRefreshTokenRepo)
 	{
@@ -81,7 +92,7 @@ public class AuthService
 			signingCredentials: creds
 		);
 
-		return new JwtSecurityTokenHandler().WriteToken(token);
+		return TokenHandler.WriteToken(token);
 	}
 
 	public (long ID, string Name) GetUserInfoFromAccessToken(string accessToken)
@@ -100,8 +111,7 @@ public class AuthService
 
 	public JwtSecurityToken DecodeJwtToken(string token)
 	{
-		var tokenHandler = new JwtSecurityTokenHandler();
-		return tokenHandler.ReadJwtToken(token);
+		return TokenHandler.ReadJwtToken(token);
 	}
 
 	/// <returns><see cref="JwtSecurityToken"/> if token is valid. Null if it's not.</returns>
@@ -110,8 +120,7 @@ public class AuthService
 		if (accessToken is null)
 			return null;
 
-		var tokenHandler = new JwtSecurityTokenHandler();
-		var validationResult = await tokenHandler.ValidateTokenAsync(accessToken, ServicesConfigurator.GetJwtTokenValidationParameters(config));
+		var validationResult = await TokenHandler.ValidateTokenAsync(accessToken, ServicesConfigurator.GetJwtTokenValidationParameters(config));
 
 		return validationResult.IsValid
 			? validationResult.SecurityToken as JwtSecurityToken
@@ -124,8 +133,7 @@ public class AuthService
 		if (accessToken is null)
 			return null;
 
-		var tokenHandler = new JwtSecurityTokenHandler();
-		var validationResult = await tokenHandler.ValidateTokenAsync(accessToken, new TokenValidationParameters
+		var validationResult = await TokenHandler.ValidateTokenAsync(accessToken, new TokenValidationParameters
 		{
 			ValidIssuer = config["Jwt:Issuer"],
 			ValidAudience = config["Jwt:Audience"],
@@ -154,6 +162,21 @@ public class AuthService
 	{
 		var token = CreateRefreshToken();
 		return await repo.UpdateRefreshTokenAsync(userRefreshToken, token);
+	}
+
+	public async Task<bool> LogoutFromDevice(long userID, string deviceID)
+	{
+		return await repo.RemoveUserTokenDevice(userID, deviceID);
+	}
+
+	public async Task<bool> LogoutFromAllDevices(long userID)
+	{
+		return await repo.RemoveAllUserTokens(userID);
+	}
+
+	public async Task<bool> LogoutFromAllDevices_ExceptOne(long userID, string deviceID)
+	{
+		return await repo.RemoveUserTokensExceptOneDevice(userID, deviceID);
 	}
 
 

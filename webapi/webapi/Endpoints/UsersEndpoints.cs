@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Authentication;
+using webapi.Data;
 using webapi.Models;
 using webapi.Repositories;
 using webapi.Services;
@@ -16,8 +17,10 @@ public static class UsersEndpoints
 		app.MapGet("/user", GetAsync)
 			.Produces<User>();
 
-		app.MapDelete("/users/{username}", DeleteAsync);
+		app.MapDelete("/user", DeleteAsync);
 	}
+
+
 
 	internal static async Task<IResult> GetAllAsync(UsersRepository users)
 	{
@@ -30,7 +33,6 @@ public static class UsersEndpoints
 		if (accessToken is null) return Results.Unauthorized();
 
 		(long userID, string username) = auth.GetUserInfoFromAccessToken(accessToken);
-
 		var user = await users.GetAsync(userID);
 
 		return user != null
@@ -38,12 +40,20 @@ public static class UsersEndpoints
 			: Results.NotFound($"User '{username}' not found.");
 	}
 
-	internal static async Task<IResult> DeleteAsync(UsersRepository users, string username)
+	internal static async Task<IResult> DeleteAsync(HttpContext context, AuthService auth, UsersRepository users, AppDbContext db)
 	{
-		bool deleted = await users.DeleteAsync(username);
+		var accessToken = await context.GetTokenAsync(AuthEndpoint.ACCESS_TOKEN_COOKIE_NAME);
+		if (accessToken is null) return Results.Unauthorized();
 
-		return deleted
-			? Results.Ok($"User '{username}' was deleted.")
-			: Results.BadRequest($"Can not delete user '{username}'.");
+		(long userID, string username) = auth.GetUserInfoFromAccessToken(accessToken);
+
+		bool deleted = await users.DeleteAsync(userID);
+		if (deleted)
+		{
+			AuthEndpoint.DeleteTokenCookies(context.Response);
+			return Results.Ok($"User '{username}' was deleted.");
+		}
+		else
+			return Results.BadRequest($"Can not delete user '{username}'.");
 	}
 }

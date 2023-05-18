@@ -1,31 +1,32 @@
 import axios from 'axios'
 import { useQuery, useQueryClient } from 'react-query'
 import { useNavigate } from 'react-router-dom'
+import { useRef } from 'react'
+import LoadingContent from '../LoadingContent/loadingContent'
 import ENDPOINTS from '../../utilities/Api_Endpoints'
 import './profile.css'
 
 export default function Profile() {
+    const deleteAccountDialog = useRef<HTMLDialogElement>(null)
     const navigate = useNavigate()
     const queryClient = useQueryClient()
     const { data: user, isLoading: loadingUsername, error: errorUsername } = useQuery('profileUsername', fetchUsername)
-    const { data: deviceCountResp, isLoading: loadingDeviceCount, error: errorDeviceCount, refetch: refetchDeviceCount } = useQuery('profileDeviceCount', fetchDeviceCount, {
-        enabled: !loadingUsername
-    })
+    const { data: deviceCountResp, isLoading: loadingDeviceCount, error: errorDeviceCount, refetch: refetchDeviceCount } = useQuery('profileDeviceCount', fetchDeviceCount)
     const username = user ? user.name : 'loading'
     const deviceCount = deviceCountResp ?? '?'
 
-    async function logout() {
-        axios.post(ENDPOINTS.POST_LOGOUT_URL)
+    function logout() {
+        axios.post(ENDPOINTS.Auth.POST_LOGOUT_URL)
             .then(() => {
                 queryClient.removeQueries('profileUsername')
                 queryClient.removeQueries('profileDeviceCount')
-                navigate('/login')
+                navigate('/login', { state: { doNotRedirect: true } })
             })
             .catch(e => console.log(e))
     }
 
     function logoutFromAnotherDevices() {
-        axios.delete(ENDPOINTS.DELETE_ANOTHER_DEVICES_REFRESH_TOKENS_URL)
+        axios.post(ENDPOINTS.Auth.POST_LOGOUT_FROM_ANOTHER_DEVICES_URL)
             .then(response => {
                 if (response.status === 200) {
                     showWarningText('Успех!', 'green')
@@ -38,28 +39,52 @@ export default function Profile() {
             })
     }
 
+
+
+    function openDeleteDialog() {
+        deleteAccountDialog.current?.showModal()
+    }
+
+    function closeDeleteDialog() {
+        deleteAccountDialog.current?.close()
+    }
+
+    function deleteAccount() {
+        axios.delete(ENDPOINTS.Users.DELETE_USER_URL)
+            .then(response => {
+                showWarningText(false)
+                console.log(response.data)
+                navigate('/login', { state: { doNotRedirect: true } })
+            })
+            .catch(e => {
+                console.log(e)
+                showWarningText('Не удалось удалить аккаунт!', 'red')
+            })
+            .finally(() => {
+                closeDeleteDialog()
+            })
+    }
+
+
+
     function getProfileInfo() {
-        if (loadingUsername) return <p>Загружаю...</p>
         if (errorUsername) return <p>Произошла ошибка!</p>
 
-        return <div>
+        return <LoadingContent loading={loadingUsername} content={<div>
             <p>Никнейм (он же логин):</p>
             <p className='username'>{username}</p>
-        </div>
+        </div>} />
     }
 
     function getLoginDeviceInfo() {
-        if (loadingDeviceCount) return <p>Загружаю...</p>
         if (errorDeviceCount) return <p>Произошла ошибка!</p>
 
-        return <div>
+        return <LoadingContent loading={loadingDeviceCount} content={<div>
             <p id='loginCount'>{deviceCount}</p>
             <p id='deviceCountWarningText'>Сообщения еще нет...</p>
             <button onClick={logoutFromAnotherDevices}>Выйти со всех других устройств</button>
-        </div>
+        </div>} />
     }
-
-    if (loadingUsername) return <div>Loading...</div>
 
     return <div id='profileContainer'>
         <h1>Профиль</h1>
@@ -76,19 +101,25 @@ export default function Profile() {
         </div>
 
         <button id='exitBtn' onClick={logout}>Выйти<span className='icon' /></button>
-        <button id='deleteAccountBtn'>Удалить аккаунт</button>
+        <button id='deleteAccountBtn' onClick={openDeleteDialog}>Удалить аккаунт</button>
+        <dialog id='deleteAccountDialog' ref={deleteAccountDialog} className='myModal' onClose={closeDeleteDialog}>
+
+            <p>Уверены, что хотите <span>удалить аккаунт</span> ?</p>
+            <button onClick={deleteAccount}>Да</button>
+            <button onClick={closeDeleteDialog}>Нет</button>
+        </dialog>
     </div>
 }
 
 
 
 async function fetchUsername() {
-    return axios.get(ENDPOINTS.GET_USER_INFO_URL)
+    return axios.get(ENDPOINTS.Users.GET_USER_INFO_URL)
         .then(response => response.data)
 }
 
 async function fetchDeviceCount() {
-    return axios.get(ENDPOINTS.GET_USER_DEVICE_COUNT_URL)
+    return axios.get(ENDPOINTS.Auth.GET_USER_DEVICE_COUNT_URL)
         .then(response => response.data)
 }
 

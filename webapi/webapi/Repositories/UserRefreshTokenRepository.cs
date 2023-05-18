@@ -67,6 +67,25 @@ public class UserRefreshTokenRepository
 		}
 	}
 
+	public async Task<bool> RemoveUserTokenDevice(long userID, string deviceID)
+	{
+		try
+		{
+			var entryToDelete = await context.UserRefreshTokens.FindAsync(userID, deviceID);
+			if (entryToDelete is null)
+				return false;
+
+			context.UserRefreshTokens.Remove(entryToDelete);
+			await context.SaveChangesAsync();
+
+			return true;
+		}
+		catch (Exception)
+		{
+			return false;
+		}
+	}
+
 	public async Task<bool> RemoveUserTokensExceptOneDevice(long userID, string deviceID)
 	{
 		try

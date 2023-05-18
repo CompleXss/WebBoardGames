@@ -7,19 +7,34 @@ const BASE_URL =
         : BASE_URL_PRODUCTION
 
 const ENDPOINTS = {
-    POST_REGISTER_URL: BASE_URL + '/auth/register',
-    POST_LOGIN_URL: BASE_URL + '/auth/login',
-    POST_LOGOUT_URL: BASE_URL + '/auth/logout',
-    GET_REFRESH_TOKEN_URL: BASE_URL + '/auth/refresh',
-    
-    GET_IS_AUTHORIZED: BASE_URL + '/auth/isAuthorized',
-    GET_USER_DEVICE_COUNT_URL: BASE_URL + '/auth/deviceCount',
-    DELETE_ANOTHER_DEVICES_REFRESH_TOKENS_URL: BASE_URL + '/auth/anotherDevices-logout',
+    Auth: {
+        // register & login & refresh
+        POST_REGISTER_URL: BASE_URL + '/auth/register',
+        POST_LOGIN_URL: BASE_URL + '/auth/login',
+        POST_REFRESH_TOKEN_URL: BASE_URL + '/auth/refresh',
 
-    GET_USER_INFO_URL: BASE_URL + '/user',
-    GET_HISTORY_URL: BASE_URL + '/history/33',
+        // logout
+        POST_LOGOUT_URL: BASE_URL + '/auth/logout',
+        POST_LOGOUT_FROM_ALL_DEVICES_URL: BASE_URL + '/auth/logout-from-all-devices',
+        POST_LOGOUT_FROM_ANOTHER_DEVICES_URL: BASE_URL + '/auth/logout-from-another-devices',
+
+        // other
+        GET_IS_AUTHORIZED: BASE_URL + '/auth/isAuthorized',
+        GET_USER_DEVICE_COUNT_URL: BASE_URL + '/auth/deviceCount',
+    },
+
+    Users: {
+        GET_USER_INFO_URL: BASE_URL + '/user',
+        DELETE_USER_URL: BASE_URL + '/user',
+    },
+
+    GET_HISTORY_URL: BASE_URL + '/history',
     GET_CHECKERS_GAME_URL: BASE_URL + '/',
     GET_ACTIVE_GAME_URL: BASE_URL + '/',
+
+    Hubs: {
+        CHECKERS_LOBBY: BASE_URL + '/lobby/checkers',
+    },
 }
 
 export default ENDPOINTS

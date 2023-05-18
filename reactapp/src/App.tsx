@@ -1,5 +1,6 @@
 import React from 'react';
 import { Routes, Route, Navigate, useNavigate } from 'react-router-dom';
+import RequireAuth from './components/RequireAuth/RequireAuth';
 import NavPanel from './components/NavPanel/navPanel';
 import Home from './components/Home/home';
 import Login from './components/Login/login';
@@ -22,16 +23,16 @@ export default function App() {
       <main>
         <Routes>
           <Route path='/' element={<Home />} />
-          <Route path='/login' element={<Login />} />
-          <Route path='/profile' element={<Profile />} />
-          <Route path='/history' element={<History />} />
+          <Route path='/login' element={<RequireAuth onOk={<Login />} redirect='/profile' inverse />} />
+          <Route path='/profile' element={<RequireAuth onOk={<Profile />} />} />
+          <Route path='/history' element={<RequireAuth onOk={<History />} />} />
           <Route path='/leaderboard' element={<Leaderboard />} />
           <Route path='/about' element={<About />} />
-          <Route path='/lobby/checkers' element={<CheckersLobby />} />
-          <Route path='/play/checkers' element={<CheckersGame />} />
+          <Route path='/lobby/checkers' element={<RequireAuth onOk={<CheckersLobby />} />} />
+          <Route path='/play/checkers' element={<RequireAuth onOk={<CheckersGame />} />} />
           <Route path='*' element={<Navigate to={'/'} replace={true} />} />
         </Routes>
       </main>
     </div>
-  );
+  )
 }

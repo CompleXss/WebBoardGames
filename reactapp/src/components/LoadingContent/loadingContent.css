@@ -1,0 +1,13 @@
+.loadingContent {
+    position: relative;
+}
+
+.loadingBackground {
+    display: flex;
+    position: absolute;
+    box-sizing: border-box;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    height: 100%;
+}

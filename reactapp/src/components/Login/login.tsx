@@ -1,7 +1,6 @@
 import axios from 'axios'
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useQuery } from 'react-query'
 import ENDPOINTS from '../../utilities/Api_Endpoints'
 import './login.css'
 
@@ -12,19 +11,6 @@ export default function Login() {
     const [isLogin, setIsLogin] = useState(true)
     const navigate = useNavigate()
     
-    const { isLoading } = useQuery('navPanel', isAuthorized, {
-        retry: false
-    })
-
-    async function isAuthorized() {
-        return axios.get(ENDPOINTS.GET_IS_AUTHORIZED)
-            .then(reponse => {
-                if (reponse.data.isAuthorized) {
-                    navigate('/profile')
-                }
-            })
-    }
-
     function switchMode() {
         let loginBtn = document.getElementById('loginBtn')
         let registerBtn = document.getElementById('registerBtn')
@@ -62,7 +48,7 @@ export default function Login() {
     function login(login: string, password: string) {
         console.log('trying to login ' + login)
 
-        axios.post(ENDPOINTS.POST_LOGIN_URL, {
+        axios.post(ENDPOINTS.Auth.POST_LOGIN_URL, {
             name: login,
             password: password,
         }).then(response => {
@@ -80,7 +66,7 @@ export default function Login() {
     function register(login: string, password: string) {
         console.log('trying to register ' + login)
 
-        axios.post(ENDPOINTS.POST_REGISTER_URL, {
+        axios.post(ENDPOINTS.Auth.POST_REGISTER_URL, {
             name: login,
             password: password,
         }).then(response => {
@@ -96,8 +82,6 @@ export default function Login() {
     }
 
 
-
-    if (isLoading) return <div>Loading...</div>
 
     return <div id='loginContainer'>
         <div id='loginWrapper'>

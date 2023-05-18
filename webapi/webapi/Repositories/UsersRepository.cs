@@ -23,7 +23,7 @@ public class UsersRepository
 		return await context.Users.ToListAsync();
 	}
 
-	public async Task<User?> GetAsync(long id) => await context.Users.FindAsync(id);
+	public async Task<User?> GetAsync(long userID) => await context.Users.FindAsync(userID);
 	public async Task<User?> GetAsync(string username) => await context.Users.FirstOrDefaultAsync(x => x.Name == username);
 
 
@@ -49,18 +49,27 @@ public class UsersRepository
 		return await DeleteAsync(userToRemove);
 	}
 
-	public async Task<bool> DeleteAsync(long id)
+	public async Task<bool> DeleteAsync(long userID)
 	{
-		var userToRemove = await GetAsync(id);
+		var userToRemove = await GetAsync(userID);
 		return await DeleteAsync(userToRemove);
 	}
 
-	private async Task<bool> DeleteAsync(User? userToRemove)
+	public async Task<bool> DeleteAsync(User? userToRemove)
 	{
-		if (userToRemove == null)
+		if (userToRemove is null)
 			return false;
 
-		context.Users.Remove(userToRemove);
-		return await context.SaveChangesAsync() >= 1;
+		try
+		{
+			context.Users.Remove(userToRemove);
+			await context.SaveChangesAsync();
+
+			return true;
+		}
+		catch (Exception)
+		{
+			return false;
+		}
 	}
 }

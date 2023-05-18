@@ -9,6 +9,8 @@ axios.defaults.withCredentials = true
 axios.interceptors.request.clear()
 axios.interceptors.response.clear()
 
+
+
 // error => try refresh token pair if 401
 axios.interceptors.response.use(response => response, async error => {
     if (refreshing || !error.response || error.response.status !== 401) {
@@ -35,13 +37,14 @@ axios.interceptors.response.use(response => response, async error => {
 
 async function refreshTokenPair(config: any) {
     try {
-        const response = await axios.get(ENDPOINTS.GET_REFRESH_TOKEN_URL, config)
+        const response = await axios.post(ENDPOINTS.Auth.POST_REFRESH_TOKEN_URL, config)
 
         if (response.status === 200) {
             return axios(config)
         }
 
     } catch (e) {
+        console.log(e)
     }
 }
 
@@ -49,10 +52,11 @@ export function setNavigateFunc(navigate: NavigateFunction) {
     navigateFunc = navigate;
 }
 
-export async function isAuthorized() {
+export async function isAuthorized(): Promise<boolean> {
     const config: any = { doNotRedirect: true }
-    return axios.get(ENDPOINTS.GET_IS_AUTHORIZED, config)
-        .then(response => response.data)
+    return axios.get(ENDPOINTS.Auth.GET_IS_AUTHORIZED, config)
+        .then(_ => true)
+        .catch(_ => false)
 }
 
 function navigate(path: string) {
