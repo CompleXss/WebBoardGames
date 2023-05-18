@@ -2,7 +2,7 @@ import { NavLink } from "react-router-dom";
 import AccountIcon from '../../SVGs/account'
 import './navPanel.css'
 
-// TODO: you can spam /profile button (server requests spam)
+// TODO: can tab to hidden buttons in mobile mode
 
 export default function NavPanel() {
     return (
@@ -14,14 +14,14 @@ export default function NavPanel() {
             <NavLink id='profileLink' to={'/profile'}>
                 <AccountIcon className='accountIcon' />
             </NavLink>
-            <button className='burger' onClick={openBurger}></button>
+            <button className='burger' onClick={toggleBurger}></button>
         </nav>
     )
 }
 
 
 
-function openBurger() {
+function toggleBurger() {
     let nav = document.getElementById('nav');
     if (nav === null) return;
 
