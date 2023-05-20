@@ -1,7 +1,7 @@
 import axios from 'axios'
 import { useQuery, useQueryClient } from 'react-query'
 import { useNavigate } from 'react-router-dom'
-import { useRef } from 'react'
+import { useEffect, useRef } from 'react'
 import LoadingContent from '../LoadingContent/loadingContent'
 import ENDPOINTS from '../../utilities/Api_Endpoints'
 import './profile.css'
@@ -14,6 +14,10 @@ export default function Profile() {
     const { data: deviceCountResp, isLoading: loadingDeviceCount, error: errorDeviceCount, refetch: refetchDeviceCount } = useQuery('profileDeviceCount', fetchDeviceCount)
     const username = user ? user.name : 'loading'
     const deviceCount = deviceCountResp ?? '?'
+
+    useEffect(() => {
+        document.title = 'Профиль'
+    }, [])
 
     function logout() {
         axios.post(ENDPOINTS.Auth.POST_LOGOUT_URL)
@@ -86,7 +90,9 @@ export default function Profile() {
         </div>} />
     }
 
-    return <div id='profileContainer'>
+
+
+    return <div className='profileContainer'>
         <h1>Профиль</h1>
 
         <div id='accountInfo'>
@@ -100,10 +106,10 @@ export default function Profile() {
             {getLoginDeviceInfo()}
         </div>
 
-        <button id='exitBtn' onClick={logout}>Выйти<span className='icon' /></button>
+        <button className='exitBtn' onClick={logout}>Выйти<span className='icon' /></button>
         <button id='deleteAccountBtn' onClick={openDeleteDialog}>Удалить аккаунт</button>
-        <dialog id='deleteAccountDialog' ref={deleteAccountDialog} className='myModal' onClose={closeDeleteDialog}>
 
+        <dialog id='deleteAccountDialog' ref={deleteAccountDialog} onClose={closeDeleteDialog}>
             <p>Уверены, что хотите <span>удалить аккаунт</span> ?</p>
             <button onClick={deleteAccount}>Да</button>
             <button onClick={closeDeleteDialog}>Нет</button>

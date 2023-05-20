@@ -1,4 +1,6 @@
-#profileContainer {
+@import url(profileDeleteAccountDialog.css);
+
+.profileContainer {
     display: grid;
     justify-items: center;
     box-sizing: border-box;
@@ -18,7 +20,7 @@
     background-color: var(--background);
 }
 
-#profileContainer p {
+.profileContainer p {
     font-size: 1.1em;
 }
 
@@ -84,7 +86,7 @@
     background-color: var(--background);
 }
 
-#profileContainer button {
+.profileContainer button {
     display: block;
     cursor: pointer;
     border: none;
@@ -96,34 +98,34 @@
     padding: 12px 32px;
 
     box-shadow: 0 0 12px black;
-    background-color: whitesmoke;
+    background-color: var(--white-btn);
     color: black;
 }
 
-#profileContainer button:hover {
-    background-color: #ccc;
+.profileContainer button:hover {
+    background-color: var(--white-btn-hover);
 }
 
-#profileContainer button:active {
-    background-color: #aaa;
+.profileContainer button:active {
+    background-color: var(--white-btn-active);
 }
 
-#profileContainer #deleteAccountBtn {
+.profileContainer #deleteAccountBtn {
     font-size: 1.3em;
     color: whitesmoke;
     width: fit-content;
 
     grid-row: 3;
     grid-column: 1;
-    background-color: #aa0000;
+    background-color: var(--red-btn);
 }
 
-#profileContainer #deleteAccountBtn:hover {
-    background-color: #880000;
+.profileContainer #deleteAccountBtn:hover {
+    background-color: var(--red-btn-hover);
 }
 
-#profileContainer #deleteAccountBtn:active {
-    background-color: #770000;
+.profileContainer #deleteAccountBtn:active {
+    background-color: var(--red-btn-active);
 }
 
 #deviceCountWarningText {
@@ -131,28 +133,17 @@
     opacity: 0;
 }
 
-#profileContainer #exitBtn {
+.profileContainer .exitBtn {
     grid-row: 1;
     grid-column: 2;
 
     padding-right: 16px;
 }
 
-#exitBtn .icon {
-    float: right;
-    margin: 0;
-    margin-left: 16px;
-    width: 22px;
-    height: 22px;
-    
-    background: url(/images/logout.svg) no-repeat;
-    background-size: contain;
-}
-
 
 
 @media all and (max-width: 950px) {
-    #profileContainer {
+    .profileContainer {
         grid-template-rows: 0.5fr auto auto 0.25fr 0.25fr;
         grid-template-columns: 1fr;
     }
@@ -162,16 +153,12 @@
         grid-column: 1;
     }
 
-    #profileContainer #exitBtn {
+    .profileContainer .exitBtn {
         grid-row: 4;
         grid-column: 1;
     }
 
-    #profileContainer #deleteAccountBtn {
+    .profileContainer #deleteAccountBtn {
         grid-row: 5;
     }
 }
-
-
-
-@import url(profileDeleteAccountDialog.css)
