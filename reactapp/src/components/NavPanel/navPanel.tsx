@@ -6,12 +6,12 @@ import './navPanel.css'
 
 export default function NavPanel() {
     return (
-        <nav id="nav" className="closed">
+        <nav id='nav'>
             <NavLink to={'/'} onClick={hideBurger}> Home </NavLink>
             <NavLink to={'/history'} onClick={hideBurger}> History </NavLink>
             <NavLink to={'/leaderboard'} onClick={hideBurger}> Leaderboard </NavLink>
             <NavLink to={'/about'} onClick={hideBurger}> About </NavLink>
-            <NavLink id='profileLink' to={'/profile'}>
+            <NavLink to={'/profile'}>
                 <AccountIcon className='accountIcon' />
             </NavLink>
             <button className='burger' onClick={toggleBurger}></button>
@@ -22,17 +22,18 @@ export default function NavPanel() {
 
 
 function toggleBurger() {
-    let nav = document.getElementById('nav');
-    if (nav === null) return;
+    const nav = document.getElementById('nav')
+    if (nav === null) return
 
-    nav.className = nav.className === 'closed'
-        ? 'open'
-        : 'closed'
+    if (nav.classList.contains('open'))
+        nav.classList.remove('open')
+    else
+        nav.classList.add('open')
 }
 
 function hideBurger() {
-    let nav = document.getElementById('nav');
-    if (nav === null) return;
+    const nav = document.getElementById('nav')
+    if (nav === null) return
 
-    nav.className = 'closed'
+    nav.classList.remove('open')
 }
