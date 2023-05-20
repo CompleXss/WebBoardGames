@@ -8,7 +8,7 @@ import Profile from './components/Profile/profile';
 import History from './components/History/history';
 import Leaderboard from './components/LeaderBoard/leaderboard';
 import About from './components/About/about';
-import CheckersLobby from './components/Games/Checkers/checkersLobby';
+import CheckersLobby from './components/Games/Checkers/Lobby/checkersLobby';
 import CheckersGame from './components/Games/Checkers/checkersGame';
 import { setNavigateFunc } from './utilities/auth';
 import './App.css'
