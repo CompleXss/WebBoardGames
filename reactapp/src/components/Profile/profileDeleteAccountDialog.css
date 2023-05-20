@@ -1,4 +1,4 @@
-#profileContainer dialog {
+#deleteAccountDialog {
     text-align: center;
     color: whitesmoke;
     
@@ -8,32 +8,32 @@
     background-color: var(--foreground);
 }
 
-#profileContainer dialog::backdrop {
+#deleteAccountDialog::backdrop {
     background-color: rgba(0, 0, 0, 0.5);
 }
 
-#profileContainer dialog p {
+#deleteAccountDialog p {
     font-size: 1.3em;
 }
 
-#profileContainer dialog p span {
+#deleteAccountDialog p span {
     font-weight: bold;
     color: red;
 }
 
-#profileContainer dialog button {
+#deleteAccountDialog button {
     display: inline;
 }
 
-#profileContainer dialog button:first-of-type {
+#deleteAccountDialog button:first-of-type {
     color: whitesmoke;
     background-color: #aa0000;
 }
 
-#profileContainer dialog button:first-of-type:hover {
+#deleteAccountDialog button:first-of-type:hover {
     background-color: #880000;
 }
 
-#profileContainer dialog button:first-of-type:active {
+#deleteAccountDialog button:first-of-type:active {
     background-color: #770000;
 }
