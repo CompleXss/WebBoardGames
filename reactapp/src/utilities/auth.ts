@@ -44,7 +44,8 @@ async function refreshTokenPair(config: any) {
         }
 
     } catch (e) {
-        console.log(e)
+        const response = (e as any).response
+        console.log(response ?? e)
     }
 }
 
