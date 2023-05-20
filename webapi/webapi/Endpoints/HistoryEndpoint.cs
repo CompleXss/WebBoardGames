@@ -13,12 +13,12 @@ public static class PlayHistoryEndpoint
 		app.MapPost("/history", AddUserHistory);
 	}
 
-	internal static async Task<IResult> GetUserHistory(HttpContext context, AuthService auth, CheckersHistoryRepository history)
+	internal static async Task<IResult> GetUserHistory(HttpContext context, CheckersHistoryRepository history)
 	{
 		var accessToken = await context.GetTokenAsync(AuthEndpoint.ACCESS_TOKEN_COOKIE_NAME);
 		if (accessToken is null) return Results.Unauthorized();
 
-		(long userID, _) = auth.GetUserInfoFromAccessToken(accessToken);
+		var userID = AuthService.GetUserInfoFromAccessToken(accessToken).ID;
 
 		var checkersHistory = await history.GetAsync(userID);
 		// other histories...

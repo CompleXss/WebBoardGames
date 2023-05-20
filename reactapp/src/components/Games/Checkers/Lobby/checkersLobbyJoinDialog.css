@@ -1,0 +1,39 @@
+@import url(checkersLobbyJoinDialogButtons.css);
+
+.checkersLobbyWrapper dialog {
+    text-align: center;
+    color: whitesmoke;
+
+    border-radius: 12px;
+    border: 2px solid black;
+    box-shadow: 0 0 12px var(--background);
+    background-color: var(--foreground);
+}
+
+.checkersLobbyWrapper dialog::backdrop {
+    background-color: rgba(0, 0, 0, 0.5);
+}
+
+.checkersLobbyWrapper dialog p {
+    font-size: 1.4em;
+}
+
+.checkersLobbyWrapper dialog button {
+    display: inline;
+}
+
+.checkersLobbyWrapper dialog input {
+    display: block;
+    font-size: 1.5em;
+    text-align: center;
+    width: 5em;
+
+    margin: auto;
+    margin-top: 16px;
+    margin-bottom: 16px;
+
+    border: 1px solid black;
+    border-radius: 10px;
+    padding: 10px;
+    background-color: whitesmoke;
+}

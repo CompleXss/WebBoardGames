@@ -67,7 +67,7 @@ public static class AuthEndpoint
 		var providedAccessToken = await auth.ValidateAccessTokenAsync_DontCheckExpireDate(providedAccessToken_str);
 		if (providedAccessToken is null) return Results.Unauthorized();
 
-		(long userID, string userName) = auth.GetUserInfoFromAccessToken(providedAccessToken);
+		var user = AuthService.GetUserInfoFromAccessToken(providedAccessToken);
 
 		var providedRefreshToken = context.Request.Cookies[REFRESH_TOKEN_COOKIE_NAME];
 		if (providedRefreshToken is null)
@@ -80,7 +80,7 @@ public static class AuthEndpoint
 
 
 		// Get user's active refresh token
-		var activeUserRefreshToken = await auth.FindUserRefreshTokenAsync(userID, deviceID);
+		var activeUserRefreshToken = await auth.FindUserRefreshTokenAsync(user.ID, deviceID);
 		if (activeUserRefreshToken is null)
 			return Results.BadRequest("This user does not have a Refresh Token for provided Device Guid.");
 
@@ -103,7 +103,7 @@ public static class AuthEndpoint
 		if (refreshToken is null)
 			return Results.Problem("Can not update refresh token.");
 
-		var accessToken = auth.CreateAccessToken(userID, userName);
+		var accessToken = auth.CreateAccessToken(user.ID, user.Name);
 		AddCookiesToResponse(context.Response, deviceID, accessToken, refreshToken);
 
 		return Results.Ok();
@@ -111,12 +111,12 @@ public static class AuthEndpoint
 
 	internal static IResult IsAuthorized() => Results.Ok();
 
-	internal static async Task<IResult> GetLoginDeviceCountAsync(HttpContext context, AuthService auth, UserRefreshTokenRepository repo)
+	internal static async Task<IResult> GetLoginDeviceCountAsync(HttpContext context, UserRefreshTokenRepository repo)
 	{
 		var accessToken = await context.GetTokenAsync(ACCESS_TOKEN_COOKIE_NAME);
 		if (accessToken is null) return Results.Unauthorized();
 
-		(long userID, _) = auth.GetUserInfoFromAccessToken(accessToken);
+		var userID = AuthService.GetUserInfoFromAccessToken(accessToken).ID;
 		var deviceCount = await repo.GetUserDeviceCount(userID);
 
 		return Results.Ok(deviceCount);
@@ -132,7 +132,7 @@ public static class AuthEndpoint
 		var deviceID = context.Request.Cookies[DEVICE_ID_COOKIE_NAME];
 		if (deviceID is null) return Results.BadRequest("Provided Device Guid is null.");
 
-		(long userID, _) = auth.GetUserInfoFromAccessToken(accessToken);
+		var userID = AuthService.GetUserInfoFromAccessToken(accessToken).ID;
 
 		if (!await auth.LogoutFromDevice(userID, deviceID))
 			return Results.Problem("Can not logout from this device.");
@@ -147,7 +147,7 @@ public static class AuthEndpoint
 		var accessToken = await context.GetTokenAsync(ACCESS_TOKEN_COOKIE_NAME);
 		if (accessToken is null) return Results.Unauthorized();
 
-		(long userID, _) = auth.GetUserInfoFromAccessToken(accessToken);
+		var userID = AuthService.GetUserInfoFromAccessToken(accessToken).ID;
 
 		if (!await auth.LogoutFromAllDevices(userID))
 			return Results.Problem("Can not logout from all devices.");
@@ -165,7 +165,7 @@ public static class AuthEndpoint
 		var deviceID = context.Request.Cookies[DEVICE_ID_COOKIE_NAME];
 		if (deviceID is null) return Results.BadRequest("Provided Device Guid is null.");
 
-		(long userID, _) = auth.GetUserInfoFromAccessToken(accessToken);
+		var userID = AuthService.GetUserInfoFromAccessToken(accessToken).ID;
 		bool succeeded = await auth.LogoutFromAllDevices_ExceptOne(userID, deviceID);
 
 		return succeeded

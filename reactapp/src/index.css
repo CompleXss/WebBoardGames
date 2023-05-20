@@ -1,9 +1,23 @@
-@import url("https://fonts.googleapis.com/css2?family=Montserrat");
+@import url("https://fonts.googleapis.com/css?family=Montserrat");
+@import url("https://fonts.googleapis.com/css?family=Courier+New");
 
 :root {
   --background: #171717;
   --foreground: #272727;
   --orange: #fddb3a;
+
+  --white-btn: whitesmoke;
+  --white-btn-hover: #ccc;
+  --white-btn-active: #bababa;
+
+  --red-btn: #aa0000;
+  --red-btn-hover: #880000;
+  --red-btn-active: #770000;
+
+  --green-btn: #008800;
+  --green-btn-hover: #007000;
+  --green-btn-active: #006000;
+
   --win-color: green;
   --loose-color: red;
 }
@@ -13,8 +27,8 @@ body {
   padding: 0;
   color: whitesmoke;
   background: var(--foreground);
-  
-  font-family: -apple-system, BlinkMacSystemFont, 'Montserrat', 'Segoe UI', 'Roboto', 'Oxygen',
+
+  font-family: -apple-system, BlinkMacSystemFont, 'Montserrat', 'Roboto', 'Segoe UI', 'Oxygen',
     'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
     sans-serif;
   -webkit-font-smoothing: antialiased;

@@ -1,0 +1,164 @@
+@import url(checkersLobbyJoinDialog.css);
+@import url(checkersLobbyButtons.css);
+
+.checkersLobbyWrapper {
+    display: flex;
+    box-sizing: border-box;
+    flex-direction: column;
+    align-self: center;
+
+    flex-grow: 1;
+    justify-content: center;
+    align-items: center;
+    border-radius: 16px;
+
+    width: 80%;
+    max-width: 120vh;
+    padding: 24px 36px;
+    margin-bottom: 5%;
+    margin-top: 5%;
+
+    background: url(/images/checkers-bg.jpg) no-repeat;
+    background-size: cover;
+    background-position: center;
+    box-shadow: 0 0 8px var(--background);
+}
+
+#lobbyKeyWarningMessage {
+    opacity: 0;
+    font-size: 1.1em;
+    text-align: left;
+    margin-left: 12px;
+
+    margin-top: 0;
+    margin-bottom: 0;
+}
+
+
+
+/* Main lobby */
+.checkersLobbyWrapper.open {
+    justify-content: flex-start;
+
+    background: none;
+    background-color: var(--background);
+    box-shadow: 0 0 8px var(--background);
+}
+
+.checkersLobbyWrapper hr {
+    width: 90%;
+    margin-bottom: 12px;
+}
+
+
+
+/* Lobby key */
+.checkersLobbyWrapper .lobbyKeyWrapper {
+    box-sizing: border-box;
+    text-align: center;
+
+    margin-top: 24px;
+    margin-bottom: 24px;
+
+    padding: 12px;
+    border-radius: 10px;
+    background-color: var(--foreground);
+}
+
+.checkersLobbyWrapper .lobbyKeyWrapper h2 {
+    display: inline-block;
+    font-size: 2em;
+    vertical-align: middle;
+
+    margin: 12px;
+    margin-right: 0.7em;
+}
+
+.checkersLobbyWrapper .lobbyKey {
+    display: inline-block;
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 2.5em;
+    vertical-align: middle;
+
+    margin: 0;
+    padding: 24px;
+    border-radius: 10px;
+    background-color: var(--background);
+}
+
+
+
+/* Player list */
+.checkersLobbyWrapper .playersList {
+    box-sizing: border-box;
+    align-self: flex-start;
+    border: 2px solid whitesmoke;
+    padding: 16px;
+    margin-top: 24px;
+    margin-bottom: 24px;
+
+    border-radius: 10px;
+    background-color: var(--foreground);
+}
+
+.checkersLobbyWrapper .playersList legend {
+    font-size: 1.6em;
+    margin-left: 16px;
+    margin-right: 120px;
+
+    padding: 6px 12px;
+    border-radius: 10px;
+}
+
+.checkersLobbyWrapper .playersList hr {
+    margin: auto;
+    margin-top: 0;
+    margin-bottom: 18px;
+
+    width: 95%;
+}
+
+.checkersLobbyWrapper .playersList p {
+    font-size: 1.5em;
+    text-align: start;
+
+    word-break: break-all;
+    width: fit-content;
+
+    margin: 10px;
+    padding: 12px 18px;
+    border-radius: 10px;
+    background-color: var(--background);
+}
+
+.checkersLobbyWrapper .playerListButtonsWrapper {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+
+    width: 100%;
+}
+
+.checkersLobbyWrapper .btnWrapper {
+    display: flex;
+    flex-direction: column;
+}
+
+
+
+@media all and (max-width: 1000px) {
+    .checkersLobbyWrapper .playerListButtonsWrapper {
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+
+    .checkersLobbyWrapper .playersList {
+        width: 100%;
+    }
+
+    .checkersLobbyWrapper .playersList legend {
+        margin-left: auto;
+        margin-right: auto;
+    }
+}

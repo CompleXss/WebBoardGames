@@ -1,0 +1,51 @@
+.checkersLobbyWrapper button {
+    cursor: pointer;
+    border: none;
+    font-size: 1.3em;
+    border-radius: 8px;
+
+    margin: 10px 16px;
+    padding: 16px 32px;
+    box-shadow: 0 2px 12px black;
+    background-color: #202020;
+    color: whitesmoke;
+}
+
+.checkersLobbyWrapper button:hover {
+    background-color: #171717;
+}
+
+.checkersLobbyWrapper button:active {
+    background-color: #0a0a0a;
+}
+
+
+
+/* Start game button */
+.checkersLobbyWrapper .startGameBtn {
+    background-color: var(--green-btn);
+}
+
+.checkersLobbyWrapper .startGameBtn:hover {
+    background-color: var(--green-btn-hover);
+}
+
+.checkersLobbyWrapper .startGameBtn:active {
+    background-color: var(--green-btn-active);
+}
+
+
+
+/* Leave lobby button */
+.checkersLobbyWrapper .exitBtn {
+    background-color: var(--white-btn);
+    color: black;
+}
+
+.checkersLobbyWrapper .exitBtn:hover {
+    background-color: var(--white-btn-hover);
+}
+
+.checkersLobbyWrapper .exitBtn:active {
+    background-color: var(--white-btn-active);
+}

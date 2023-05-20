@@ -18,16 +18,6 @@ public class AuthService
 	private readonly UserRefreshTokenRepository repo;
 	private readonly IConfiguration config;
 
-	private JwtSecurityTokenHandler? tokenHandler;
-	private JwtSecurityTokenHandler TokenHandler
-	{
-		get
-		{
-			tokenHandler ??= new JwtSecurityTokenHandler();
-			return tokenHandler;
-		}
-	}
-
 	public AuthService(IConfiguration config, UserRefreshTokenRepository userRefreshTokenRepo)
 	{
 		this.config = config;
@@ -92,26 +82,32 @@ public class AuthService
 			signingCredentials: creds
 		);
 
-		return TokenHandler.WriteToken(token);
+		var tokenHandler = new JwtSecurityTokenHandler();
+		return tokenHandler.WriteToken(token);
 	}
 
-	public (long ID, string Name) GetUserInfoFromAccessToken(string accessToken)
+	public static UserTokenInfo GetUserInfoFromAccessToken(string accessToken)
 	{
 		var decodedToken = DecodeJwtToken(accessToken);
 		return GetUserInfoFromAccessToken(decodedToken);
 	}
 
-	public (long ID, string Name) GetUserInfoFromAccessToken(JwtSecurityToken accessToken)
+	public static UserTokenInfo GetUserInfoFromAccessToken(JwtSecurityToken accessToken)
 	{
 		long userID = long.Parse(accessToken.Claims.FirstOrDefault(x => x.Type == JwtRegisteredClaimNames.Sub)!.Value);
 		string userName = accessToken.Claims.FirstOrDefault(x => x.Type == JwtRegisteredClaimNames.Name)!.Value;
 
-		return (userID, userName);
+		return new UserTokenInfo()
+		{
+			ID = userID,
+			Name = userName,
+		};
 	}
 
-	public JwtSecurityToken DecodeJwtToken(string token)
+	public static JwtSecurityToken DecodeJwtToken(string token)
 	{
-		return TokenHandler.ReadJwtToken(token);
+		var tokenHandler = new JwtSecurityTokenHandler();
+		return tokenHandler.ReadJwtToken(token);
 	}
 
 	/// <returns><see cref="JwtSecurityToken"/> if token is valid. Null if it's not.</returns>
@@ -120,7 +116,8 @@ public class AuthService
 		if (accessToken is null)
 			return null;
 
-		var validationResult = await TokenHandler.ValidateTokenAsync(accessToken, ServicesConfigurator.GetJwtTokenValidationParameters(config));
+		var tokenHandler = new JwtSecurityTokenHandler();
+		var validationResult = await tokenHandler.ValidateTokenAsync(accessToken, ServicesConfigurator.GetJwtTokenValidationParameters(config));
 
 		return validationResult.IsValid
 			? validationResult.SecurityToken as JwtSecurityToken
@@ -133,7 +130,8 @@ public class AuthService
 		if (accessToken is null)
 			return null;
 
-		var validationResult = await TokenHandler.ValidateTokenAsync(accessToken, new TokenValidationParameters
+		var tokenHandler = new JwtSecurityTokenHandler();
+		var validationResult = await tokenHandler.ValidateTokenAsync(accessToken, new TokenValidationParameters
 		{
 			ValidIssuer = config["Jwt:Issuer"],
 			ValidAudience = config["Jwt:Audience"],

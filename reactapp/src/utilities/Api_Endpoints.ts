@@ -25,6 +25,7 @@ const ENDPOINTS = {
 
     Users: {
         GET_USER_INFO_URL: BASE_URL + '/user',
+        GET_USER_INFO_BY_ID_URL: BASE_URL + '/user/',
         DELETE_USER_URL: BASE_URL + '/user',
     },
 

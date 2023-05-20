@@ -6,7 +6,6 @@ using webapi.Endpoints;
 using webapi.Repositories;
 using webapi.Services;
 using webapi.Configuration;
-using webapi.Hubs;
 
 var builder = WebApplication.CreateBuilder(args);
 var config = builder.Configuration;
@@ -23,7 +22,7 @@ builder.Services.AddTransient<CheckersUserRepository>();
 builder.Services.AddTransient<CheckersHistoryRepository>();
 builder.Services.AddTransient<AuthService>();
 
-builder.Services.AddSingleton<CheckersService>();
+builder.Services.AddSingleton<CheckersLobbyService>();
 
 // Configure Authentication & Authorization
 builder.Services.ConfigureAuthentication(config);
