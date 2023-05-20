@@ -1,7 +1,7 @@
-import { useEffect, useState } from 'react';
-import ENDPOINTS from '../../../utilities/Api_Endpoints';
-import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import ENDPOINTS from '../../../utilities/Api_Endpoints';
 import './checkersGame.css'
 
 interface Point {
@@ -19,6 +19,10 @@ export default function CheckersGame() {
     const [loading, setLoading] = useState(false) // set to true
     const [gameData, setGameData] = useState<GameData | null>(null)
     const navigate = useNavigate()
+
+    useEffect(() => {
+        document.title = 'Шашки'
+    }, [])
 
     // useEffect(() => {
     //     const fetchData = () => {

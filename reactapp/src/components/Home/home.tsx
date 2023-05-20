@@ -18,6 +18,10 @@ export default function Home() {
     const [chessUrl, setChessUrl] = useState('/')
     const [monopolyUrl, setMonopolyUrl] = useState('/')
 
+    useEffect(() => {
+        document.title = 'Главная'
+    }, [])
+
     // useEffect(() => {
     //     const fetchData = () => {
     //         axios.get(ENDPOINTS.GET_ACTIVE_GAME_URL)

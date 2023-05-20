@@ -1,5 +1,5 @@
 import axios from 'axios'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import ENDPOINTS from '../../utilities/Api_Endpoints'
 import './login.css'
@@ -11,6 +11,10 @@ export default function Login() {
     const [isLogin, setIsLogin] = useState(true)
     const navigate = useNavigate()
     
+    useEffect(() => {
+        document.title = 'Авторизация'
+    }, [])
+
     function switchMode() {
         let loginBtn = document.getElementById('loginBtn')
         let registerBtn = document.getElementById('registerBtn')

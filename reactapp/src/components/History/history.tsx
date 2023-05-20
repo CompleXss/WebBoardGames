@@ -1,4 +1,5 @@
 import axios from 'axios'
+import { useEffect } from 'react'
 import { useQuery } from 'react-query'
 import { GameHistory } from './gameHistoryTypes'
 import { mapCheckers } from './gameHistoryMappers'
@@ -9,6 +10,10 @@ import './history.css'
 export default function History() {
     const { data, isLoading, isError } = useQuery('history', fetchData)
     const history = data as GameHistory
+
+    useEffect(() => {
+        document.title = 'История игр'
+    }, [])
 
     const games = !history ? [] : Object.keys(history)
         .filter(name => history[name].length !== 0).map((Name, gameIndex) => {
