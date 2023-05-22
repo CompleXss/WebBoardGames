@@ -1,0 +1,23 @@
+.aboutContainer {
+    text-align: center;
+}
+
+.aboutContainer .nick {
+    font-weight: bold;
+    padding-top: 20px;
+
+    color: var(--orange);
+}
+
+.aboutContainer hr {
+    width: 85%;
+    margin-top: 48px;
+    margin-bottom: 48px;
+}
+
+.aboutContainer a {
+    display: block;
+    font-size: 2em;
+    margin: 10px;
+    color: #00aacc;
+}
