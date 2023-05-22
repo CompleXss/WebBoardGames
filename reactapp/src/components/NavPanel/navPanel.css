@@ -10,10 +10,11 @@ nav {
     text-align: center;
     width: 100%;
     top: 0;
-
+    
     box-shadow: var(--background) 0 1px 6px;
     padding: 18px 6px;
     background-color: var(--background);
+    border-bottom: 1px solid #aaa;
     z-index: 1;
 }
 
