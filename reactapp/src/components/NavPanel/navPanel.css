@@ -32,7 +32,7 @@ nav a {
 }
 
 nav a:not(:last-of-type):hover {
-    color: var(--orange);
+    color: var(--yellow);
     transition: color 0.1s ease-in-out;
 }
 
@@ -52,7 +52,7 @@ nav a:not(:last-of-type)::after {
     width: auto;
     height: 3px;
     border-radius: 10px;
-    background: var(--orange);
+    background: var(--yellow);
 }
 
 nav a:not(:last-of-type):hover::after {
@@ -97,7 +97,7 @@ nav a .accountIcon {
 }
 
 nav a:hover .accountIcon {
-    fill: var(--orange);
+    fill: var(--yellow);
 }
 
 
