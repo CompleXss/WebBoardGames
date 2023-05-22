@@ -32,10 +32,9 @@ public static class UsersEndpoints
 
 	internal static async Task<IResult> GetAsync(HttpContext context, UsersRepository users)
 	{
-		var accessToken = await context.GetTokenAsync(AuthEndpoint.ACCESS_TOKEN_COOKIE_NAME);
-		if (accessToken is null) return Results.Unauthorized();
+		var userInfo = await AuthService.TryGetUserInfoFromHttpContextAsync(context);
+		if (userInfo is null) return Results.Unauthorized();
 
-		var userInfo = AuthService.GetUserInfoFromAccessToken(accessToken);
 		var user = await users.GetAsync(userInfo.ID);
 
 		return user != null
@@ -54,10 +53,8 @@ public static class UsersEndpoints
 
 	internal static async Task<IResult> DeleteAsync(HttpContext context, UsersRepository users, AppDbContext db)
 	{
-		var accessToken = await context.GetTokenAsync(AuthEndpoint.ACCESS_TOKEN_COOKIE_NAME);
-		if (accessToken is null) return Results.Unauthorized();
-
-		var user = AuthService.GetUserInfoFromAccessToken(accessToken);
+		var user = await AuthService.TryGetUserInfoFromHttpContextAsync(context);
+		if (user is null) return Results.Unauthorized();
 
 		bool deleted = await users.DeleteAsync(user.ID);
 		if (deleted)

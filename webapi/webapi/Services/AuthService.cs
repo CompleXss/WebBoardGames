@@ -6,6 +6,8 @@ using Microsoft.IdentityModel.Tokens;
 using webapi.Models;
 using webapi.Repositories;
 using webapi.Configuration;
+using Microsoft.AspNetCore.Authentication;
+using webapi.Endpoints;
 
 namespace webapi.Services;
 
@@ -90,6 +92,14 @@ public class AuthService
 	{
 		var decodedToken = DecodeJwtToken(accessToken);
 		return GetUserInfoFromAccessToken(decodedToken);
+	}
+
+	public static async Task<UserTokenInfo?> TryGetUserInfoFromHttpContextAsync(HttpContext context)
+	{
+		var accessToken = await context.GetTokenAsync(AuthEndpoint.ACCESS_TOKEN_COOKIE_NAME);
+		if (accessToken is null) return null;
+
+		return GetUserInfoFromAccessToken(accessToken);
 	}
 
 	public static UserTokenInfo GetUserInfoFromAccessToken(JwtSecurityToken accessToken)

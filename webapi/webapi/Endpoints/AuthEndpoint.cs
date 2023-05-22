@@ -1,5 +1,4 @@
-﻿using Microsoft.AspNetCore.Authentication;
-using webapi.Models;
+﻿using webapi.Models;
 using webapi.Repositories;
 using webapi.Services;
 using SameSiteMode = Microsoft.AspNetCore.Http.SameSiteMode;
@@ -113,11 +112,10 @@ public static class AuthEndpoint
 
 	internal static async Task<IResult> GetLoginDeviceCountAsync(HttpContext context, UserRefreshTokenRepository repo)
 	{
-		var accessToken = await context.GetTokenAsync(ACCESS_TOKEN_COOKIE_NAME);
-		if (accessToken is null) return Results.Unauthorized();
+		var user = await AuthService.TryGetUserInfoFromHttpContextAsync(context);
+		if (user is null) return Results.Unauthorized();
 
-		var userID = AuthService.GetUserInfoFromAccessToken(accessToken).ID;
-		var deviceCount = await repo.GetUserDeviceCount(userID);
+		var deviceCount = await repo.GetUserDeviceCount(user.ID);
 
 		return Results.Ok(deviceCount);
 	}
@@ -126,15 +124,13 @@ public static class AuthEndpoint
 
 	internal static async Task<IResult> LogoutAsync(HttpContext context, AuthService auth)
 	{
-		var accessToken = await context.GetTokenAsync(ACCESS_TOKEN_COOKIE_NAME);
-		if (accessToken is null) return Results.Unauthorized();
+		var user = await AuthService.TryGetUserInfoFromHttpContextAsync(context);
+		if (user is null) return Results.Unauthorized();
 
 		var deviceID = context.Request.Cookies[DEVICE_ID_COOKIE_NAME];
 		if (deviceID is null) return Results.BadRequest("Provided Device Guid is null.");
 
-		var userID = AuthService.GetUserInfoFromAccessToken(accessToken).ID;
-
-		if (!await auth.LogoutFromDevice(userID, deviceID))
+		if (!await auth.LogoutFromDevice(user.ID, deviceID))
 			return Results.Problem("Can not logout from this device.");
 
 		DeleteTokenCookies(context.Response);
@@ -144,12 +140,10 @@ public static class AuthEndpoint
 
 	internal static async Task<IResult> LogoutFromAllDevicesAsync(HttpContext context, AuthService auth)
 	{
-		var accessToken = await context.GetTokenAsync(ACCESS_TOKEN_COOKIE_NAME);
-		if (accessToken is null) return Results.Unauthorized();
+		var user = await AuthService.TryGetUserInfoFromHttpContextAsync(context);
+		if (user is null) return Results.Unauthorized();
 
-		var userID = AuthService.GetUserInfoFromAccessToken(accessToken).ID;
-
-		if (!await auth.LogoutFromAllDevices(userID))
+		if (!await auth.LogoutFromAllDevices(user.ID))
 			return Results.Problem("Can not logout from all devices.");
 
 		DeleteTokenCookies(context.Response);
@@ -159,14 +153,13 @@ public static class AuthEndpoint
 
 	internal static async Task<IResult> LogoutFromAnotherDevicesAsync(HttpContext context, AuthService auth)
 	{
-		var accessToken = await context.GetTokenAsync(ACCESS_TOKEN_COOKIE_NAME);
-		if (accessToken is null) return Results.Unauthorized();
+		var user = await AuthService.TryGetUserInfoFromHttpContextAsync(context);
+		if (user is null) return Results.Unauthorized();
 
 		var deviceID = context.Request.Cookies[DEVICE_ID_COOKIE_NAME];
 		if (deviceID is null) return Results.BadRequest("Provided Device Guid is null.");
 
-		var userID = AuthService.GetUserInfoFromAccessToken(accessToken).ID;
-		bool succeeded = await auth.LogoutFromAllDevices_ExceptOne(userID, deviceID);
+		bool succeeded = await auth.LogoutFromAllDevices_ExceptOne(user.ID, deviceID);
 
 		return succeeded
 			? Results.Ok()

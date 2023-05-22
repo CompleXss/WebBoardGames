@@ -27,11 +27,12 @@ public partial class AppDbContext : DbContext
 			entity.ToTable("Checkers_History");
 
 			entity.Property(e => e.Id).HasColumnName("ID");
-			entity.Property(e => e.UserId).HasColumnName("UserID");
+			entity.Property(e => e.LooserId).HasColumnName("LooserID");
+			entity.Property(e => e.WinnerId).HasColumnName("WinnerID");
 
-			entity.HasOne(d => d.User).WithMany(p => p.CheckersHistories)
-				.HasForeignKey(d => d.UserId)
-				.OnDelete(DeleteBehavior.ClientSetNull);
+			entity.HasOne(d => d.Looser).WithMany(p => p.CheckersHistoryLoosers).HasForeignKey(d => d.LooserId);
+
+			entity.HasOne(d => d.Winner).WithMany(p => p.CheckersHistoryWinners).HasForeignKey(d => d.WinnerId);
 		});
 
 		modelBuilder.Entity<CheckersUser>(entity =>
@@ -44,9 +45,7 @@ public partial class AppDbContext : DbContext
 				.ValueGeneratedNever()
 				.HasColumnName("UserID");
 
-			entity.HasOne(d => d.User).WithOne(p => p.CheckersUser)
-				.HasForeignKey<CheckersUser>(d => d.UserId)
-				.OnDelete(DeleteBehavior.ClientSetNull);
+			entity.HasOne(d => d.User).WithOne(p => p.CheckersUser).HasForeignKey<CheckersUser>(d => d.UserId);
 		});
 
 		modelBuilder.Entity<User>(entity =>
@@ -67,9 +66,7 @@ public partial class AppDbContext : DbContext
 			entity.Property(e => e.UserId).HasColumnName("UserID");
 			entity.Property(e => e.DeviceId).HasColumnName("DeviceID");
 
-			entity.HasOne(d => d.User).WithMany(p => p.UserRefreshTokens)
-				.HasForeignKey(d => d.UserId)
-				.OnDelete(DeleteBehavior.ClientSetNull);
+			entity.HasOne(d => d.User).WithMany(p => p.UserRefreshTokens).HasForeignKey(d => d.UserId);
 		});
 
 		OnModelCreatingPartial(modelBuilder);

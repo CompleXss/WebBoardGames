@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.SignalR;
 using webapi.Hubs;
-using webapi.Models.GameModels;
+using webapi.Models.GameModels.Checkers;
 
 namespace webapi.Services;
 
@@ -46,6 +46,7 @@ public class CheckersLobbyService
 		await hub.Groups.AddToGroupAsync(connectionID, lobby.Key);
 		lobby.ConnectionIDs.Add(connectionID);
 
+		logger.LogInformation("Lobby with key {LobbyKey} was CREATED.", lobby.Key);
 		return lobby;
 	}
 
@@ -100,7 +101,7 @@ public class CheckersLobbyService
 		return lobby.Key;
 	}
 
-	private async Task CloseLobby(CheckersLobby lobby)
+	public async Task CloseLobby(CheckersLobby lobby)
 	{
 		usersInLobby.Remove(lobby.HostID);
 		if (lobby.SecondPlayerID.HasValue)
@@ -109,10 +110,20 @@ public class CheckersLobbyService
 		lobbies.Remove(lobby);
 
 		await hub.Clients.Group(lobby.Key).SendAsync(CheckersLobbyHub.LOBBY_CLOSED);
-		foreach (var conID in lobby.ConnectionIDs)
-			await hub.Groups.RemoveFromGroupAsync(conID, lobby.Key);
+		await RemoveAllUsersFromLobbyGroup(lobby);
 
 		logger.LogInformation("Lobby with key {LobbyKey} was CLOSED.", lobby.Key);
 		lobby.Dispose();
+	}
+
+	public async Task RemoveAllUsersFromLobbyGroup(CheckersLobby lobby)
+	{
+		var tasks = new Task[lobby.ConnectionIDs.Count];
+
+		for (int i = 0; i < lobby.ConnectionIDs.Count; i++)
+			tasks[i] = hub.Groups.RemoveFromGroupAsync(lobby.ConnectionIDs[i], lobby.Key);
+
+		await Task.WhenAll(tasks);
+		lobby.ConnectionIDs.Clear();
 	}
 }

@@ -14,19 +14,18 @@ public class CheckersHistoryRepository
 	}
 
 	public async Task<List<CheckersHistory>> GetAsync(long userId)
-		=> await context.CheckersHistories.Where(x => x.UserId == userId).ToListAsync();
+		=> await context.CheckersHistories.Include(x => x.Winner).Include(x => x.Looser).Where(x => x.WinnerId == userId || x.LooserId == userId).ToListAsync();
 
-	public async Task<bool> AddAsync(PlayHistoryDto historyDto)
+	public async Task<bool> AddAsync(CheckersHistory history)
 	{
-		await context.CheckersHistories.AddAsync(new CheckersHistory
+		try
 		{
-			UserId = historyDto.UserId,
-			IsWin = Convert.ToInt64(historyDto.IsWin),
-			EnemyName = historyDto.EnemyName,
-			DateTimeStart = historyDto.DateTimeStart.ToString(AppDbContext.DATETIME_STRING_FORMAT),
-			DateTimeEnd = historyDto.DateTimeEnd.ToString(AppDbContext.DATETIME_STRING_FORMAT)
-		});
-
-		return await context.SaveChangesAsync() > 0;
+			await context.CheckersHistories.AddAsync(history);
+			return await context.SaveChangesAsync() > 0;
+		}
+		catch (Exception)
+		{
+			return false;
+		}
 	}
 }

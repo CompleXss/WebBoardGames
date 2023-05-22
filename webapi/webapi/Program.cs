@@ -16,13 +16,15 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 {
 	options.UseSqlite(config.GetConnectionString("DefaultConnection"));
 });
-builder.Services.AddTransient<UsersRepository>();
+builder.Services.AddTransient<AuthService>();
 builder.Services.AddTransient<UserRefreshTokenRepository>();
+builder.Services.AddTransient<UsersRepository>();
 builder.Services.AddTransient<CheckersUserRepository>();
 builder.Services.AddTransient<CheckersHistoryRepository>();
-builder.Services.AddTransient<AuthService>();
+builder.Services.AddTransient<GameHistoryService>();
 
 builder.Services.AddSingleton<CheckersLobbyService>();
+builder.Services.AddSingleton<CheckersGameService>();
 
 // Configure Authentication & Authorization
 builder.Services.ConfigureAuthentication(config);
@@ -58,9 +60,10 @@ app.UseAuthorization();
 app.MapAuthEndpoints();
 app.MapUsersEndpoints();
 app.MapPlayHistoryEndpoints();
+app.MapLeaderboardEndpoints();
 
 // games
-app.MapLobbyEndpoints();
+app.MapGameEndpoints();
 
 
 

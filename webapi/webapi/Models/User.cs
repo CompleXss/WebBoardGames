@@ -15,7 +15,10 @@ public partial class User
 	public byte[] PasswordSalt { get; set; } = null!;
 
 	[JsonIgnore]
-	public virtual ICollection<CheckersHistory> CheckersHistories { get; set; } = new List<CheckersHistory>();
+	public virtual ICollection<CheckersHistory> CheckersHistoryLoosers { get; set; } = new List<CheckersHistory>();
+
+	[JsonIgnore]
+	public virtual ICollection<CheckersHistory> CheckersHistoryWinners { get; set; } = new List<CheckersHistory>();
 
 	[JsonIgnore]
 	public virtual CheckersUser? CheckersUser { get; set; }

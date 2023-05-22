@@ -1,9 +1,11 @@
 ﻿using Microsoft.AspNetCore.SignalR;
-using webapi.Endpoints;
 using webapi.Models;
 using webapi.Services;
 
 namespace webapi.Hubs;
+
+// TODO: Возможность перезагружать страницу и нормально переподключаться (+ задержка перед киком)
+// TODO: Возможность кикать игроков
 
 public class CheckersLobbyHub : Hub
 {
@@ -11,6 +13,7 @@ public class CheckersLobbyHub : Hub
 	public const string USER_DISCONNECTED = "UserDisconnected";
 	public const string LOBBY_INFO = "LobbyInfo";
 	public const string LOBBY_CLOSED = "LobbyClosed";
+	public const string GAME_STARTED = "GameStarted";
 
 	private readonly CheckersLobbyService lobbyService;
 	private readonly ILogger<CheckersLobbyHub> logger;
@@ -23,13 +26,13 @@ public class CheckersLobbyHub : Hub
 
 
 
-	public override Task OnConnectedAsync()
+	public async override Task OnConnectedAsync()
 	{
-		var user = GetUserInfo();
+		var user = await GetUserInfoAsync();
 		if (user is null)
 		{
 			logger.LogError("Can not get claims from Access Token!");
-			return Task.CompletedTask;
+			return;
 		}
 
 		// TODO: Возможность зайти в то же лобби с другого устройства?
@@ -42,13 +45,12 @@ public class CheckersLobbyHub : Hub
 		//	return;
 		//}
 
-		logger.LogInformation("User with ID {UserID} CONNECTED to checkers hub.", user.ID);
-		return Task.CompletedTask;
+		logger.LogInformation("User with ID {UserID} CONNECTED to checkers lobby hub.", user.ID);
 	}
 
 	public override async Task OnDisconnectedAsync(Exception? exception)
 	{
-		var user = GetUserInfo();
+		var user = await GetUserInfoAsync();
 		if (user is null)
 		{
 			logger.LogError("Can not get claims from Access Token!");
@@ -56,14 +58,14 @@ public class CheckersLobbyHub : Hub
 		}
 
 		await lobbyService.LeaveLobby(user.ID, Context.ConnectionId);
-		logger.LogInformation("User with ID {UserID} DISCONNECTED from checkers hub.", user.ID);
+		logger.LogInformation("User with ID {UserID} DISCONNECTED from checkers lobby hub.", user.ID);
 	}
 
 
 
-	public async Task<IResult> CreateLobby(ILogger<CheckersLobbyHub> logger)
+	public async Task<IResult> CreateLobby()
 	{
-		var user = GetUserInfo();
+		var user = await GetUserInfoAsync();
 		if (user is null) return Results.Unauthorized();
 
 		var lobby = await lobbyService.TryCreateLobbyAsync(user.ID, Context.ConnectionId);
@@ -76,7 +78,7 @@ public class CheckersLobbyHub : Hub
 
 	public async Task<IResult> EnterLobby(string lobbyKey)
 	{
-		var user = GetUserInfo();
+		var user = await GetUserInfoAsync();
 		if (user is null) return Results.Unauthorized();
 
 		var (lobby, errorResult) = await lobbyService.TryEnterLobby(user.ID, Context.ConnectionId, lobbyKey);
@@ -88,7 +90,7 @@ public class CheckersLobbyHub : Hub
 
 	public async Task<IResult> LeaveLobby()
 	{
-		var user = GetUserInfo();
+		var user = await GetUserInfoAsync();
 		if (user is null) return Results.Unauthorized();
 
 		var lobbyKey = await lobbyService.LeaveLobby(user.ID, Context.ConnectionId);
@@ -97,20 +99,32 @@ public class CheckersLobbyHub : Hub
 		return Results.Ok();
 	}
 
-
-
-	private UserTokenInfo? GetUserInfo()
+	public async Task<IResult> StartGame(CheckersGameService gameService)
 	{
-		string? accessToken = GetAccessToken();
-		if (accessToken is null)
-			return null;
+		var user = await GetUserInfoAsync();
+		if (user is null) return Results.Unauthorized();
 
-		return AuthService.GetUserInfoFromAccessToken(accessToken);
+		var lobby = lobbyService.GetUserLobby(user.ID);
+		if (lobby is null) return Results.BadRequest("You're not in a lobby.");
+		if (lobby.HostID != user.ID) return Results.BadRequest("You're not a host of this lobby.");
+		if (!lobby.SecondPlayerID.HasValue) return Results.BadRequest("Lobby is not full.");
+
+		gameService.CreateNewGame(lobby.HostID, lobby.SecondPlayerID.Value);
+
+		await Clients.Group(lobby.Key).SendAsync(GAME_STARTED);
+		await lobbyService.RemoveAllUsersFromLobbyGroup(lobby);
+		await lobbyService.CloseLobby(lobby);
+
+		return Results.Ok();
 	}
 
-	private string? GetAccessToken()
+
+
+	private async Task<UserTokenInfo?> GetUserInfoAsync()
 	{
 		var httpContext = Context.GetHttpContext();
-		return httpContext?.Request.Cookies[AuthEndpoint.ACCESS_TOKEN_COOKIE_NAME];
+		if (httpContext is null) return null;
+
+		return await AuthService.TryGetUserInfoFromHttpContextAsync(httpContext);
 	}
 }
