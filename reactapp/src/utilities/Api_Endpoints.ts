@@ -30,11 +30,12 @@ const ENDPOINTS = {
     },
 
     GET_HISTORY_URL: BASE_URL + '/history',
-    GET_CHECKERS_GAME_URL: BASE_URL + '/',
-    GET_ACTIVE_GAME_URL: BASE_URL + '/',
-
+    GET_LEADERBOARD: BASE_URL + '/leaderboard',
+    GET_IS_IN_GAME: BASE_URL + '/isInGame/checkers',
+    
     Hubs: {
         CHECKERS_LOBBY: BASE_URL + '/lobby/checkers',
+        CHECKERS_GAME: BASE_URL + '/play/checkers',
     },
 }
 
