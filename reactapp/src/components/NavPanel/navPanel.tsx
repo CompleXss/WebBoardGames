@@ -7,10 +7,10 @@ import './navPanel.css'
 export default function NavPanel() {
     return (
         <nav id='nav'>
-            <NavLink to={'/'} onClick={hideBurger}> Home </NavLink>
-            <NavLink to={'/history'} onClick={hideBurger}> History </NavLink>
-            <NavLink to={'/leaderboard'} onClick={hideBurger}> Leaderboard </NavLink>
-            <NavLink to={'/about'} onClick={hideBurger}> About </NavLink>
+            <NavLink to={'/'} onClick={hideBurger}> Главная </NavLink>
+            <NavLink to={'/history'} onClick={hideBurger}> История </NavLink>
+            <NavLink to={'/leaderboard'} onClick={hideBurger}> Рекорды </NavLink>
+            <NavLink to={'/about'} onClick={hideBurger}> О нас </NavLink>
             <NavLink to={'/profile'}>
                 <AccountIcon className='accountIcon' />
             </NavLink>
