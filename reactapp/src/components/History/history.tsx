@@ -5,22 +5,23 @@ import { GameHistory } from './gameHistoryTypes'
 import { mapCheckers } from './gameHistoryMappers'
 import Loading from '../Loading/loading'
 import ENDPOINTS from '../../utilities/Api_Endpoints'
-import './history.css'
 
 export default function History() {
     const { data, isLoading, isError } = useQuery('history', fetchData)
-    const history = data as GameHistory
+    const d = data as { userID: number, history: GameHistory }
+    const myID = d ? d.userID : null
+    const history = d ? d.history : null
 
     useEffect(() => {
         document.title = 'История игр'
     }, [])
 
-    const games = !history ? [] : Object.keys(history)
+    const games = !history || !myID ? [] : Object.keys(history)
         .filter(name => history[name].length !== 0).map((Name, gameIndex) => {
             switch (Name) {
                 case 'checkers':
                     return <div className='table_wrapper' key={'Game ' + gameIndex}>
-                        {mapCheckers(history[Name])}
+                        {mapCheckers(myID, history[Name])}
                     </div>
 
                 default:
@@ -29,7 +30,7 @@ export default function History() {
         })
 
     if (isLoading) return <Loading />
-    if (isError) return <h1>Произошла ошибка!</h1>
+    if (isError) return <h1> Произошла ошибка! </h1>
 
     if (games.length === 0) return <h1> У тебя еще нет истории игр. <br /> Самое время поиграть :) </h1>
 
@@ -47,4 +48,5 @@ export default function History() {
 async function fetchData() {
     return axios.get(ENDPOINTS.GET_HISTORY_URL)
         .then(response => response.data)
+        .catch(e => console.log(e))
 }

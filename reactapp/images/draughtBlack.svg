@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<svg viewBox="-25 -25 850 850"
+    xmlns="http://www.w3.org/2000/svg">
+    <path fill-rule="evenodd" clip-rule="evenodd" fill="black" stroke="black" stroke-width="12" stroke-miterlimit="10" d="
+	M66.7,400C66.7,215.9,215.9,66.7,400,66.7c184.1,0,333.3,149.2,333.3,333.3c0,184.1-149.2,333.3-333.3,333.3
+	C215.9,733.3,66.7,584.1,66.7,400z"/>
+</svg>

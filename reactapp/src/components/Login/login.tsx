@@ -1,5 +1,5 @@
 import axios from 'axios'
-import { useEffect, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import ENDPOINTS from '../../utilities/Api_Endpoints'
 import './login.css'
@@ -10,7 +10,7 @@ export default function Login() {
     const [switchModeText, setswitchModeText] = useState('Нет аккаунта? Регистрируйся')
     const [isLogin, setIsLogin] = useState(true)
     const navigate = useNavigate()
-    
+
     useEffect(() => {
         document.title = 'Авторизация'
     }, [])
@@ -63,7 +63,7 @@ export default function Login() {
             }
         }).catch(e => {
             console.log(e)
-            showWarningText(e?.response?.data)
+            showWarningText(e?.response?.data || e?.message)
         })
     }
 
@@ -81,8 +81,21 @@ export default function Login() {
             }
         }).catch(e => {
             console.log(e)
-            showWarningText(e?.response?.data)
+            showWarningText(e?.response?.data || e?.message)
         })
+    }
+
+    function loginInputOnKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
+        if (e.key === 'Enter') {
+            document.getElementById('loginPassword')?.focus()
+        }
+    }
+
+    function passInputOnKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
+        if (e.key !== 'Enter') return
+
+        if (isLogin) getInputAnd(login)
+        else getInputAnd(register)
     }
 
 
@@ -95,8 +108,8 @@ export default function Login() {
                 <h1 id='registerHeader'>Регистрация</h1>
             </div>
             <div className='inputContainer'>
-                <input id='loginName' name='name' type='text' placeholder='Имя пользователя' maxLength={32} />
-                <input id='loginPassword' name='password' type='password' placeholder='Пароль' maxLength={64} />
+                <input id='loginName' name='name' type='text' placeholder='Имя пользователя' maxLength={32} onKeyDown={loginInputOnKeyDown} />
+                <input id='loginPassword' name='password' type='password' placeholder='Пароль' maxLength={64} onKeyDown={passInputOnKeyDown} />
                 <p id='loginWarningText'>Введите имя и пароль</p>
                 <div className='btnContainer'>
                     <button id='dummyBtn'>dummy</button>
@@ -112,7 +125,7 @@ export default function Login() {
 
 
 
-function getInputAnd(func: Function) {
+function getInputAnd(action: (login: string, password: string) => void) {
     let loginName = document.getElementById('loginName') as HTMLInputElement
     let loginPassword = document.getElementById('loginPassword') as HTMLInputElement
     if (loginName === null || loginPassword === null) return
@@ -126,7 +139,7 @@ function getInputAnd(func: Function) {
     }
     else showWarningText(false)
 
-    func(login, password);
+    action(login, password);
 }
 
 function showBtn(button: HTMLElement, show: boolean) {

@@ -5,18 +5,16 @@
     justify-content: center;
     align-items: center;
 
-    grid-template-rows: max(50px, 10%) 1fr max(50px, 10%);
+    grid-template-rows: max(70px, 10%) 60px 1fr max(70px, 10%);
     grid-template-columns: 100%;
 
     gap: 0;
     flex-grow: 1;
     height: 100%;
     width: 100%;
-
-    background-color: yellowgreen;
 }
 
-.boardContainer {
+.checkersContainer .boardContainer {
     display: flex;
     flex-direction: row;
     justify-content: center;
@@ -26,7 +24,8 @@
     width: 100%;
 }
 
-.board {
+.checkersContainer .board {
+    position: relative;
     display: grid;
     box-sizing: border-box;
     grid-template-columns: repeat(8, 1fr);
@@ -37,32 +36,187 @@
     height: 100%;
     max-width: 100%;
 
-    background-color: gray;
+    background-color: burlywood;
 }
 
-.board .cell {
+.checkersContainer .board .cell {
+    position: relative;
     aspect-ratio: 1 / 1;
+    border: none;
     gap: 0;
 }
 
-.board .cell.black {
-    background-color: black;
+.checkersContainer .board .cell.black {
+    background-color: #666;
 }
 
-.board .cell.white {
-    background-color: white;
+.checkersContainer .board .cell.white {
+    background-color: #ddd;
 }
 
 
 
-.enemyZone {
+/* Шашки */
+.checkersContainer .board .unit {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+
+    aspect-ratio: 1 / 1;
+    height: calc((100% - 20px) / 8);
+    width: calc((100% - 20px) / 8);
+
+    border: none;
+    background-repeat: no-repeat;
+    background-size: contain;
+
+    transition: transform 0.3s ease-in-out;
+}
+
+.checkersContainer .board .unit.white {
+    background: url(/images/draughtWhite.svg);
+}
+
+.checkersContainer .board .unit.white.queen {
+    background: url(/images/draughtWhiteQueen.svg);
+}
+
+.checkersContainer .board .unit.black {
+    background: url(/images/draughtBlack.svg);
+}
+
+.checkersContainer .board .unit.black.queen {
+    background: url(/images/draughtBlackQueen.svg);
+}
+
+
+
+/* Enemy zone & My zone */
+.checkersContainer .enemyZone {
+    display: flex;
+    box-sizing: border-box;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+
     height: 100%;
     width: 100%;
-    background-color: aqua;
+
+    background-color: var(--background);
 }
 
-.myZone {
+.checkersContainer .myZone {
+    display: flex;
+    box-sizing: border-box;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+
     height: 100%;
     width: 100%;
-    background-color: aqua;
+
+    background-color: var(--background);
 }
+
+.checkersContainer .enemyZone h1 {
+    transition: all 0.3s;
+}
+
+.checkersContainer .whosTurn {
+    align-self: flex-start;
+    margin-top: 10px;
+    width: 100%;
+}
+
+
+
+/* WINNER BANNER */
+.checkersContainer dialog {
+    text-align: center;
+
+    width: 100%;
+
+    border: none;
+
+    border-radius: 16px;
+    background-color: var(--background);
+    color: whitesmoke;
+}
+
+.checkersContainer dialog h1 {
+    font-size: 3em;
+    font-weight: bold;
+}
+
+.checkersContainer dialog::backdrop {
+    background-color: rgba(0, 0, 0, 0.4);
+}
+
+.checkersContainer .winnerName {
+    font-size: 2em;
+    word-break: break-all;
+}
+
+.checkersContainer dialog button {
+    border: none;
+    cursor: pointer;
+    font-size: 1.2em;
+
+    margin-bottom: 12px;
+    padding: 12px 24px;
+
+    border-radius: 8px;
+    color: black;
+    background-color: var(--white-btn);
+}
+
+.checkersContainer dialog button:hover {
+    background-color: var(--white-btn-hover);
+}
+
+.checkersContainer dialog button:active {
+    background-color: var(--white-btn-active);
+}
+
+
+
+
+
+
+/* .checkersContainer .board .cell.blackUnit::before {
+    content: '';
+    position: absolute;
+
+    background: url(/images/draughtBlack.svg);
+    background-repeat: no-repeat;
+    background-size: contain;
+
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 100%;
+}
+
+.checkersContainer .board .cell.blackUnit.queen::before {
+    background: url(/images/draughtBlackQueen.svg);
+}
+
+
+
+.checkersContainer .board .cell.whiteUnit::before {
+    content: '';
+    position: absolute;
+
+    background: url(/images/draughtWhite.svg);
+    background-repeat: no-repeat;
+    background-size: contain;
+
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 100%;
+}
+
+.checkersContainer .board .cell.whiteUnit.queen::before {
+    background: url(/images/draughtWhiteQueen.svg);
+} */

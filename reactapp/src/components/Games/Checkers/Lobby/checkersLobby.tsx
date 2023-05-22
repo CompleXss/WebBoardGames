@@ -1,7 +1,8 @@
 import axios from "axios"
 import { useEffect, useRef, useState } from "react"
-import { HubConnection, HubConnectionState } from "@microsoft/signalr"
-import { getConnectionTo } from "../../../../utilities/webSocketsHelper"
+import { useNavigate } from "react-router-dom"
+import { HubConnection } from "@microsoft/signalr"
+import { useWebsocketConnection } from "../../../../utilities/useWebsocketHook"
 import ENDPOINTS from "../../../../utilities/Api_Endpoints"
 import Loading from "../../../Loading/loading"
 import './checkersLobby.css'
@@ -25,9 +26,7 @@ interface PLayerInfo {
 }
 
 export default function CheckersLobby() {
-    const [connection, setConnection] = useState<HubConnection>()
-    const [loading, setLoading] = useState(true)
-    const [error, setError] = useState<any>(null)
+    const navigate = useNavigate()
 
     const [lobbyKey, setLobbyKey] = useState<string>()
     const [isHost, setIsHost] = useState(false)
@@ -37,36 +36,19 @@ export default function CheckersLobby() {
     const joinLobbyDialog = useRef<HTMLDialogElement>(null)
     const lobbyKeyInput = useRef<HTMLInputElement>(null)
     const lobbyKeyWarningMessage = useRef<HTMLParagraphElement>(null)
+    const startGameWarningMessage = useRef<HTMLParagraphElement>(null)
 
     useEffect(() => {
         document.title = 'Шашки (лобби)'
     }, [])
 
     // create connection
-    useEffect(() => {
-        setConnection(getConnectionTo(ENDPOINTS.Hubs.CHECKERS_LOBBY))
-        clearLobbyInfo()
-    }, [])
-
-    useEffect(() => {
-        if (!connection || connection.state !== HubConnectionState.Disconnected) return
-
-        setLoading(true)
-        setError(null)
-        addEventHandlers(connection)
-
-        connection.start()
-            .catch(e => {
-                console.log('Connection to hub failed with error: ')
-                console.log(e)
-                setError(e?.toString())
-            })
-            .finally(() => setLoading(false))
-
-        return () => {
-            connection.stop()
-        }
-    }, [connection])
+    const { connection, loading, setLoading, error }
+        = useWebsocketConnection(ENDPOINTS.Hubs.CHECKERS_LOBBY, {
+            whenCreatingConnection: clearLobbyInfo,
+            whenConnectionCreated: addEventHandlers,
+            debugInConsole: true,
+        })
 
     // server side event handlers
     function addEventHandlers(connection: HubConnection) {
@@ -91,6 +73,10 @@ export default function CheckersLobby() {
             clearLobbyInfo()
 
             alert('Комната была закрыта!') // TODO: change alert to smth nice
+        })
+
+        connection.on('GameStarted', () => {
+            navigate('/play/checkers')
         })
 
         connection.onreconnecting(() => setLoading(true))
@@ -168,6 +154,18 @@ export default function CheckersLobby() {
         lobbyKeyWarningMessage.current.style.color = color ?? 'red'
     }
 
+    function showStartGameWarningText(show: string | false, color?: string) {
+        if (!startGameWarningMessage.current) return
+
+        startGameWarningMessage.current.textContent = show ? show : '?'
+
+        if (show) {
+            startGameWarningMessage.current.textContent = show
+        }
+        startGameWarningMessage.current.style.opacity = show ? '1' : '0';
+        startGameWarningMessage.current.style.color = color ?? 'red'
+    }
+
     function showJoinDialog() {
         showLobbyKeyWarningText(false)
         joinLobbyDialog.current?.showModal()
@@ -211,9 +209,20 @@ export default function CheckersLobby() {
     }
 
     function startGame() {
-        console.log('Start Game')
+        showStartGameWarningText(false)
 
+        connection?.invoke('StartGame')
+            .then(response => {
+                if (response.statusCode !== 200) {
+                    console.log(response.value)
+                    showStartGameWarningText(response.value)
+                }
+            })
+            .catch(e => console.log(e))
+    }
 
+    function lobbyKeyInputOnKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
+        if (e.key === 'Enter') joinLobby()
     }
 
 
@@ -241,6 +250,7 @@ export default function CheckersLobby() {
             </fieldset>
 
             <div className="btnWrapper">
+                <p ref={startGameWarningMessage}>Тут будут ошибки</p>
                 {isHost && <button className="startGameBtn" onClick={startGame}>Начать игру</button>}
                 <button className="exitBtn" onClick={leaveLobby}>{isHost ? 'Закрыть комнату' : 'Покинуть комнату'}<span className="icon"></span></button>
             </div>
@@ -256,7 +266,7 @@ export default function CheckersLobby() {
 
         <dialog ref={joinLobbyDialog}>
             <p>Введите код комнаты</p>
-            <input ref={lobbyKeyInput} type="text" maxLength={4} autoFocus />
+            <input ref={lobbyKeyInput} onKeyDown={lobbyKeyInputOnKeyDown} type="text" maxLength={4} autoFocus />
             <p id="lobbyKeyWarningMessage" ref={lobbyKeyWarningMessage}></p>
             <button className="enterLobbyBtn" onClick={joinLobby}>Войти</button>
             <button className="exitBtn" onClick={hideJoinDialog}>Отмена</button>

@@ -145,6 +145,16 @@
     flex-direction: column;
 }
 
+.checkersLobbyWrapper .btnWrapper p {
+    color: red;
+    opacity: 0;
+    font-size: 1.1em;
+
+    margin: 0;
+    margin-left: 24px;
+    margin-right: 24px;
+}
+
 
 
 @media all and (max-width: 1000px) {

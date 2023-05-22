@@ -1,10 +1,12 @@
+import { User } from "../../utilities/Api_DataTypes"
+
 export interface GameHistory {
-    [Name: string]: CheckersData[] // | OtherGameData[]
+    [Name: string]: CheckersHistoryData[] // | OtherGameData[]
 }
 
-export interface CheckersData {
-    isWin: number,
-    enemyName: string,
+export interface CheckersHistoryData {
+    winner: User,
+    looser: User,
     dateTimeStart: Date,
     dateTimeEnd: Date
 }
