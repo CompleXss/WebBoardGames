@@ -1,5 +1,5 @@
 import axios, { ResponseType } from "axios"
-import { HttpClient, HttpRequest, HttpResponse, HubConnectionBuilder, IHttpConnectionOptions, LogLevel } from "@microsoft/signalr"
+import { HttpClient, HttpRequest, HttpResponse, HubConnection, HubConnectionBuilder, HubConnectionState, IHttpConnectionOptions, LogLevel } from "@microsoft/signalr"
 
 class AxiosHttpClient extends HttpClient {
     async get(url: string) {
