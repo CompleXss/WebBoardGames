@@ -10,6 +10,7 @@ export function mapCheckers(leaderboard: CheckersLeaderboardData[]) {
                 <td>Игрок</td>
                 <td>Кол-во игр</td>
                 <td>Кол-во побед</td>
+                <td>Процент побед</td>
             </tr>
         </thead>
 
@@ -19,6 +20,7 @@ export function mapCheckers(leaderboard: CheckersLeaderboardData[]) {
                     <td>{data.user.name}</td>
                     <td>{data.playCount}</td>
                     <td>{data.winCount}</td>
+                    <td>{(data.winCount / data.playCount).toLocaleString(undefined, { style: 'percent', minimumFractionDigits: 0 })}</td>
                 </tr>
             )}
         </tbody>
