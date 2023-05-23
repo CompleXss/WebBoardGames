@@ -9,7 +9,7 @@ export default function NavPanel() {
         <nav id='nav'>
             <NavLink to={'/'} onClick={hideBurger}> Главная </NavLink>
             <NavLink to={'/history'} onClick={hideBurger}> История </NavLink>
-            <NavLink to={'/leaderboard'} onClick={hideBurger}> Рекорды </NavLink>
+            <NavLink to={'/leaderboard'} onClick={hideBurger}> Лидеры </NavLink>
             <NavLink to={'/about'} onClick={hideBurger}> О нас </NavLink>
             <NavLink to={'/profile'}>
                 <AccountIcon className='accountIcon' />
