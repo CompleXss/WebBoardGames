@@ -17,23 +17,21 @@ import RequireActiveGame from './components/RequireComponents/RequireActiveGame'
 export default function App() {
   setNavigateFunc(useNavigate())
 
-  return (
-    <div className='wrapper'>
-      <NavPanel />
+  return <div className='wrapper'>
+    <NavPanel />
 
-      <main>
-        <Routes>
-          <Route path='/' element={<Home />} />
-          <Route path='/login' element={<RequireAuth onOk={<Login />} redirect='/profile' inverse />} />
-          <Route path='/profile' element={<RequireAuth onOk={<Profile />} />} />
-          <Route path='/history' element={<RequireAuth onOk={<History />} />} />
-          <Route path='/leaderboard' element={<Leaderboard />} />
-          <Route path='/about' element={<About />} />
-          <Route path='/lobby/checkers' element={<RequireAuth onOk={<RequireActiveGame inverse onOk={<CheckersLobby />} redirect='/play/checkers' />} />} />
-          <Route path='/play/checkers' element={<RequireAuth onOk={<RequireActiveGame onOk={<CheckersGame />} redirect='/lobby/checkers' />} />} />
-          <Route path='*' element={<Navigate to={'/'} replace={true} />} />
-        </Routes>
-      </main>
-    </div>
-  )
+    <main>
+      <Routes>
+        <Route path='/' element={<Home />} />
+        <Route path='/login' element={<RequireAuth onOk={<Login />} redirect='/profile' inverse />} />
+        <Route path='/profile' element={<RequireAuth onOk={<Profile />} />} />
+        <Route path='/history' element={<RequireAuth onOk={<History />} />} />
+        <Route path='/leaderboard' element={<Leaderboard />} />
+        <Route path='/about' element={<About />} />
+        <Route path='/lobby/checkers' element={<RequireAuth onOk={<RequireActiveGame inverse onOk={<CheckersLobby />} redirect='/play/checkers' />} />} />
+        <Route path='/play/checkers' element={<RequireAuth onOk={<RequireActiveGame onOk={<CheckersGame />} redirect='/lobby/checkers' />} />} />
+        <Route path='*' element={<Navigate to={'/'} replace={true} />} />
+      </Routes>
+    </main>
+  </div>
 }
