@@ -1,10 +1,13 @@
 import { useEffect } from 'react'
 import { NavLink } from 'react-router-dom'
+import { addMeta } from '../../utilities/utils'
 import './home.css'
 
 export default function Home() {
     useEffect(() => {
         document.title = 'Главная'
+        addMeta('description', 'Настольные игры онлайн')
+        addMeta('keywords', 'Настольные игры, шашки, шахматы, монополия')
     }, [])
 
     return <div className="home">
