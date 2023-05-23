@@ -1,13 +1,12 @@
+import axios from 'axios';
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { HubConnection } from '@microsoft/signalr';
 import { useWebsocketConnection } from '../../../utilities/useWebsocketHook';
+import LoadingContent from '../../LoadingContent/loadingContent';
 import ENDPOINTS from '../../../utilities/Api_Endpoints';
 import Loading from "../../Loading/loading";
 import './checkersGame.css'
-import axios from 'axios';
-import LoadingContent from '../../LoadingContent/loadingContent';
-import { sleep } from '../../../utilities/utils';
 
 interface DraughtInfo {
     x: number
@@ -151,9 +150,7 @@ export default function CheckersGame() {
     function getWinnerName(winnerID: number) {
         setLoadingWinnerName(true)
         axios.get(ENDPOINTS.Users.GET_USER_INFO_BY_ID_URL + winnerID)
-            .then(async response => {
-                await sleep(1000)
-
+            .then(response => {
                 if (winnerName.current)
                     winnerName.current.textContent = response.data.name
                 setLoadingWinnerName(false)
