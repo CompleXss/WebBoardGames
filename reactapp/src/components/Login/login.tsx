@@ -49,21 +49,25 @@ export default function Login() {
         setIsLogin(!isLogin)
     }
 
+    function getErrorMessage(e: any) {
+        return (e?.response?.data?.errors && e?.response?.data?.errors[0])
+            || e?.response?.data
+            || e?.message
+    }
+
     function login(login: string, password: string) {
         console.log('trying to login ' + login)
 
         axios.post(ENDPOINTS.Auth.POST_LOGIN_URL, {
             name: login,
             password: password,
-        }).then(response => {
-            if (response.status === 200) {
-                console.log(login + ' logged in')
-                showWarningText('Вход успешен!', 'green')
-                setTimeout(() => navigate('/'), 1000)
-            }
+        }).then(() => {
+            console.log(login + ' logged in')
+            showWarningText('Вход успешен!', 'green')
+            setTimeout(() => navigate('/'), 1000)
         }).catch(e => {
             console.log(e)
-            showWarningText(e?.response?.data || e?.message)
+            showWarningText(getErrorMessage(e))
         })
     }
 
@@ -73,22 +77,20 @@ export default function Login() {
         axios.post(ENDPOINTS.Auth.POST_REGISTER_URL, {
             name: login,
             password: password,
-        }).then(response => {
-            if (response.status === 201) {
-                console.log(login + ' registered')
-                showWarningText('Регистрация успешна!', 'green')
-                setTimeout(() => navigate('/'), 1000)
-            }
+        }).then(() => {
+            console.log(login + ' registered')
+            showWarningText('Регистрация успешна!', 'green')
+            setTimeout(() => navigate('/'), 1000)
         }).catch(e => {
             console.log(e)
-            showWarningText(e?.response?.data || e?.message)
+            showWarningText(getErrorMessage(e))
         })
     }
 
     function loginInputOnKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
-        if (e.key === 'Enter') {
-            document.getElementById('loginPassword')?.focus()
-        }
+        if (e.key !== 'Enter') return
+
+        document.getElementById('loginPassword')?.focus()
     }
 
     function passInputOnKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
@@ -126,19 +128,29 @@ export default function Login() {
 
 
 function getInputAnd(action: (login: string, password: string) => void) {
-    let loginName = document.getElementById('loginName') as HTMLInputElement
-    let loginPassword = document.getElementById('loginPassword') as HTMLInputElement
-    if (loginName === null || loginPassword === null) return
+    const loginName = document.getElementById('loginName') as HTMLInputElement
+    const loginPassword = document.getElementById('loginPassword') as HTMLInputElement
+    if (!loginName || !loginPassword) return
 
-    let login = loginName.value.trim()
-    let password = loginPassword.value.trim()
+    const login = loginName.value.trim()
+    const password = loginPassword.value.trim()
 
     if (login === '' || password === '') {
         showWarningText('Введите имя и пароль')
         return
     }
-    else showWarningText(false)
 
+    if (login.length < 3) {
+        showWarningText('Длина имени должна быть больше или равна 3')
+        return
+    }
+
+    if (password.length < 3) {
+        showWarningText('Длина пароля должна быть больше или равна 3')
+        return
+    }
+
+    showWarningText(false)
     action(login, password);
 }
 
