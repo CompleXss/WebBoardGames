@@ -1,4 +1,5 @@
-﻿using webapi.Models;
+﻿using webapi.Filters;
+using webapi.Models;
 using webapi.Repositories;
 using webapi.Services;
 using SameSiteMode = Microsoft.AspNetCore.Http.SameSiteMode;
@@ -15,7 +16,10 @@ public static class AuthEndpoint
 	public static void MapAuthEndpoints(this WebApplication app)
 	{
 		// register & login & refresh
-		app.MapPost("/auth/register", RegisterAsync).AllowAnonymous();
+		app.MapPost("/auth/register", RegisterAsync)
+			.AddEndpointFilter<ValidationFilter<UserDto>>()
+			.AllowAnonymous();
+
 		app.MapPost("/auth/login", LoginAsync).AllowAnonymous();
 		app.MapPost(REFRESH_TOKEN_PATH, RefreshTokenAsync).AllowAnonymous();
 
@@ -29,7 +33,6 @@ public static class AuthEndpoint
 		app.MapGet("/auth/deviceCount", GetLoginDeviceCountAsync);
 	}
 
-	// TODO: улетает в exception, если в body не было юзера
 	internal static async Task<IResult> RegisterAsync(HttpContext context, UsersRepository users, AuthService auth, UserDto userDto)
 	{
 		if (await users.GetAsync(userDto.Name) is not null)

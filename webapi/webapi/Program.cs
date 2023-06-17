@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Swashbuckle.AspNetCore.SwaggerGen;
@@ -6,6 +7,7 @@ using webapi.Endpoints;
 using webapi.Repositories;
 using webapi.Services;
 using webapi.Configuration;
+using FluentValidation;
 
 var builder = WebApplication.CreateBuilder(args);
 var config = builder.Configuration;
@@ -16,6 +18,9 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 {
 	options.UseSqlite(config.GetConnectionString("DefaultConnection"));
 });
+
+builder.Services.AddValidatorsFromAssemblyContaining<Program>();
+
 builder.Services.AddTransient<AuthService>();
 builder.Services.AddTransient<UserRefreshTokenRepository>();
 builder.Services.AddTransient<UsersRepository>();
@@ -54,6 +59,17 @@ else
 
 app.UseAuthentication();
 app.UseAuthorization();
+
+// global exception handling
+app.Map("/error", (HttpContext context) =>
+{
+	var exceptionHandlerPathFeature = context.Features.Get<IExceptionHandlerPathFeature>();
+	var exception = exceptionHandlerPathFeature?.Error;
+
+	return Results.Problem(title: exception?.Message);
+});
+
+app.UseExceptionHandler("/error");
 
 
 
