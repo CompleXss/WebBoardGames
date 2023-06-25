@@ -21,6 +21,7 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 
 builder.Services.AddValidatorsFromAssemblyContaining<Program>();
 
+// Configure services
 builder.Services.AddTransient<AuthService>();
 builder.Services.AddTransient<UserRefreshTokenRepository>();
 builder.Services.AddTransient<UsersRepository>();
@@ -60,6 +61,8 @@ else
 app.UseAuthentication();
 app.UseAuthorization();
 
+
+
 // global exception handling
 app.Map("/error", (HttpContext context) =>
 {
@@ -78,13 +81,8 @@ app.MapUsersEndpoints();
 app.MapPlayHistoryEndpoints();
 app.MapLeaderboardEndpoints();
 
-// games
 app.MapGameEndpoints();
 
 
 
 app.Run();
-
-
-
-// TODO: добавить фильтры

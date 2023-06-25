@@ -1,7 +1,4 @@
-﻿using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Components.Forms;
-using Microsoft.AspNetCore.Http;
-using webapi.Hubs;
+﻿using webapi.Hubs;
 using webapi.Services;
 
 namespace webapi.Endpoints;

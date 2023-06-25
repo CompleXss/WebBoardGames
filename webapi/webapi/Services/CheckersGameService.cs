@@ -18,7 +18,6 @@ public class CheckersGameService
 	public string CreateNewGame(long firstPlayerID, long secondPlayerID)
 	{
 		bool firstPlayerIsWhite = Random.Shared.NextBoolean();
-		Console.WriteLine("firstPlayerIsWhite: " + firstPlayerIsWhite);
 
 		var game = firstPlayerIsWhite
 			? CheckersGame.CreateNew(firstPlayerID, secondPlayerID)

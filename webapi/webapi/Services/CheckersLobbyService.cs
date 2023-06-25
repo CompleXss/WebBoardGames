@@ -18,17 +18,7 @@ public class CheckersLobbyService
 		this.logger = logger;
 	}
 
-	public string GetRoomKey(long hostID)
-	{
-		var lobby = lobbies.FirstOrDefault(x => x.HostID == hostID);
-		if (lobby is null)
-		{
-			lobby = new CheckersLobby(hostID);
-			lobbies.Add(lobby);
-		}
 
-		return lobby.Key;
-	}
 
 	public CheckersLobby? GetUserLobby(long userID)
 	{

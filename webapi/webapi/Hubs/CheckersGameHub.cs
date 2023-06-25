@@ -83,7 +83,7 @@ public class CheckersGameHub : Hub
 		if (game is null)
 		{
 			await Clients.Caller.SendAsync(NOT_ALLOWED);
-			return Results.BadRequest("У тебя нет активной игры в шашки!");
+			return Results.BadRequest("You don't have any active checkers game!");
 		}
 
 		game = gameService.TryMakeMove(game, user.ID, moves, out string error);
@@ -105,11 +105,11 @@ public class CheckersGameHub : Hub
 		if (game is null)
 		{
 			await Clients.Caller.SendAsync(NOT_ALLOWED);
-			return Results.BadRequest("У тебя нет активной игры в шашки!");
+			return Results.BadRequest("You don't have any active checkers game!");
 		}
 
 		var gameState = gameService.GetRelativeGameState(user.ID);
-		if (gameState is null) return Results.Problem("Не удалось получить состояние поля.");
+		if (gameState is null) return Results.Problem("Can not get field state.");
 
 		return Results.Ok(gameState);
 	}

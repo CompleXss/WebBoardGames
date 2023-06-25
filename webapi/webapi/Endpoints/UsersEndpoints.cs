@@ -1,5 +1,4 @@
-﻿using Microsoft.AspNetCore.Authentication;
-using webapi.Data;
+﻿using webapi.Data;
 using webapi.Models;
 using webapi.Repositories;
 using webapi.Services;
@@ -18,6 +17,7 @@ public static class UsersEndpoints
 			.Produces<User>();
 
 		app.MapGet("/user/{userID}", GetByIDAsync)
+			.AllowAnonymous()
 			.Produces<User>();
 
 		app.MapDelete("/user", DeleteAsync);
@@ -62,7 +62,7 @@ public static class UsersEndpoints
 			AuthEndpoint.DeleteTokenCookies(context.Response);
 			return Results.Ok($"User '{user.Name}' was deleted.");
 		}
-		else
-			return Results.BadRequest($"Can not delete user '{user.Name}'.");
+
+		return Results.BadRequest($"Can not delete user '{user.Name}'.");
 	}
 }
