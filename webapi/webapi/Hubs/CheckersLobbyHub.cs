@@ -70,7 +70,7 @@ public class CheckersLobbyHub : Hub
 
 		var lobby = await lobbyService.TryCreateLobbyAsync(user.ID, Context.ConnectionId);
 		if (lobby is null)
-			return Results.BadRequest("You are already in a lobby.");
+			return Results.BadRequest("Can not create lobby.");
 
 		logger.LogInformation("Lobby with key {LobbyKey} was CREATED.", lobby.Key);
 		return Results.Ok(new { lobby });

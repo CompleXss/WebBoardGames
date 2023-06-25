@@ -2,36 +2,51 @@
 
 public sealed class CheckersLobby : IDisposable
 {
-    private static readonly HashSet<string> activeKeys = new();
+	private const int MAX_LOBBIES_COUNT = 10_000;
+	private static readonly HashSet<string> activeKeys = new();
 
-    public List<string> ConnectionIDs { get; } = new();
-    public long HostID { get; }
-    public long? SecondPlayerID { get; set; }
-    public string Key { get; }
+	public string Key { get; }
+	public long HostID { get; }
+	public long? SecondPlayerID { get; set; }
+	public List<string> ConnectionIDs { get; } = new();
+	public bool ErrorWhileCreating { get; }
 
-    public CheckersLobby(long hostID)
-    {
-        do
-        {
-            Key = GetRandomKey(10_000);
-        }
-        while (!activeKeys.Add(Key));
+	public CheckersLobby(long hostID)
+	{
+		if (activeKeys.Count >= MAX_LOBBIES_COUNT)
+		{
+			ErrorWhileCreating = true;
+			Key = "";
+			return;
+		}
 
-        HostID = hostID;
-    }
+		int retries = 0;
+		do
+		{
+			Key = GetRandomKey(MAX_LOBBIES_COUNT);
+
+			if (++retries == 1000)
+			{
+				ErrorWhileCreating = true;
+				break;
+			}
+		}
+		while (!activeKeys.Add(Key));
+
+		HostID = hostID;
+	}
 
 
 
-    /// <summary> <paramref name="maxValue"/> is exclusive. </summary>
-    private static string GetRandomKey(int maxValue)
-    {
-        int key = Random.Shared.Next(0, maxValue);
-        string k = key.ToString("D4");
-        return k;
-    }
+	/// <summary> <paramref name="maxValue"/> is exclusive. </summary>
+	private static string GetRandomKey(int maxValue)
+	{
+		int key = Random.Shared.Next(0, maxValue);
+		return key.ToString("D4");
+	}
 
-    public void Dispose()
-    {
-        activeKeys.Remove(Key);
-    }
+	public void Dispose()
+	{
+		activeKeys.Remove(Key);
+	}
 }

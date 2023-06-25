@@ -31,6 +31,9 @@ public class CheckersLobbyService
 			return null;
 
 		var lobby = new CheckersLobby(hostID);
+		if (lobby.ErrorWhileCreating)
+			return null;
+
 		lobbies.Add(lobby);
 
 		await hub.Groups.AddToGroupAsync(connectionID, lobby.Key);
