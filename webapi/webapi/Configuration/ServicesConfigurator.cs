@@ -54,7 +54,7 @@ public static class ServicesConfigurator
 		ValidateIssuer = true,
 		ValidateAudience = true,
 		ValidateLifetime = true,
-		ClockSkew = TimeSpan.Zero,
+		ClockSkew = TimeSpan.FromSeconds(5),
 		ValidateIssuerSigningKey = true,
 	};
 
