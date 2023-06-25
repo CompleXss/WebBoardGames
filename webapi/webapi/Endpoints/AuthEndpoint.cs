@@ -95,15 +95,12 @@ public static class AuthEndpoint
 			// Something fishy is going on here
 			// Database contains another refreshToken for provided user-deviceID pair, so someone is probably trying to fool me
 
-			// TODO: invalidate all user's refresh tokens
+			await auth.LogoutFromAllDevices(user.ID);
 			return Results.BadRequest("Invalid refresh token. Suspicious activity detected.");
 		}
 
 		if (DateTime.Parse(activeUserRefreshToken.TokenExpires) < DateTime.UtcNow)
-		{
-			// TODO: delete token from database
 			return Results.BadRequest("Refresh Token expired.");
-		}
 
 		var refreshToken = await auth.UpdateUserRefreshTokenAsync(activeUserRefreshToken);
 		if (refreshToken is null)

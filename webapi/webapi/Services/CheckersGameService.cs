@@ -84,6 +84,7 @@ public class CheckersGameService
 		activeGames.Remove(game);
 
 		logger.LogInformation("Checkers game with key {gameKey} was CLOSED.", game.Key);
+		game.Dispose();
 	}
 
 

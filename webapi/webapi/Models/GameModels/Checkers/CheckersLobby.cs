@@ -13,6 +13,8 @@ public sealed class CheckersLobby : IDisposable
 
 	public CheckersLobby(long hostID)
 	{
+		HostID = hostID;
+
 		if (activeKeys.Count >= MAX_LOBBIES_COUNT)
 		{
 			ErrorWhileCreating = true;
@@ -32,8 +34,6 @@ public sealed class CheckersLobby : IDisposable
 			}
 		}
 		while (!activeKeys.Add(Key));
-
-		HostID = hostID;
 	}
 
 

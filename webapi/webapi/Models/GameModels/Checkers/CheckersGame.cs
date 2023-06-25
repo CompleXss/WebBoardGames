@@ -1,7 +1,9 @@
 ﻿namespace webapi.Models.GameModels.Checkers;
 
-public class CheckersGame
+public sealed class CheckersGame : IDisposable
 {
+	private static readonly HashSet<string> activeKeys = new();
+
 	public string Key { get; }
 
 	public long WhitePlayerID { get; init; }
@@ -15,13 +17,16 @@ public class CheckersGame
 
 	public DateTime GameStarted { get; }
 
-	//public CheckersMove[] LastMove { get; set; } = Array.None<CheckersMove>();
-
 	public CheckersCell[,] Board { get; } = new CheckersCell[8, 8];
 
 	private CheckersGame(long whitePlayerID, long blackPlayerID)
 	{
-		Key = Guid.NewGuid().ToString(); // TODO: удостовериться в уникальности?
+		do
+		{
+			Key = Guid.NewGuid().ToString();
+		}
+		while (!activeKeys.Add(Key));
+
 		WhitePlayerID = whitePlayerID;
 		BlackPlayerID = blackPlayerID;
 
@@ -176,5 +181,10 @@ public class CheckersGame
 	private static bool ShouldMirrorMove(CheckersCellStates playerColor)
 	{
 		return playerColor == CheckersCellStates.Black;
+	}
+
+	public void Dispose()
+	{
+		activeKeys.Remove(Key);
 	}
 }
