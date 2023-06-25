@@ -30,7 +30,7 @@ public class UserRefreshTokenRepository
 				DeviceId = deviceID,
 			};
 
-			entry.RefreshToken = token.Token;
+			entry.RefreshTokenHash = token.CreateHash();
 			entry.TokenCreated = token.TokenCreated.ToString(AppDbContext.DATETIME_STRING_FORMAT);
 			entry.TokenExpires = token.TokenExpires.ToString(AppDbContext.DATETIME_STRING_FORMAT);
 
@@ -54,7 +54,7 @@ public class UserRefreshTokenRepository
 			await context.SaveChangesAsync();
 
 			// update entry
-			userToken.RefreshToken = newToken.Token;
+			userToken.RefreshTokenHash = newToken.CreateHash();
 			userToken.TokenCreated = newToken.TokenCreated.ToString(AppDbContext.DATETIME_STRING_FORMAT);
 			userToken.TokenExpires = newToken.TokenExpires.ToString(AppDbContext.DATETIME_STRING_FORMAT);
 

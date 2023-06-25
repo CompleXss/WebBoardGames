@@ -2,18 +2,18 @@
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.IdentityModel.Tokens.Jwt;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.IdentityModel.Tokens;
 using webapi.Models;
 using webapi.Repositories;
 using webapi.Configuration;
-using Microsoft.AspNetCore.Authentication;
 using webapi.Endpoints;
 
 namespace webapi.Services;
 
 public class AuthService
 {
-	public static readonly TimeSpan accessTokenLifetime = TimeSpan.FromMinutes(1);
+	public static readonly TimeSpan accessTokenLifetime = TimeSpan.FromMinutes(5);
 	public static readonly TimeSpan refreshTokenLifetime = TimeSpan.FromDays(60);
 	public static readonly TimeSpan deviceID_CookieLifetime = TimeSpan.FromDays(400);
 
@@ -32,14 +32,12 @@ public class AuthService
 	{
 		CreatePasswordHash(request.Password, out byte[] passwordHash, out byte[] passwordSalt);
 
-		var user = new User()
+		return new User()
 		{
 			Name = request.Name,
 			PasswordHash = passwordHash,
 			PasswordSalt = passwordSalt,
 		};
-
-		return user;
 	}
 
 	private static void CreatePasswordHash(string password, out byte[] passwordHash, out byte[] passwordSalt)
@@ -54,7 +52,7 @@ public class AuthService
 	{
 		using var hmac = new HMACSHA512(passwordSalt);
 
-		var computedHash = hmac.ComputeHash(Encoding.UTF8.GetBytes(password));
+		byte[] computedHash = hmac.ComputeHash(Encoding.UTF8.GetBytes(password));
 		return passwordHash.SequenceEqual(computedHash);
 	}
 

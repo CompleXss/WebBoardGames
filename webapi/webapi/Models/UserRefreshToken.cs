@@ -6,7 +6,7 @@ public partial class UserRefreshToken
 
 	public string DeviceId { get; set; } = null!;
 
-	public string RefreshToken { get; set; } = null!;
+	public byte[] RefreshTokenHash { get; set; } = null!;
 
 	public string TokenCreated { get; set; } = null!;
 

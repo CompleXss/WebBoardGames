@@ -20,8 +20,12 @@ public static class AuthEndpoint
 			.AddEndpointFilter<ValidationFilter<UserDto>>()
 			.AllowAnonymous();
 
-		app.MapPost("/auth/login", LoginAsync).AllowAnonymous();
-		app.MapPost(REFRESH_TOKEN_PATH, RefreshTokenAsync).AllowAnonymous();
+		app.MapPost("/auth/login", LoginAsync)
+			.AddEndpointFilter<ValidationFilter<UserDto>>()
+			.AllowAnonymous();
+
+		app.MapPost(REFRESH_TOKEN_PATH, RefreshTokenAsync)
+			.AllowAnonymous();
 
 		// logout
 		app.MapPost("/auth/logout", LogoutAsync);
@@ -86,7 +90,7 @@ public static class AuthEndpoint
 		if (activeUserRefreshToken is null)
 			return Results.BadRequest("This user does not have a Refresh Token for provided Device Guid.");
 
-		if (activeUserRefreshToken.RefreshToken != providedRefreshToken)
+		if (!RefreshToken.VerifyTokenHash(providedRefreshToken, activeUserRefreshToken.RefreshTokenHash))
 		{
 			// Something fishy is going on here
 			// Database contains another refreshToken for provided user-deviceID pair, so someone is probably trying to fool me
