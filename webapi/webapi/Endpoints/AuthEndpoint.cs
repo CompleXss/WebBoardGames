@@ -11,16 +11,18 @@ public static class AuthEndpoint
 	public const string ACCESS_TOKEN_COOKIE_NAME = "access_token";
 	public const string REFRESH_TOKEN_COOKIE_NAME = "refresh_token";
 	public const string DEVICE_ID_COOKIE_NAME = "device-guid";
-	private const string REFRESH_TOKEN_PATH = "/auth/refresh";
+
+	private const string AUTH_PATH = "/auth";
+	private const string REFRESH_TOKEN_PATH = AUTH_PATH + "/refresh";
 
 	public static void MapAuthEndpoints(this WebApplication app)
 	{
 		// register & login & refresh
-		app.MapPost("/auth/register", RegisterAsync)
+		app.MapPost(AUTH_PATH + "/register", RegisterAsync)
 			.AddEndpointFilter<ValidationFilter<UserDto>>()
 			.AllowAnonymous();
 
-		app.MapPost("/auth/login", LoginAsync)
+		app.MapPost(AUTH_PATH + "/login", LoginAsync)
 			.AddEndpointFilter<ValidationFilter<UserDto>>()
 			.AllowAnonymous();
 
@@ -28,13 +30,13 @@ public static class AuthEndpoint
 			.AllowAnonymous();
 
 		// logout
-		app.MapPost("/auth/logout", LogoutAsync);
-		app.MapPost("/auth/logout-from-all-devices", LogoutFromAllDevicesAsync);
-		app.MapPost("/auth/logout-from-another-devices", LogoutFromAnotherDevicesAsync);
+		app.MapPost(AUTH_PATH + "/logout", LogoutAsync);
+		app.MapPost(AUTH_PATH + "/logout-from-all-devices", LogoutFromAllDevicesAsync);
+		app.MapPost(AUTH_PATH + "/logout-from-another-devices", LogoutFromAnotherDevicesAsync);
 
 		// other
-		app.MapGet("/auth/isAuthorized", IsAuthorized);
-		app.MapGet("/auth/deviceCount", GetLoginDeviceCountAsync);
+		app.MapGet(AUTH_PATH + "/isAuthorized", IsAuthorized);
+		app.MapGet(AUTH_PATH + "/deviceCount", GetLoginDeviceCountAsync);
 	}
 
 	internal static async Task<IResult> RegisterAsync(HttpContext context, UsersRepository users, AuthService auth, UserDto userDto)
@@ -192,7 +194,7 @@ public static class AuthEndpoint
 	{
 		response.Cookies.Append(DEVICE_ID_COOKIE_NAME, deviceID, new CookieOptions()
 		{
-			Path = "/auth",
+			Path = AUTH_PATH,
 			SameSite = SameSiteMode.Strict,
 			Secure = true,
 			HttpOnly = true,
