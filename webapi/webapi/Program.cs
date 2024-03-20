@@ -54,6 +54,12 @@ if (app.Environment.IsDevelopment())
 {
 	app.UseSwagger();
 	app.UseSwaggerUI();
+
+	// Redirect to swagger page
+	app.Map("/", (HttpResponse response) =>
+	{
+		response.Redirect("/swagger");
+	}).AllowAnonymous();
 }
 
 app.UseHttpsRedirection();
