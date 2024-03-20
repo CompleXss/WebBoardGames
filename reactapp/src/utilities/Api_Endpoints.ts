@@ -1,9 +1,9 @@
-const BASE_URL_DEVELOPMENT = 'http://localhost:5042'
-const BASE_URL_PRODUCTION = 'http://localhost:5042'
+const BASE_URL_DEVELOPMENT = process.env.REACT_APP_SERVER_URL_DEVELOPMENT
+const BASE_URL_PRODUCTION = process.env.REACT_APP_SERVER_URL_PRODUCTION
 
 const BASE_URL =
     process.env.NODE_ENV === 'development'
-        ? BASE_URL_DEVELOPMENT
+        ? BASE_URL_DEVELOPMENT ?? BASE_URL_PRODUCTION
         : BASE_URL_PRODUCTION
 
 const ENDPOINTS = {
