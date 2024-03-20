@@ -37,7 +37,7 @@ builder.Services.ConfigureAuthentication(config);
 builder.Services.ConfigureAuthorization();
 
 // Configure CORS
-builder.Services.AddCORSPolicy();
+builder.Services.AddCORSPolicy(config);
 
 // Add swagger
 builder.Services.AddEndpointsApiExplorer();

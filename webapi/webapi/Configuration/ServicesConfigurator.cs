@@ -2,30 +2,35 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using webapi.Endpoints;
 
 namespace webapi.Configuration;
 
 public static class ServicesConfigurator
 {
-	public static void AddCORSPolicy(this IServiceCollection services)
+	private const string CORS_POLICY_NAME = "CORSPolicy";
+
+	public static void AddCORSPolicy(this IServiceCollection services, IConfiguration config)
 	{
 		services.AddCors(options =>
 		{
-			options.AddPolicy("CORSPolicy",
+			string[] origins = config.GetSection("CORSAllowedOrigins").Get<string[]>() ?? [];
+
+			options.AddPolicy(CORS_POLICY_NAME,
 				builder =>
 				{
 					builder
 					.AllowAnyMethod()
 					.AllowAnyHeader()
 					.AllowCredentials()
-					.WithOrigins("http://localhost:3000", "https://localhost:3000");
+					.WithOrigins(origins);
 				});
 		});
 	}
 
 	public static void UseCORSPolicy(this WebApplication app)
 	{
-		app.UseCors("CORSPolicy");
+		app.UseCors(CORS_POLICY_NAME);
 	}
 
 	public static void ConfigureAuthentication(this IServiceCollection services, IConfiguration config)
@@ -38,7 +43,7 @@ public static class ServicesConfigurator
 			{
 				OnMessageReceived = context =>
 				{
-					context.Token = context.Request.Cookies["access_token"];
+					context.Token = context.Request.Cookies[AuthEndpoint.ACCESS_TOKEN_COOKIE_NAME];
 					return Task.CompletedTask;
 				}
 			};
@@ -49,8 +54,7 @@ public static class ServicesConfigurator
 	{
 		ValidIssuer = config["Jwt:Issuer"],
 		ValidAudience = config["Jwt:Audience"],
-		IssuerSigningKey = new SymmetricSecurityKey
-					(Encoding.UTF8.GetBytes(config["Jwt:Key"]!)),
+		IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(config["Jwt:Key"]!)),
 		ValidateIssuer = true,
 		ValidateAudience = true,
 		ValidateLifetime = true,
@@ -62,12 +66,11 @@ public static class ServicesConfigurator
 
 	public static void ConfigureAuthorization(this IServiceCollection services)
 	{
-		services.AddAuthorization(options =>
-		{
-			options.FallbackPolicy = new AuthorizationPolicyBuilder()
+		services.AddAuthorizationBuilder()
+			.SetFallbackPolicy(new AuthorizationPolicyBuilder()
 				.AddAuthenticationSchemes(JwtBearerDefaults.AuthenticationScheme)
 				.RequireAuthenticatedUser()
-				.Build();
-		});
+				.Build()
+			);
 	}
 }
