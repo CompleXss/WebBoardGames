@@ -56,13 +56,13 @@ export default function Login() {
     }
 
     function login(login: string, password: string) {
-        console.log('trying to login ' + login)
+        console.log('trying to login as: ' + login)
 
         axios.post(ENDPOINTS.Auth.POST_LOGIN_URL, {
             name: login,
             password: password,
         }).then(() => {
-            console.log(login + ' logged in')
+            console.log('logged in as: ' + login)
             showWarningText('Вход успешен!', 'green')
             setTimeout(() => navigate('/'), 1000)
         }).catch(e => {
