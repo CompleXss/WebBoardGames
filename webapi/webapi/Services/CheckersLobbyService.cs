@@ -9,10 +9,10 @@ public class CheckersLobbyService
 	private readonly List<CheckersLobby> lobbies = new();
 	private readonly HashSet<long> usersInLobby = new();
 
-	private readonly IHubContext<CheckersLobbyHub> hub;
+	private readonly IHubContext<CheckersLobbyHub, ICheckersLobbyHub> hub;
 	private readonly ILogger<CheckersLobbyService> logger;
 
-	public CheckersLobbyService(IHubContext<CheckersLobbyHub> hub, ILogger<CheckersLobbyService> logger)
+	public CheckersLobbyService(IHubContext<CheckersLobbyHub, ICheckersLobbyHub> hub, ILogger<CheckersLobbyService> logger)
 	{
 		this.hub = hub;
 		this.logger = logger;
@@ -63,7 +63,7 @@ public class CheckersLobbyService
 		lobby.SecondPlayerID = userID;
 		lobby.ConnectionIDs.Add(connectionID);
 
-		await hub.Clients.Group(lobbyKey).SendAsync(CheckersLobbyHub.USER_CONNECTED, userID);
+		await hub.Clients.Group(lobbyKey).UserConnected(userID);
 		await hub.Groups.AddToGroupAsync(connectionID, lobbyKey);
 
 		return (lobby, Results.Empty);
@@ -88,7 +88,7 @@ public class CheckersLobbyService
 		else
 		{
 			lobby.SecondPlayerID = null;
-			await hub.Clients.Group(lobby.Key).SendAsync(CheckersLobbyHub.USER_DISCONNECTED, userID);
+			await hub.Clients.Group(lobby.Key).UserDisconnected(userID);
 		}
 
 		return lobby.Key;
@@ -102,7 +102,7 @@ public class CheckersLobbyService
 
 		lobbies.Remove(lobby);
 
-		await hub.Clients.Group(lobby.Key).SendAsync(CheckersLobbyHub.LOBBY_CLOSED);
+		await hub.Clients.Group(lobby.Key).LobbyClosed();
 		await RemoveAllUsersFromLobbyGroup(lobby);
 
 		logger.LogInformation("Lobby with key {LobbyKey} was CLOSED.", lobby.Key);

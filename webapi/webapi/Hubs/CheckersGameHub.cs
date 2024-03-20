@@ -5,13 +5,8 @@ using webapi.Services;
 
 namespace webapi.Hubs;
 
-public class CheckersGameHub : Hub
+public class CheckersGameHub : Hub<ICheckersGameHub>
 {
-	public const string NOT_ALLOWED = "NotAllowed";
-	public const string GAME_STATE_CHANGED = "GameStateChanged";
-	public const string USER_DISCONNECTED = "UserDisconnected";
-	public const string USER_RECONNECTED = "UserReconnected";
-
 	private readonly CheckersGameService gameService;
 	private readonly ILogger<CheckersLobbyHub> logger;
 
@@ -35,13 +30,13 @@ public class CheckersGameHub : Hub
 		var game = gameService.GetUserGame(user.ID);
 		if (game is null)
 		{
-			await Clients.Caller.SendAsync(NOT_ALLOWED);
+			await Clients.Caller.NotAllowed();
 			return;
 		}
 
 		game.PlayersAlive++;
 		game.ConnectionIDs.Add(Context.ConnectionId);
-		await Clients.Group(game.Key).SendAsync(USER_RECONNECTED, user.ID);
+		await Clients.Group(game.Key).UserReconnected(user.ID);
 		await Groups.AddToGroupAsync(Context.ConnectionId, game.Key);
 
 		logger.LogInformation("User with ID {UserID} CONNECTED to checkers game hub.", user.ID);
@@ -68,7 +63,7 @@ public class CheckersGameHub : Hub
 			if (game.PlayersAlive == 0)
 				gameService.CloseGame(game);
 			else
-				await Clients.Group(game.Key).SendAsync(USER_DISCONNECTED, user.ID);
+				await Clients.Group(game.Key).UserDisconnected(user.ID);
 		}
 	}
 
@@ -82,7 +77,7 @@ public class CheckersGameHub : Hub
 		var game = gameService.GetUserGame(user.ID);
 		if (game is null)
 		{
-			await Clients.Caller.SendAsync(NOT_ALLOWED);
+			await Clients.Caller.NotAllowed();
 			return Results.BadRequest("You don't have any active checkers game!");
 		}
 
@@ -92,7 +87,7 @@ public class CheckersGameHub : Hub
 		if (game.WinnerID.HasValue)
 			await gameService.AddGameToHistory(gameHistoryService, game);
 
-		await Clients.Group(game.Key).SendAsync(GAME_STATE_CHANGED);
+		await Clients.Group(game.Key).GameStateChanged();
 		return Results.Ok();
 	}
 
@@ -104,7 +99,7 @@ public class CheckersGameHub : Hub
 		var game = gameService.GetUserGame(user.ID);
 		if (game is null)
 		{
-			await Clients.Caller.SendAsync(NOT_ALLOWED);
+			await Clients.Caller.NotAllowed();
 			return Results.BadRequest("You don't have any active checkers game!");
 		}
 

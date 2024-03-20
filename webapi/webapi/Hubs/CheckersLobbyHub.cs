@@ -7,14 +7,8 @@ namespace webapi.Hubs;
 // TODO: Возможность перезагружать страницу и нормально переподключаться (+ задержка перед киком)
 // TODO: Возможность кикать игроков
 
-public class CheckersLobbyHub : Hub
+public class CheckersLobbyHub : Hub<ICheckersLobbyHub>
 {
-	public const string USER_CONNECTED = "UserConnected";
-	public const string USER_DISCONNECTED = "UserDisconnected";
-	public const string LOBBY_INFO = "LobbyInfo";
-	public const string LOBBY_CLOSED = "LobbyClosed";
-	public const string GAME_STARTED = "GameStarted";
-
 	private readonly CheckersLobbyService lobbyService;
 	private readonly ILogger<CheckersLobbyHub> logger;
 
@@ -111,7 +105,7 @@ public class CheckersLobbyHub : Hub
 
 		gameService.CreateNewGame(lobby.HostID, lobby.SecondPlayerID.Value);
 
-		await Clients.Group(lobby.Key).SendAsync(GAME_STARTED);
+		await Clients.Group(lobby.Key).GameStarted();
 		await lobbyService.RemoveAllUsersFromLobbyGroup(lobby);
 		await lobbyService.CloseLobby(lobby);
 
