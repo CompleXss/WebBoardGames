@@ -25,7 +25,7 @@ public static class CheckersGameRuler
 			return false;
 		}
 
-		if (!SecondStage(Clone(board), moves, playerColor))
+		if (!SecondStage(CloneBoard(board), moves, playerColor))
 		{
 			validationError = "Ход не прошел 2 ступень валидации.";
 			return false;
@@ -42,54 +42,68 @@ public static class CheckersGameRuler
 
 		foreach (var move in moves)
 		{
-			if (move.From.X < 0 || move.From.X > 7 &&
+			if (move.From.X < 0 || move.From.X > 7 ||
 				move.From.Y < 0 || move.From.Y > 7)
 				return false; // Ход вышел за пределы доски
 
-			if (move.From.X == move.To.X && move.From.Y == move.To.Y)
-				return false; // Ход на ту же клетку
+			if (!IsMoveDiagonal(move.From, move.To))
+				return false; // Ход не по диагонали (или на ту же клетку)
 		}
 
 		return true;
 	}
 
-	private static bool SecondStage(CheckersCell[,] Board, CheckersMove[] moves, CheckersCellStates playerColor)
+	private static bool SecondStage(CheckersCell[,] board, CheckersMove[] moves, CheckersCellStates playerColor)
 	{
 		var enemyColor = playerColor == CheckersCellStates.Black ? CheckersCellStates.White : CheckersCellStates.Black;
+		bool shouldEat = false;
 
 		for (int i = 0; i < moves.Length; i++)
 		{
 			var from = moves[i].From;
 			var to = moves[i].To;
 
-			if (Board[from.X, from.Y].cellState != playerColor)
+			if (board[from.X, from.Y].DraughtColor != playerColor)
 				return false; // Ход не своей шашкой
 
-			if (Board[to.X, to.Y].cellState != CheckersCellStates.None)
+			if (board[to.X, to.Y].DraughtColor != CheckersCellStates.None)
 				return false; // Ход не на пустую клетку
 
-			if (!IsMoveDiagonal(from, to))
-				return false; // Ход не по диагонали
 
 
+			bool ate = false;
 			int distance = Math.Abs(to.X - from.X);
 			var moveVector = new Point(Math.Sign(to.X - from.X), Math.Sign(to.Y - from.Y));
 
-			if (!Board[from.X, from.Y].isQueen
-				&& !IsGoingUpwards(moves[i], playerColor)
-				&& Board[from.X + moveVector.X, from.Y + moveVector.Y].cellState != enemyColor)
-				return false; // Ход не в ту сторону
-
-
-
-			if (!Board[from.X, from.Y].isQueen && distance > 1)
+			if (board[from.X, from.Y].IsQueen)
 			{
-				if (distance > 2) return false; // Ход обычной шашкой больше, чем на 2 клетки
 
-				// distance == 2
-				if (Board[from.X + moveVector.X, from.Y + moveVector.Y].cellState != enemyColor)
-					return false; // Ход обычной шашкой на 2 клетки, но никого не съел (или съел своего)
 			}
+			else
+			{
+				if (distance > 2)
+					return false; // Ход обычной шашкой больше, чем на 2 клетки
+
+				if (distance == 2)
+				{
+					ate = board[from.X + moveVector.X, from.Y + moveVector.Y].DraughtColor == enemyColor;
+
+					if (ate)
+					{
+						shouldEat = true;
+						continue;
+					}
+					else
+						return false; // Ход обычной шашкой на 2 клетки, но никого не съел (или съел своего)
+				}
+
+				// distance == 1
+				if (!IsGoingUpwards(moves[i], playerColor))
+					return false; // Ход не в ту сторону
+
+				return true;
+			}
+
 
 
 
@@ -427,7 +441,7 @@ public static class CheckersGameRuler
 
 
 
-	private static CheckersCell[,] Clone(CheckersCell[,] oldArr)
+	private static CheckersCell[,] CloneBoard(CheckersCell[,] oldArr)
 	{
 		var newArr = new CheckersCell[8, 8];
 

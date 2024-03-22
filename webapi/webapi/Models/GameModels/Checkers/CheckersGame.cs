@@ -82,19 +82,19 @@ public sealed class CheckersGame : IDisposable
 
 		for (int x = 0; x < len1; x++)
 			for (int y = 0; y < len2; y++)
-				if (Board[x, y].cellState == playerColor)
+				if (Board[x, y].DraughtColor == playerColor)
 				{
 					if (reverse)
-						myList.Add(new Draught(7 - x, 7 - y, Board[x, y].isQueen));
+						myList.Add(new Draught(7 - x, 7 - y, Board[x, y].IsQueen));
 					else
-						myList.Add(new Draught(x, y, Board[x, y].isQueen));
+						myList.Add(new Draught(x, y, Board[x, y].IsQueen));
 				}
-				else if (Board[x, y].cellState == enemyColor)
+				else if (Board[x, y].DraughtColor == enemyColor)
 				{
 					if (reverse)
-						enemyList.Add(new Draught(7 - x, 7 - y, Board[x, y].isQueen));
+						enemyList.Add(new Draught(7 - x, 7 - y, Board[x, y].IsQueen));
 					else
-						enemyList.Add(new Draught(x, y, Board[x, y].isQueen));
+						enemyList.Add(new Draught(x, y, Board[x, y].IsQueen));
 				}
 
 		return (myList.ToArray(), enemyList.ToArray());
@@ -104,12 +104,12 @@ public sealed class CheckersGame : IDisposable
 
 	public void ApplyMove(CheckersMove[] moves)
 	{
-		var userColor = Board[moves[0].From.X, moves[0].From.Y].cellState;
+		var userColor = Board[moves[0].From.X, moves[0].From.Y].DraughtColor;
 
 		foreach (var move in moves)
 		{
 			bool isQueen =
-				Board[move.From.X, move.From.Y].isQueen
+				Board[move.From.X, move.From.Y].IsQueen
 				|| (userColor == CheckersCellStates.White && move.To.Y == 7)
 				|| (userColor == CheckersCellStates.Black && move.To.Y == 0);
 
@@ -171,7 +171,7 @@ public sealed class CheckersGame : IDisposable
 
 		foreach (var cell in Board)
 		{
-			if (cell.cellState == state)
+			if (cell.DraughtColor == state)
 				count++;
 		}
 
