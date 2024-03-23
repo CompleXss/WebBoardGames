@@ -2,10 +2,10 @@
 
 namespace webapi.Models.GameModels.Checkers;
 
-public struct CheckersCell
+public readonly struct CheckersCell
 {
-	public CheckersCellStates DraughtColor { get; set; }
-	public bool IsQueen { get; set; }
+	public CheckersCellStates DraughtColor { get; init; }
+	public bool IsQueen { get; init; }
 
 	public CheckersCell(CheckersCellStates draughtColor, bool isQueen)
 	{
@@ -23,21 +23,21 @@ public enum CheckersCellStates
 
 public readonly struct CheckersMove
 {
-	public Point From { get; }
-	public Point To { get; }
+	public Point From { get; init; }
+	public Point To { get; init; }
 
 	public CheckersMove(Point from, Point to)
 	{
-		From = from;
-		To = to;
+		this.From = from;
+		this.To = to;
 	}
 }
 
 public readonly struct Draught
 {
-	public int X { get; }
-	public int Y { get; }
-	public bool IsQueen { get; }
+	public int X { get; init; }
+	public int Y { get; init; }
+	public bool IsQueen { get; init; }
 
 	public Draught(int x, int y, bool isQueen)
 	{
