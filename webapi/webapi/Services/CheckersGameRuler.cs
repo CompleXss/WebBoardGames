@@ -1,11 +1,9 @@
-﻿using System;
-using System.Drawing;
-using System.Numerics;
+﻿using System.Drawing;
 using webapi.Models.GameModels.Checkers;
 
 namespace webapi.Services;
 
-// TODO: Валидация хода (шашки)
+// TODO: Eating is mandatory ??? (шашки)
 
 public static class CheckersGameRuler
 {
@@ -13,48 +11,66 @@ public static class CheckersGameRuler
 	{
 		if (playerColor == CheckersCellStates.None)
 		{
-			validationError = "Цвет игрока не определен!";
+			validationError = "Цвет игрока не определен";
 			return false;
 		}
 
-		//CheckSurrender(moves, pl);
-
-		if (!FirstStage(moves))
-		{
-			validationError = "Ход не прошел 1 ступень валидации.";
+		// simple checks
+		if (!FirstStage(board, moves, playerColor, out validationError))
 			return false;
-		}
 
-		if (!SecondStage(CloneBoard(board), moves, playerColor))
-		{
-			validationError = "Ход не прошел 2 ступень валидации.";
+		// advanced checks
+		if (!SecondStage(board, moves, playerColor, out validationError))
 			return false;
-		}
 
-		validationError = "";
+		validationError = string.Empty;
 		return true;
 	}
 
-	private static bool FirstStage(CheckersMove[] moves)
+	private static bool FirstStage(CheckersCell[,] board, CheckersMove[] moves, CheckersCellStates playerColor, out string validationError)
 	{
 		if (moves.Length == 0)
+		{
+			validationError = "Ход пустой";
 			return false;
+		}
 
 		foreach (var move in moves)
 		{
+			if (board[move.From.X, move.From.Y].DraughtColor != playerColor)
+			{
+				validationError = "Ход не своей шашкой";
+				return false;
+			}
+
+			if (board[move.To.X, move.To.Y].DraughtColor != CheckersCellStates.None)
+			{
+				validationError = "Ход не на пустую клетку";
+				return false;
+			}
+
 			if (move.From.X < 0 || move.From.X > 7 ||
 				move.From.Y < 0 || move.From.Y > 7)
-				return false; // Ход вышел за пределы доски
+			{
+				validationError = " Ход вышел за пределы доски";
+				return false;
+			}
 
 			if (!IsMoveDiagonal(move.From, move.To))
-				return false; // Ход не по диагонали (или на ту же клетку)
+			{
+				validationError = "Ход не по диагонали (или на ту же клетку)";
+				return false;
+			}
 		}
 
+		validationError = string.Empty;
 		return true;
 	}
 
-	private static bool SecondStage(CheckersCell[,] board, CheckersMove[] moves, CheckersCellStates playerColor)
+	private static bool SecondStage(CheckersCell[,] board, CheckersMove[] moves, CheckersCellStates playerColor, out string validationError)
 	{
+		board = CloneBoard(board);
+
 		var enemyColor = playerColor == CheckersCellStates.Black ? CheckersCellStates.White : CheckersCellStates.Black;
 		bool shouldEat = false;
 
@@ -62,164 +78,68 @@ public static class CheckersGameRuler
 		{
 			var from = moves[i].From;
 			var to = moves[i].To;
-
-			if (board[from.X, from.Y].DraughtColor != playerColor)
-				return false; // Ход не своей шашкой
-
-			if (board[to.X, to.Y].DraughtColor != CheckersCellStates.None)
-				return false; // Ход не на пустую клетку
-
-
-
-			bool ate = false;
 			int distance = Math.Abs(to.X - from.X);
 			var moveVector = new Point(Math.Sign(to.X - from.X), Math.Sign(to.Y - from.Y));
 
-			if (board[from.X, from.Y].IsQueen)
-			{
 
+
+			bool isNotQueen = !board[from.X, from.Y].IsQueen;
+			if (isNotQueen && distance > 2)
+			{
+				validationError = "Ход обычной шашкой больше, чем на 2 клетки";
+				return false;
 			}
-			else
+
+			bool ate = false;
+			for (int j = 1; j < distance; j++)
 			{
-				if (distance > 2)
-					return false; // Ход обычной шашкой больше, чем на 2 клетки
-
-				if (distance == 2)
+				var passedDraughtColor = board[from.X + moveVector.X * j, from.Y + moveVector.Y * j].DraughtColor;
+				if (passedDraughtColor == playerColor)
 				{
-					ate = board[from.X + moveVector.X, from.Y + moveVector.Y].DraughtColor == enemyColor;
-
-					if (ate)
-					{
-						shouldEat = true;
-						continue;
-					}
-					else
-						return false; // Ход обычной шашкой на 2 клетки, но никого не съел (или съел своего)
+					validationError = "Игрок съел свою шашку";
+					return false;
 				}
 
-				// distance == 1
-				if (!IsGoingUpwards(moves[i], playerColor))
-					return false; // Ход не в ту сторону
-
-				return true;
+				ate = ate || passedDraughtColor == enemyColor;
 			}
 
 
 
+			if (ate)
+			{
+				shouldEat = true; // Съел хотя бы 1 шашку --> на следующих мувах тоже обязательно надо кушать
+				CheckersGame.ApplyMove(board, moves[i]);
+				continue;
+			}
 
+			// else
+			if (isNotQueen && distance == 2)
+			{
+				validationError = "Ход обычной шашкой на 2 клетки, но не съел ни одного врага";
+				return false;
+			}
 
+			if (shouldEat)
+			{
+				validationError = "Начал есть, а потом просто передвинул шашку, никого не съев (в пределах одного хода)";
+				return false;
+			}
 
+			if (isNotQueen && !IsGoingUpwards(moves[i], playerColor))
+			{
+				validationError = "Ход обычной шашкой не вверх";
+				return false;
+			}
 
-
-
+			validationError = string.Empty;
+			return true;
 		}
 
-
-
-
-		//bool isAte = false;
-
-		//for (int i = 1; i < moves.Length; i++)
-		//{
-		//	while (curPos != futPos)
-		//	{
-		//		curPos += deltaVector;
-		//		Draught tmpDraught = Board.Find(X => X.Position == GetPosition(curPos));
-
-		//		if (!activeDraught.IsQueen)
-		//			lenght++;
-
-		//		if (tmpDraught != null) //если на пути есть шашка
-		//			if (tmpDraught.DColor != activeDraught.DColor)
-		//			{
-		//				Board.Remove(tmpDraught);
-		//				isAte = true;
-		//				lenght--;
-		//			}
-		//			else
-		//			{
-		//				//Debug.Log($"Сторона {pl.MySide} На пути встречена своя шашка Ход: {GetTurn(moves)}");
-		//				return false;
-		//			}
-
-		//		if (lenght == 2)
-		//			return false;//ход дальше, чем возможно
-		//	}
-
-		//	activeDraught.Position = GetPosition(curPos);
-
-		//	if (!activeDraught.IsQueen && !isAte && ((pl.IsUpwards && (futPos - curPos1).Y > 0) || (!pl.IsUpwards && (futPos - curPos1).Y < 0)))
-		//	{
-		//		//Debug.Log($"Сторона {pl.MySide} Ход не в ту сторону Ход: {GetTurn(moves)}");
-		//		return false; //проверка на вверх и вниз не для дамки
-		//	}
-
-		//	if (!isAte && moves.Length - i - 1 > 0)
-		//	{
-		//		//Debug.Log($"Сторона {pl.MySide} Избыток ходов Ход: {GetTurn(moves)}");
-		//		return false;//я не съел, но есть ещё ходы
-		//	}
-
-		//	if (!isAte && moves.Length != 2)
-		//	{
-		//		//Debug.Log($"Сторона {pl.MySide} Избыток ходов Ход: {GetTurn(moves)}");
-		//		return false;//я не съел, но есть ещё ходы
-		//	}
-
-		//	if (CheckShouldEat(copyList, pl) != isAte)
-		//	{
-		//		//Debug.Log($"Сторона {pl.MySide} Не съел, но должен Ход: {GetTurn(moves)}");
-		//		return false; //не съел, когда должен был
-		//	}
-
-		//	//activeDraught.Position = GetPosition(from);
-
-		//	CheckQueen(activeDraught, pl);
-		//}
-
-		//if (CheckShouldEat(activeDraught, Board, pl) && isAte)
-		//{
-		//	//Debug.Log($"Сторона {pl.MySide} Не всех доел Ход: {GetTurn(moves)}");
-		//	return false;//доел ли всех
-		//}
-
+		validationError = string.Empty;
 		return true;
 	}
 
-	private static bool IsGoingUpwards(CheckersMove move, CheckersCellStates playerColor)
-	{
-		int yDelta = move.To.Y - move.From.Y;
 
-		return playerColor == CheckersCellStates.White && yDelta > 0
-			|| playerColor == CheckersCellStates.Black && yDelta < 0;
-	}
-
-
-
-	//public static void CheckSurrender(string[] moves, Player pl)
-	//{
-	//	if (moves[0] == "Surrender")
-	//	{
-	//		Debug.Log($"{pl.MySide} сдался!");
-	//	}
-	//}
-
-	//private static bool CheckShouldEat(Draught draught, List<Draught> draughts, Player pl)
-	//{
-	//	if (CheckCanDraughtEat(draughts, draught, pl)) return true;
-	//	return false;
-	//}
-
-	//private static bool CheckShouldEat(List<Draught> draughts, Player pl)
-	//{
-	//	List<Draught> playerDraughts = draughts.FindAll(X => X.DColor == pl.MySide);
-
-	//	foreach (var dr in playerDraughts)
-	//	{
-	//		if (CheckCanDraughtEat(draughts, dr, pl)) return true;
-	//	}
-	//	return false;
-	//}
 
 	//private static bool CheckCanDraughtEat(List<Draught> draughts, Draught draught, Player pl)
 	//{
@@ -417,29 +337,23 @@ public static class CheckersGameRuler
 	//	return false;
 	//}
 
-	//private static void CheckQueen(Draught draught, Player pl)
-	//{
-	//	if (pl.IsUpwards && draught.Position[1] == '1')
-	//	{
-	//		draught.IsQueen = true;
-	//	}
-
-	//	if (!pl.IsUpwards && draught.Position[1] == '8')
-	//	{
-	//		draught.IsQueen = true;
-	//	}
-	//}
 
 
+	private static bool IsGoingUpwards(CheckersMove move, CheckersCellStates playerColor)
+	{
+		int yDelta = move.To.Y - move.From.Y;
 
+		return playerColor == CheckersCellStates.White && yDelta > 0
+			|| playerColor == CheckersCellStates.Black && yDelta < 0;
+	}
+
+	/// <returns> True if move is diagonal and <paramref name="from"/> != <paramref name="to"/>. </returns>
 	private static bool IsMoveDiagonal(Point from, Point to)
 	{
 		return from.X != to.X
 			&& from.Y != to.Y
 			&& Math.Abs(to.X - from.X) == Math.Abs(to.Y - from.Y);
 	}
-
-
 
 	private static CheckersCell[,] CloneBoard(CheckersCell[,] oldArr)
 	{
