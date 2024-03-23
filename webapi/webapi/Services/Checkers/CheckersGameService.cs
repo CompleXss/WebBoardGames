@@ -1,7 +1,6 @@
 ﻿using webapi.Models;
-using webapi.Models.GameModels.Checkers;
 
-namespace webapi.Services;
+namespace webapi.Services.Checkers;
 
 public class CheckersGameService
 {
@@ -44,8 +43,8 @@ public class CheckersGameService
 
 		var userColor = game.GetUserColor(userID);
 		var (allyPositions, enemyPositions) = game.GetDraughtsRelativeTo(userColor);
-		bool isMyTurn = (game.IsWhiteTurn && userColor == CheckersCellStates.White) ||
-						(!game.IsWhiteTurn && userColor == CheckersCellStates.Black);
+		bool isMyTurn = game.IsWhiteTurn && userColor == CheckersCellStates.White ||
+						!game.IsWhiteTurn && userColor == CheckersCellStates.Black;
 
 		return new
 		{

@@ -1,4 +1,4 @@
-﻿namespace webapi.Models.GameModels.Checkers;
+﻿namespace webapi.Services.Checkers;
 
 public sealed class CheckersLobby : IDisposable
 {

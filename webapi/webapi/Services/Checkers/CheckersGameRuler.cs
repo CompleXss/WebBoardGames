@@ -1,7 +1,7 @@
 ﻿using System.Drawing;
-using webapi.Models.GameModels.Checkers;
+using webapi.Models;
 
-namespace webapi.Services;
+namespace webapi.Services.Checkers;
 
 // TODO: Eating is mandatory ??? (шашки)
 

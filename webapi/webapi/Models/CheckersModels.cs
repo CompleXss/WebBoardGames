@@ -1,6 +1,6 @@
 ﻿using System.Drawing;
 
-namespace webapi.Models.GameModels.Checkers;
+namespace webapi.Models;
 
 public readonly struct CheckersCell
 {
@@ -9,8 +9,8 @@ public readonly struct CheckersCell
 
 	public CheckersCell(CheckersCellStates draughtColor, bool isQueen)
 	{
-		this.DraughtColor = draughtColor;
-		this.IsQueen = isQueen;
+		DraughtColor = draughtColor;
+		IsQueen = isQueen;
 	}
 }
 
@@ -28,8 +28,8 @@ public readonly struct CheckersMove
 
 	public CheckersMove(Point from, Point to)
 	{
-		this.From = from;
-		this.To = to;
+		From = from;
+		To = to;
 	}
 }
 
@@ -41,8 +41,8 @@ public readonly struct Draught
 
 	public Draught(int x, int y, bool isQueen)
 	{
-		this.X = x;
-		this.Y = y;
-		this.IsQueen = isQueen;
+		X = x;
+		Y = y;
+		IsQueen = isQueen;
 	}
 }

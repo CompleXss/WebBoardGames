@@ -2,12 +2,13 @@ using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Swashbuckle.AspNetCore.SwaggerGen;
+using FluentValidation;
 using webapi.Data;
 using webapi.Endpoints;
 using webapi.Repositories;
 using webapi.Services;
 using webapi.Configuration;
-using FluentValidation;
+using webapi.Services.Checkers;
 
 var builder = WebApplication.CreateBuilder(args);
 var config = builder.Configuration;

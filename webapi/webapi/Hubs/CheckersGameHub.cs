@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.SignalR;
 using webapi.Models;
-using webapi.Models.GameModels.Checkers;
 using webapi.Services;
+using webapi.Services.Checkers;
 
 namespace webapi.Hubs;
 
