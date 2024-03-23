@@ -102,29 +102,11 @@ public sealed class CheckersGame : IDisposable
 
 
 
-	public void ApplyMove(CheckersMove[] moves)
+	public void ApplyMoves(CheckersMove[] moves)
 	{
-		var userColor = Board[moves[0].From.X, moves[0].From.Y].DraughtColor;
-
 		foreach (var move in moves)
 		{
-			bool isQueen =
-				Board[move.From.X, move.From.Y].IsQueen
-				|| (userColor == CheckersCellStates.White && move.To.Y == 7)
-				|| (userColor == CheckersCellStates.Black && move.To.Y == 0);
-
-			Board[move.From.X, move.From.Y] = new CheckersCell(CheckersCellStates.None, false);
-			Board[move.To.X, move.To.Y] = new CheckersCell(userColor, isQueen);
-
-			int cellsToClearCount = Math.Abs(move.To.X - move.From.X);
-			int moveVectorX = Math.Sign(move.To.X - move.From.X);
-			int moveVectorY = Math.Sign(move.To.Y - move.From.Y);
-
-			for (int i = 1; i < cellsToClearCount; i++)
-			{
-				Board[move.From.X + moveVectorX * i, move.From.Y + moveVectorY * i]
-					= new CheckersCell(CheckersCellStates.None, false);
-			}
+			ApplyMove(Board, move);
 		}
 
 		IsWhiteTurn = !IsWhiteTurn;
@@ -143,6 +125,31 @@ public sealed class CheckersGame : IDisposable
 			return;
 		}
 	}
+
+	public static void ApplyMove(CheckersCell[,] board, CheckersMove move)
+	{
+		var userColor = board[move.From.X, move.From.Y].DraughtColor;
+
+		bool isQueen =
+				board[move.From.X, move.From.Y].IsQueen
+				|| (userColor == CheckersCellStates.White && move.To.Y == 7)
+				|| (userColor == CheckersCellStates.Black && move.To.Y == 0);
+
+		board[move.To.X, move.To.Y] = new CheckersCell(userColor, isQueen);
+
+		// Clear cells
+		int cellsToClearCount = Math.Abs(move.To.X - move.From.X);
+		int moveVectorX = Math.Sign(move.To.X - move.From.X);
+		int moveVectorY = Math.Sign(move.To.Y - move.From.Y);
+
+		for (int i = 0; i < cellsToClearCount; i++)
+		{
+			board[move.From.X + moveVectorX * i, move.From.Y + moveVectorY * i]
+				= new CheckersCell(CheckersCellStates.None, false);
+		}
+	}
+
+
 
 	public void DerelatifyMoves(CheckersMove[] moves, CheckersCellStates playerColor)
 	{

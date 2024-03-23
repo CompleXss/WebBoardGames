@@ -75,7 +75,7 @@ public class CheckersGameService
 		if (!moveIsValid)
 			return null;
 
-		game.ApplyMove(moves);
+		game.ApplyMoves(moves);
 		return game;
 	}
 
