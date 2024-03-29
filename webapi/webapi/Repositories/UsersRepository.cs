@@ -4,27 +4,22 @@ using webapi.Models;
 
 namespace webapi.Repositories;
 
-public class UsersRepository
+public class UsersRepository(AppDbContext db)
 {
-	private readonly AppDbContext context;
+	private readonly AppDbContext db = db;
 
-	public UsersRepository(AppDbContext context)
+	public Task<List<User>> GetAllAsync() => db.Users.ToListAsync();
+	public ValueTask<User?> GetByIdAsync(long userID) => db.Users.FindAsync(userID);
+	public Task<User?> GetByPublicIdAsync(string publicID) => db.Users.FirstOrDefaultAsync(x => x.PublicID == publicID);
+	public Task<User?> GetByLoginAsync(string login) => db.Users.FirstOrDefaultAsync(x => x.Login == login);
+
+	public Task<long> GetDatabaseIdByPublicID(string userPublicID)
 	{
-		this.context = context;
+		return db.Users
+			.Where(x => x.PublicID == userPublicID)
+			.Select(x => x.ID)
+			.SingleAsync();
 	}
-
-	public List<User> GetAll()
-	{
-		return context.Users.ToList();
-	}
-
-	public async Task<List<User>> GetAllAsync()
-	{
-		return await context.Users.ToListAsync();
-	}
-
-	public async Task<User?> GetAsync(long userID) => await context.Users.FindAsync(userID);
-	public async Task<User?> GetAsync(string username) => await context.Users.FirstOrDefaultAsync(x => x.Name == username);
 
 
 
@@ -32,8 +27,8 @@ public class UsersRepository
 	{
 		try
 		{
-			await context.AddAsync(user);
-			return await context.SaveChangesAsync() >= 1;
+			await db.AddAsync(user);
+			return await db.SaveChangesAsync() > 0;
 		}
 		catch (Exception)
 		{
@@ -43,15 +38,15 @@ public class UsersRepository
 
 
 
-	public async Task<bool> DeleteAsync(string username)
+	public async Task<bool> DeleteByPublicIdAsync(string userPublicID)
 	{
-		var userToRemove = await GetAsync(username);
+		var userToRemove = await GetByPublicIdAsync(userPublicID);
 		return await DeleteAsync(userToRemove);
 	}
 
-	public async Task<bool> DeleteAsync(long userID)
+	public async Task<bool> DeleteByIdAsync(long userID)
 	{
-		var userToRemove = await GetAsync(userID);
+		var userToRemove = await GetByIdAsync(userID);
 		return await DeleteAsync(userToRemove);
 	}
 
@@ -62,10 +57,8 @@ public class UsersRepository
 
 		try
 		{
-			context.Users.Remove(userToRemove);
-			await context.SaveChangesAsync();
-
-			return true;
+			db.Users.Remove(userToRemove);
+			return await db.SaveChangesAsync() > 0;
 		}
 		catch (Exception)
 		{

@@ -5,8 +5,8 @@ namespace webapi.Services.Checkers;
 
 public class CheckersLobbyService
 {
-	private readonly List<CheckersLobby> lobbies = new();
-	private readonly HashSet<long> usersInLobby = new();
+	private readonly List<CheckersLobby> lobbies = [];
+	private readonly HashSet<string> usersInLobby = [];
 
 	private readonly IHubContext<CheckersLobbyHub, ICheckersLobbyHub> hub;
 	private readonly ILogger<CheckersLobbyService> logger;
@@ -19,12 +19,12 @@ public class CheckersLobbyService
 
 
 
-	public CheckersLobby? GetUserLobby(long userID)
+	public CheckersLobby? GetUserLobby(string userID)
 	{
 		return lobbies.Find(x => x.HostID == userID || x.SecondPlayerID == userID);
 	}
 
-	public async Task<CheckersLobby?> TryCreateLobbyAsync(long hostID, string connectionID)
+	public async Task<CheckersLobby?> TryCreateLobbyAsync(string hostID, string connectionID)
 	{
 		if (!usersInLobby.Add(hostID))
 			return null;
@@ -42,7 +42,7 @@ public class CheckersLobbyService
 		return lobby;
 	}
 
-	public async Task<(CheckersLobby? lobby, IResult errorResult)> TryEnterLobby(long userID, string connectionID, string lobbyKey)
+	public async Task<(CheckersLobby? lobby, IResult errorResult)> TryEnterLobby(string userID, string connectionID, string lobbyKey)
 	{
 		if (usersInLobby.Contains(userID))
 			return (null, Results.BadRequest("You are already in a lobby."));
@@ -55,7 +55,7 @@ public class CheckersLobbyService
 		if (lobby.HostID == userID)
 			return (lobby, Results.Empty);
 
-		if (lobby.SecondPlayerID.HasValue)
+		if (lobby.SecondPlayerID is not null)
 			return (null, Results.BadRequest("Lobby is already full."));
 
 		usersInLobby.Add(userID);
@@ -70,7 +70,7 @@ public class CheckersLobbyService
 
 	/// <summary> Disconnects user from the lobby. If user was the host, lobby closes. </summary>
 	/// <returns> Key of the lobby which was left by user. Null if leave operation can not be done. </returns>
-	public async Task<string?> LeaveLobby(long userID, string connectionID)
+	public async Task<string?> LeaveLobby(string userID, string connectionID)
 	{
 		// return early if user is not in a lobby
 		if (!usersInLobby.Remove(userID))
@@ -96,8 +96,8 @@ public class CheckersLobbyService
 	public async Task CloseLobby(CheckersLobby lobby)
 	{
 		usersInLobby.Remove(lobby.HostID);
-		if (lobby.SecondPlayerID.HasValue)
-			usersInLobby.Remove(lobby.SecondPlayerID.Value);
+		if (lobby.SecondPlayerID is not null)
+			usersInLobby.Remove(lobby.SecondPlayerID);
 
 		lobbies.Remove(lobby);
 

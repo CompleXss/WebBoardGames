@@ -1,7 +1,7 @@
-import { CheckersHistoryData } from "./gameHistoryTypes";
+import { CheckersHistoryData } from "../../utilities/Api_DataTypes";
 import { getDatesDiff_string } from "../../utilities/DateHelper";
 
-export function mapCheckers(myID: number, history: CheckersHistoryData[]) {
+export function mapCheckers(myID: string, history: CheckersHistoryData[]) {
     if (history.length === 0) return null
 
     return <table>
@@ -17,8 +17,11 @@ export function mapCheckers(myID: number, history: CheckersHistoryData[]) {
 
         <tbody>
             {history.map((data, index) => {
-                const isWin = myID === data.winner.id
-                const enemyName = isWin ? data.looser.name : data.winner.name
+                const winner = data.winners[0]
+                const looser = data.loosers[0]
+
+                const isWin = myID === winner.publicID
+                const enemyName = isWin ? looser.name : winner.name
 
                 return <tr key={index}>
                     <td>{enemyName}</td>
@@ -26,7 +29,7 @@ export function mapCheckers(myID: number, history: CheckersHistoryData[]) {
                         {isWin ? 'Победа' : 'Поражение'}
                     </td>
                     <td>{getDatesDiff_string(data.dateTimeStart, data.dateTimeEnd)}</td>
-                    <td>{data.dateTimeStart.toLocaleString()}</td>
+                    <td>{new Date(data.dateTimeStart).toLocaleString()}</td>
                 </tr>
             })}
         </tbody>

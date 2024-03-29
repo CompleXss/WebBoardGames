@@ -1,14 +1,14 @@
 import axios from 'axios'
 import { useEffect } from 'react'
 import { useQuery } from 'react-query'
-import { GameHistory } from './gameHistoryTypes'
 import { mapCheckers } from './gameHistoryMappers'
+import { Games, GameHistory } from '../../utilities/Api_DataTypes'
 import Loading from '../Loading/loading'
 import ENDPOINTS from '../../utilities/Api_Endpoints'
 
 export default function History() {
     const { data, isLoading, isError } = useQuery('history', fetchData)
-    const d = data as { userID: number, history: GameHistory }
+    const d = data as { userID: string, history: GameHistory }
     const myID = d ? d.userID : null
     const history = d ? d.history : null
 
@@ -17,15 +17,15 @@ export default function History() {
     }, [])
 
     const games = !history || !myID ? [] : Object.keys(history)
-        .filter(name => history[name].length !== 0).map((Name, gameIndex) => {
-            switch (Name) {
-                case 'checkers':
-                    return <div className='table_wrapper' key={'Game ' + gameIndex}>
-                        {mapCheckers(myID, history[Name])}
+        .filter(name => history[name].length !== 0).map((name, index) => {
+            switch (name) {
+                case Games.checkers:
+                    return <div className='table_wrapper' key={'Game ' + index}>
+                        {mapCheckers(myID, history[name])}
                     </div>
 
                 default:
-                    return <h1 style={{ color: 'red' }} key={'Game ' + gameIndex}>Unknown game</h1>
+                    return <h1 style={{ color: 'red' }} key={'Game ' + index}> Неизвестная игра </h1>
             }
         })
 

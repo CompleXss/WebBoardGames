@@ -3,15 +3,15 @@
 public sealed class CheckersLobby : IDisposable
 {
 	private const int MAX_LOBBIES_COUNT = 10_000;
-	private static readonly HashSet<string> activeKeys = new();
+	private static readonly HashSet<string> activeKeys = [];
 
 	public string Key { get; }
-	public long HostID { get; }
-	public long? SecondPlayerID { get; set; }
-	public List<string> ConnectionIDs { get; } = new();
+	public string HostID { get; }
+	public string? SecondPlayerID { get; set; }
+	public List<string> ConnectionIDs { get; } = [];
 	public bool ErrorWhileCreating { get; }
 
-	public CheckersLobby(long hostID)
+	public CheckersLobby(string hostID)
 	{
 		HostID = hostID;
 

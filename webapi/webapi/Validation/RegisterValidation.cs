@@ -3,15 +3,13 @@ using webapi.Models;
 
 namespace webapi.Validation;
 
-public class RegisterValidation : AbstractValidator<UserDto>
+public class RegisterValidation : AbstractValidator<UserRegisterDto>
 {
 	public RegisterValidation()
 	{
-		RuleFor(x => x.Name)
-			.NotEmpty()
-			.Length(3, 32);
+		Include(new LoginValidation());
 
-		RuleFor(x => x.Password)
+		RuleFor(x => x.Name)
 			.NotEmpty()
 			.MinimumLength(3);
 	}

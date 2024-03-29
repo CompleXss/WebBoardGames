@@ -7,54 +7,82 @@ namespace webapi.Services;
 public class GameHistoryService
 {
 	private readonly AppDbContext db;
-	private readonly CheckersHistoryRepository checkersHistoryRepo;
-	private readonly CheckersUserRepository userStatsRepo;
+	private readonly GameHistoryRepository gameHistoryRepo;
+	private readonly UserGameStatisticsRepository userStatsRepo;
+	private readonly GamesRepository gamesRepository;
 
-	public GameHistoryService(AppDbContext db, CheckersHistoryRepository checkersHistoryRepo, CheckersUserRepository userStatsRepo)
+	public GameHistoryService(AppDbContext db, GameHistoryRepository gameHistoryRepo, UserGameStatisticsRepository userStatsRepo, GamesRepository gamesRepository)
 	{
 		this.db = db;
-		this.checkersHistoryRepo = checkersHistoryRepo;
+		this.gameHistoryRepo = gameHistoryRepo;
 		this.userStatsRepo = userStatsRepo;
+		this.gamesRepository = gamesRepository;
 	}
 
 
 
-	public async Task<bool> AddAsync(PlayHistoryDto playHistory)
+	public async Task<bool> AddAsync(GameHistoryDto history)
 	{
 		using var transaction = await db.Database.BeginTransactionAsync();
-		bool succeeded;
+		string gameName = history.Game.ToString();
+		var tasks = new List<Task>(2 * (history.Winners.Length + history.Loosers.Length));
 
-		var task1 = userStatsRepo.AddStatsToUserInfo(playHistory.WinnerId, 1, 1);
-		var task2 = userStatsRepo.AddStatsToUserInfo(playHistory.LooserID, 1, 0);
-
-		switch (playHistory.Game)
+		try
 		{
-			case Games.Checkers:
-				var task3 = AddCheckersGameAsync(playHistory);
-				succeeded = (await Task.WhenAll(task1, task2, task3)).All(x => x);
-				break;
+			// create history entry
+			var gameID = await gamesRepository.GetIdByName(gameName);
+			var historyEntry = new GameHistory()
+			{
+				GameID = gameID,
+				DateTimeStart = history.DateTimeStart,
+				DateTimeEnd = history.DateTimeEnd
+			};
+			await gameHistoryRepo.AddAsync(historyEntry);
+			//await db.SaveChangesAsync();
 
-			default:
-				succeeded = (await Task.WhenAll(task1, task2)).All(x => x);
-				break;
+
+
+			// add players to history
+			tasks.AddRange(history.Winners.Select(winner => gameHistoryRepo.AddHistoryPlayerAsync(new GamePlayer
+			{
+				UserID = winner.ID,
+				GameHistory = historyEntry,
+				//GameHistoryId = historyEntry.Id,
+				IsWinner = true,
+			})));
+
+			tasks.AddRange(history.Loosers.Select(looser => gameHistoryRepo.AddHistoryPlayerAsync(new GamePlayer
+			{
+				UserID = looser.ID,
+				GameHistory = historyEntry,
+				//GameHistoryId = historyEntry.Id,
+				IsWinner = false,
+			})));
+
+
+
+			// update user stats
+			foreach (var winner in history.Winners)
+				tasks.Add(userStatsRepo.AddAsync(gameName, winner.ID, 1, 1));
+
+			foreach (var looser in history.Loosers)
+				tasks.Add(userStatsRepo.AddAsync(gameName, looser.ID, 1, 0));
+
+
+
+			await Task.WhenAll(tasks);
+
+			bool succeeded = await db.SaveChangesAsync() > 0;
+
+			if (succeeded)
+				await transaction.CommitAsync();
+
+			return succeeded;
 		}
-
-		if (succeeded)
-			await transaction.CommitAsync();
-
-		return succeeded;
-	}
-
-	private async Task<bool> AddCheckersGameAsync(PlayHistoryDto historyDto)
-	{
-		var checkersHistory = new CheckersHistory
+		catch (Exception)
 		{
-			WinnerId = historyDto.WinnerId,
-			LooserId = historyDto.LooserID,
-			DateTimeStart = historyDto.DateTimeStart.ToString(AppDbContext.DATETIME_STRING_FORMAT),
-			DateTimeEnd = historyDto.DateTimeEnd.ToString(AppDbContext.DATETIME_STRING_FORMAT)
-		};
-
-		return await checkersHistoryRepo.AddAsync(checkersHistory);
+			await transaction.RollbackAsync();
+			return false;
+		}
 	}
 }

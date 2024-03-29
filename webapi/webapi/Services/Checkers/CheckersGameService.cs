@@ -1,20 +1,17 @@
-﻿using webapi.Models;
+﻿using webapi.Extensions;
+using webapi.Models;
+using webapi.Repositories;
 
 namespace webapi.Services.Checkers;
 
-public class CheckersGameService
+public class CheckersGameService(ILogger<CheckersGameService> logger)
 {
-	private readonly List<CheckersGame> activeGames = new();
-	private readonly ILogger<CheckersGameService> logger;
-
-	public CheckersGameService(ILogger<CheckersGameService> logger)
-	{
-		this.logger = logger;
-	}
+	private readonly List<CheckersGame> activeGames = [];
+	private readonly ILogger<CheckersGameService> logger = logger;
 
 
 
-	public string CreateNewGame(long firstPlayerID, long secondPlayerID)
+	public string CreateNewGame(string firstPlayerID, string secondPlayerID)
 	{
 		bool firstPlayerIsWhite = Random.Shared.NextBoolean();
 
@@ -28,14 +25,14 @@ public class CheckersGameService
 		return game.Key;
 	}
 
-	public CheckersGame? GetUserGame(long userID)
+	public CheckersGame? GetUserGame(string userID)
 	{
 		return activeGames.Find(x => x.WhitePlayerID == userID || x.BlackPlayerID == userID);
 	}
 
 
 
-	public object? GetRelativeGameState(long userID)
+	public object? GetRelativeGameState(string userID)
 	{
 		var game = GetUserGame(userID);
 		if (game is null)
@@ -58,7 +55,7 @@ public class CheckersGameService
 
 
 
-	public CheckersGame? TryMakeMove(CheckersGame game, long userID, CheckersMove[] moves, out string error)
+	public CheckersGame? TryMakeMove(CheckersGame game, string userID, CheckersMove[] moves, out string error)
 	{
 		var userColor = game.GetUserColor(userID);
 		if (game.IsWhiteTurn && userColor != CheckersCellStates.White
@@ -88,17 +85,23 @@ public class CheckersGameService
 
 
 
-	public async Task AddGameToHistory(GameHistoryService gameHistoryService, CheckersGame game)
+	public async Task AddGameToHistory(GameHistoryService gameHistoryService, UsersRepository usersRepository, CheckersGame game)
 	{
-		if (!game.WinnerID.HasValue) return;
+		if (game.WinnerID is null) return;
 
-		var looserID = game.WhitePlayerID == game.WinnerID ? game.BlackPlayerID : game.WhitePlayerID;
+		var looserPublicID = game.WhitePlayerID == game.WinnerID ? game.BlackPlayerID : game.WhitePlayerID;
 
-		var playHistoryDto = new PlayHistoryDto()
+		var winner = await usersRepository.GetByPublicIdAsync(game.WinnerID);
+		var looser = await usersRepository.GetByPublicIdAsync(looserPublicID);
+
+		if (winner is null || looser is null)
+			return;
+
+		var playHistoryDto = new GameHistoryDto()
 		{
-			Game = Games.Checkers,
-			WinnerId = game.WinnerID!.Value,
-			LooserID = looserID,
+			Game = Games.checkers,
+			Winners = [winner],
+			Loosers = [looser],
 			DateTimeStart = game.GameStarted,
 			DateTimeEnd = DateTime.UtcNow,
 		};

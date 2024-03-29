@@ -4,7 +4,12 @@ namespace webapi.Models;
 
 public partial class User
 {
-	public long Id { get; set; }
+	[JsonIgnore]
+	public long ID { get; set; }
+
+	public string PublicID { get; set; } = null!;
+
+	public string Login { get; set; } = null!;
 
 	public string Name { get; set; } = null!;
 
@@ -15,13 +20,10 @@ public partial class User
 	public byte[] PasswordSalt { get; set; } = null!;
 
 	[JsonIgnore]
-	public virtual ICollection<CheckersHistory> CheckersHistoryLoosers { get; set; } = new List<CheckersHistory>();
+	public virtual ICollection<GamePlayer> GamePlayers { get; set; } = new List<GamePlayer>();
 
 	[JsonIgnore]
-	public virtual ICollection<CheckersHistory> CheckersHistoryWinners { get; set; } = new List<CheckersHistory>();
-
-	[JsonIgnore]
-	public virtual CheckersUser? CheckersUser { get; set; }
+	public virtual ICollection<UserGameStatistic> UserGameStatistics { get; set; } = new List<UserGameStatistic>();
 
 	[JsonIgnore]
 	public virtual ICollection<UserRefreshToken> UserRefreshTokens { get; set; } = new List<UserRefreshToken>();

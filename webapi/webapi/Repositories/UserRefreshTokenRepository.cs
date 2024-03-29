@@ -4,41 +4,47 @@ using webapi.Models;
 
 namespace webapi.Repositories;
 
-public class UserRefreshTokenRepository
+public class UserRefreshTokenRepository(AppDbContext db)
 {
-	private readonly AppDbContext context;
+	private readonly AppDbContext db = db;
 
-	public UserRefreshTokenRepository(AppDbContext context)
+
+
+	public Task<UserRefreshToken?> GetAsync(string userPublicID, string deviceID)
 	{
-		this.context = context;
+		return db.UserRefreshTokens
+			.Include(x => x.User)
+			.Where(x => x.User.PublicID == userPublicID && x.DeviceID == deviceID)
+			.FirstOrDefaultAsync();
 	}
 
-	public async Task<UserRefreshToken?> GetAsync(long userID, string deviceID)
-		=> await context.UserRefreshTokens.FindAsync(userID, deviceID);
-
-	public async Task<int> GetUserDeviceCount(long userID)
-		=> await context.UserRefreshTokens.CountAsync(x => x.UserId == userID);
+	public Task<int> GetUserDeviceCount(string userPublicID)
+	{
+		return db.UserRefreshTokens
+			.Include(x => x.User)
+			.CountAsync(x => x.User.PublicID == userPublicID);
+	}
 
 	public async Task<RefreshToken?> AddRefreshTokenAsync(long userID, string deviceID, RefreshToken token)
 	{
 		try
 		{
-			var existingEntry = await context.UserRefreshTokens.FindAsync(userID, deviceID);
+			var existingEntry = await db.UserRefreshTokens.FindAsync(userID, deviceID);
 			var entry = existingEntry ?? new UserRefreshToken()
 			{
-				UserId = userID,
-				DeviceId = deviceID,
+				UserID = userID,
+				DeviceID = deviceID,
 			};
 
 			entry.RefreshTokenHash = token.CreateHash();
-			entry.TokenCreated = token.TokenCreated.ToString(AppDbContext.DATETIME_STRING_FORMAT);
-			entry.TokenExpires = token.TokenExpires.ToString(AppDbContext.DATETIME_STRING_FORMAT);
+			entry.TokenCreated = token.TokenCreated;
+			entry.TokenExpires = token.TokenExpires;
 
 			// if there was no entry, create new, otherwise update
 			if (existingEntry is null)
-				await context.UserRefreshTokens.AddAsync(entry);
+				await db.UserRefreshTokens.AddAsync(entry);
 
-			return await context.SaveChangesAsync() > 0 ? token : null;
+			return await db.SaveChangesAsync() > 0 ? token : null;
 		}
 		catch (Exception)
 		{
@@ -50,16 +56,17 @@ public class UserRefreshTokenRepository
 	{
 		try
 		{
-			context.UserRefreshTokens.Remove(userToken);
-			await context.SaveChangesAsync();
+			bool needToAdd = !await db.UserRefreshTokens.ContainsAsync(userToken);
 
 			// update entry
 			userToken.RefreshTokenHash = newToken.CreateHash();
-			userToken.TokenCreated = newToken.TokenCreated.ToString(AppDbContext.DATETIME_STRING_FORMAT);
-			userToken.TokenExpires = newToken.TokenExpires.ToString(AppDbContext.DATETIME_STRING_FORMAT);
+			userToken.TokenCreated = newToken.TokenCreated;
+			userToken.TokenExpires = newToken.TokenExpires;
 
-			await context.UserRefreshTokens.AddAsync(userToken);
-			return await context.SaveChangesAsync() > 0 ? newToken : null;
+			if (needToAdd)
+				await db.UserRefreshTokens.AddAsync(userToken);
+
+			return await db.SaveChangesAsync() > 0 ? newToken : null;
 		}
 		catch (Exception)
 		{
@@ -67,49 +74,43 @@ public class UserRefreshTokenRepository
 		}
 	}
 
-	public async Task<bool> RemoveUserTokenDevice(long userID, string deviceID)
+
+
+	public Task<bool> RemoveUserTokenDeviceAsync(string userPublicID, string deviceID)
 	{
-		try
-		{
-			var entryToDelete = await context.UserRefreshTokens.FindAsync(userID, deviceID);
-			if (entryToDelete is null)
-				return false;
+		var entriesToDelete = db.UserRefreshTokens
+			.Include(x => x.User)
+			.Where(x => x.User.PublicID == userPublicID && x.DeviceID == deviceID);
 
-			context.UserRefreshTokens.Remove(entryToDelete);
-			await context.SaveChangesAsync();
-
-			return true;
-		}
-		catch (Exception)
-		{
-			return false;
-		}
+		return RemoveEntriesAsync(entriesToDelete);
 	}
 
-	public async Task<bool> RemoveUserTokensExceptOneDevice(long userID, string deviceID)
+	public Task<bool> RemoveUserTokensExceptOneDeviceAsync(string userPublicID, string deviceID)
 	{
-		try
-		{
-			var entriesToDelete = context.UserRefreshTokens.Where(x => x.UserId == userID && x.DeviceId != deviceID);
-			context.UserRefreshTokens.RemoveRange(entriesToDelete);
-			await context.SaveChangesAsync();
+		var entriesToDelete = db.UserRefreshTokens
+				.Include(x => x.User)
+				.Where(x => x.User.PublicID == userPublicID && x.DeviceID != deviceID);
 
-			return true;
-		}
-		catch (Exception)
-		{
-			return false;
-		}
+		return RemoveEntriesAsync(entriesToDelete);
 	}
 
-	public async Task<bool> RemoveAllUserTokens(long userID)
+	public Task<bool> RemoveAllUserTokensAsync(string userPublicID)
+	{
+		var entriesToDelete = db.UserRefreshTokens
+				.Include(x => x.User)
+				.Where(x => x.User.PublicID == userPublicID);
+
+		return RemoveEntriesAsync(entriesToDelete);
+	}
+
+	private async Task<bool> RemoveEntriesAsync(IQueryable<UserRefreshToken> entriesToDelete)
 	{
 		try
 		{
-			var entriesToDelete = context.UserRefreshTokens.Where(x => x.UserId == userID);
-			context.UserRefreshTokens.RemoveRange(entriesToDelete);
-			await context.SaveChangesAsync();
+			db.UserRefreshTokens.RemoveRange(entriesToDelete);
+			await db.SaveChangesAsync();
 
+			// return true even if deleted 0 entries
 			return true;
 		}
 		catch (Exception)

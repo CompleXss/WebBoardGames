@@ -20,11 +20,10 @@ public static class GameEndpoints
 
 	internal static async Task<IResult> IsInCheckersGameAsync(HttpContext context, CheckersGameService gameService)
 	{
-		var user = await AuthService.TryGetUserInfoFromHttpContextAsync(context);
-		if (user is null) return Results.Unauthorized();
+		var userTokenInfo = await AuthService.TryGetUserInfoFromHttpContextAsync(context);
+		if (userTokenInfo is null) return Results.Unauthorized();
 
-		var activeGame = gameService.GetUserGame(user.ID);
-
+		var activeGame = gameService.GetUserGame(userTokenInfo.PublicID);
 		return Results.Ok(activeGame is not null);
 	}
 }

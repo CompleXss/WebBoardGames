@@ -24,14 +24,16 @@ builder.Services.AddValidatorsFromAssemblyContaining<Program>();
 
 // Configure services
 builder.Services.AddTransient<AuthService>();
-builder.Services.AddTransient<UserRefreshTokenRepository>();
-builder.Services.AddTransient<UsersRepository>();
-builder.Services.AddTransient<CheckersUserRepository>();
-builder.Services.AddTransient<CheckersHistoryRepository>();
 builder.Services.AddTransient<GameHistoryService>();
-
 builder.Services.AddSingleton<CheckersLobbyService>();
 builder.Services.AddSingleton<CheckersGameService>();
+
+// Configure repositories
+builder.Services.AddTransient<UsersRepository>();
+builder.Services.AddTransient<UserRefreshTokenRepository>();
+builder.Services.AddTransient<GamesRepository>();
+builder.Services.AddTransient<GameHistoryRepository>();
+builder.Services.AddTransient<UserGameStatisticsRepository>();
 
 // Configure Authentication & Authorization
 builder.Services.ConfigureAuthentication(config);

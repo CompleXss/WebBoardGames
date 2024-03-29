@@ -59,7 +59,7 @@ export default function Login() {
         console.log('trying to login as: ' + login)
 
         axios.post(ENDPOINTS.Auth.POST_LOGIN_URL, {
-            name: login,
+            login: login,
             password: password,
         }).then(() => {
             console.log('logged in as: ' + login)
@@ -75,7 +75,7 @@ export default function Login() {
         console.log('trying to register ' + login)
 
         axios.post(ENDPOINTS.Auth.POST_REGISTER_URL, {
-            name: login,
+            login: login,
             password: password,
         }).then(() => {
             console.log(login + ' registered')

@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.SignalR;
+using webapi.Extensions;
 using webapi.Models;
 using webapi.Services;
 using webapi.Services.Checkers;
@@ -10,6 +11,7 @@ namespace webapi.Hubs;
 
 public class CheckersLobbyHub : Hub<ICheckersLobbyHub>
 {
+	private readonly string GAME_NAME = Games.checkers.ToString();
 	private readonly CheckersLobbyService lobbyService;
 	private readonly ILogger<CheckersLobbyHub> logger;
 
@@ -21,12 +23,12 @@ public class CheckersLobbyHub : Hub<ICheckersLobbyHub>
 
 
 
-	public async override Task OnConnectedAsync()
+	public override async Task OnConnectedAsync()
 	{
 		var user = await GetUserInfoAsync();
 		if (user is null)
 		{
-			logger.LogError("Can not get claims from Access Token!");
+			logger.CouldNotGetUserInfoFromAccessToken();
 			return;
 		}
 
@@ -40,7 +42,7 @@ public class CheckersLobbyHub : Hub<ICheckersLobbyHub>
 		//	return;
 		//}
 
-		logger.LogInformation("User with ID {UserID} CONNECTED to checkers lobby hub.", user.ID);
+		//logger.UserConnectedToGameLobbyHub(user.Name, user.PublicID, GAME_NAME);
 	}
 
 	public override async Task OnDisconnectedAsync(Exception? exception)
@@ -48,12 +50,12 @@ public class CheckersLobbyHub : Hub<ICheckersLobbyHub>
 		var user = await GetUserInfoAsync();
 		if (user is null)
 		{
-			logger.LogError("Can not get claims from Access Token!");
+			logger.CouldNotGetUserInfoFromAccessToken();
 			return;
 		}
 
-		await lobbyService.LeaveLobby(user.ID, Context.ConnectionId);
-		logger.LogInformation("User with ID {UserID} DISCONNECTED from checkers lobby hub.", user.ID);
+		await lobbyService.LeaveLobby(user.PublicID, Context.ConnectionId);
+		//logger.UserDisconnectedFromGameLobbyHub(user.Name, user.PublicID, GAME_NAME);
 	}
 
 
@@ -63,7 +65,7 @@ public class CheckersLobbyHub : Hub<ICheckersLobbyHub>
 		var user = await GetUserInfoAsync();
 		if (user is null) return Results.Unauthorized();
 
-		var lobby = await lobbyService.TryCreateLobbyAsync(user.ID, Context.ConnectionId);
+		var lobby = await lobbyService.TryCreateLobbyAsync(user.PublicID, Context.ConnectionId);
 		if (lobby is null)
 			return Results.BadRequest("Can not create lobby.");
 
@@ -76,10 +78,10 @@ public class CheckersLobbyHub : Hub<ICheckersLobbyHub>
 		var user = await GetUserInfoAsync();
 		if (user is null) return Results.Unauthorized();
 
-		var (lobby, errorResult) = await lobbyService.TryEnterLobby(user.ID, Context.ConnectionId, lobbyKey);
+		var (lobby, errorResult) = await lobbyService.TryEnterLobby(user.PublicID, Context.ConnectionId, lobbyKey);
 		if (lobby is null) return errorResult;
 
-		logger.LogInformation("User with ID {UserID} ENTERED lobby with key {LobbyKey}.", user.ID, lobbyKey);
+		logger.LogInformation("User with ID {UserID} ENTERED lobby with key {LobbyKey}.", user.PublicID, lobbyKey);
 		return Results.Ok(new { lobby });
 	}
 
@@ -88,9 +90,9 @@ public class CheckersLobbyHub : Hub<ICheckersLobbyHub>
 		var user = await GetUserInfoAsync();
 		if (user is null) return Results.Unauthorized();
 
-		var lobbyKey = await lobbyService.LeaveLobby(user.ID, Context.ConnectionId);
+		var lobbyKey = await lobbyService.LeaveLobby(user.PublicID, Context.ConnectionId);
 
-		logger.LogInformation("User with ID {UserID} LEFT the lobby with key {LobbyKey}.", user.ID, lobbyKey);
+		logger.LogInformation("User with ID {UserID} LEFT the lobby with key {LobbyKey}.", user.PublicID, lobbyKey);
 		return Results.Ok();
 	}
 
@@ -99,12 +101,12 @@ public class CheckersLobbyHub : Hub<ICheckersLobbyHub>
 		var user = await GetUserInfoAsync();
 		if (user is null) return Results.Unauthorized();
 
-		var lobby = lobbyService.GetUserLobby(user.ID);
+		var lobby = lobbyService.GetUserLobby(user.PublicID);
 		if (lobby is null) return Results.BadRequest("You're not in a lobby.");
-		if (lobby.HostID != user.ID) return Results.BadRequest("You're not a host of this lobby.");
-		if (!lobby.SecondPlayerID.HasValue) return Results.BadRequest("Lobby is not full.");
+		if (lobby.HostID != user.PublicID) return Results.BadRequest("You're not a host of this lobby.");
+		if (lobby.SecondPlayerID is null) return Results.BadRequest("Lobby is not full.");
 
-		gameService.CreateNewGame(lobby.HostID, lobby.SecondPlayerID.Value);
+		gameService.CreateNewGame(lobby.HostID, lobby.SecondPlayerID);
 
 		await Clients.Group(lobby.Key).GameStarted();
 		await lobbyService.RemoveAllUsersFromLobbyGroup(lobby);

@@ -4,24 +4,24 @@ namespace webapi.Services.Checkers;
 
 public sealed class CheckersGame : IDisposable
 {
-	private static readonly HashSet<string> activeKeys = new();
+	private static readonly HashSet<string> activeKeys = [];
 
 	public string Key { get; }
 
-	public long WhitePlayerID { get; init; }
-	public long BlackPlayerID { get; init; }
+	public string WhitePlayerID { get; init; }
+	public string BlackPlayerID { get; init; }
 
 	public int PlayersAlive { get; set; }
-	public List<string> ConnectionIDs { get; } = new();
+	public List<string> ConnectionIDs { get; } = [];
 
 	public bool IsWhiteTurn { get; set; } = true;
-	public long? WinnerID { get; private set; }
+	public string? WinnerID { get; private set; }
 
 	public DateTime GameStarted { get; }
 
 	public CheckersCell[,] Board { get; } = new CheckersCell[8, 8];
 
-	private CheckersGame(long whitePlayerID, long blackPlayerID)
+	private CheckersGame(string whitePlayerID, string blackPlayerID)
 	{
 		do
 		{
@@ -35,7 +35,7 @@ public sealed class CheckersGame : IDisposable
 		GameStarted = DateTime.UtcNow;
 	}
 
-	public static CheckersGame CreateNew(long whitePlayerID, long blackPlayerID)
+	public static CheckersGame CreateNew(string whitePlayerID, string blackPlayerID)
 	{
 		var game = new CheckersGame(whitePlayerID, blackPlayerID);
 		var board = game.Board;
@@ -59,7 +59,7 @@ public sealed class CheckersGame : IDisposable
 		return game;
 	}
 
-	public CheckersCellStates GetUserColor(long userID)
+	public CheckersCellStates GetUserColor(string userID)
 	{
 		return BlackPlayerID == userID
 			? CheckersCellStates.Black

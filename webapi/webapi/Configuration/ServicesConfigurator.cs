@@ -2,7 +2,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
-using webapi.Endpoints;
+using webapi.Extensions;
 
 namespace webapi.Configuration;
 
@@ -43,7 +43,7 @@ public static class ServicesConfigurator
 			{
 				OnMessageReceived = context =>
 				{
-					context.Token = context.Request.Cookies[AuthEndpoint.ACCESS_TOKEN_COOKIE_NAME];
+					context.Token = context.Request.GetAccessTokenCookie();
 					return Task.CompletedTask;
 				}
 			};

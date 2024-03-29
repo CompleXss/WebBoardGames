@@ -4,6 +4,6 @@ public interface ICheckersGameHub
 {
 	Task NotAllowed();
 	Task GameStateChanged();
-	Task UserReconnected(long userID);
-	Task UserDisconnected(long userID);
+	Task UserReconnected(string userPublicID);
+	Task UserDisconnected(string userPublicID);
 }

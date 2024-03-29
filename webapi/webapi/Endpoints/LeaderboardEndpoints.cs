@@ -9,14 +9,9 @@ public static class LeaderboardEndpoints
 		app.MapGet("/leaderboard", GetLeaderboardAsync).AllowAnonymous();
 	}
 
-	internal static async Task<IResult> GetLeaderboardAsync(HttpContext context, CheckersUserRepository checkersStatsRepo)
+	internal static async Task<IResult> GetLeaderboardAsync(HttpContext context, UserGameStatisticsRepository gameStatsRepo)
 	{
-		var checkersLeaderboard = await checkersStatsRepo.GetTopUsersInfo(10);
-		// other leaderboards...
-
-		return Results.Ok(new
-		{
-			Checkers = checkersLeaderboard,
-		});
+		var leaderboard = await gameStatsRepo.GetTopUsersInfoForEveryGame(10);
+		return Results.Ok(leaderboard);
 	}
 }

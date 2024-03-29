@@ -8,39 +8,32 @@ using webapi.Models;
 using webapi.Repositories;
 using webapi.Configuration;
 using webapi.Endpoints;
+using webapi.Extensions;
 
 namespace webapi.Services;
 
 public class AuthService
 {
+	public const string ACCESS_TOKEN_COOKIE_NAME = "access_token";
+	public const string REFRESH_TOKEN_COOKIE_NAME = "refresh_token";
+	public const string DEVICE_ID_COOKIE_NAME = "device_guid";
+
 	public static readonly TimeSpan accessTokenLifetime = TimeSpan.FromMinutes(5);
 	public static readonly TimeSpan refreshTokenLifetime = TimeSpan.FromDays(60);
 	public static readonly TimeSpan deviceID_CookieLifetime = TimeSpan.FromDays(400);
 
-	private readonly UserRefreshTokenRepository repo;
 	private readonly IConfiguration config;
+	private readonly UserRefreshTokenRepository refreshTokenRepo;
 
-	public AuthService(IConfiguration config, UserRefreshTokenRepository userRefreshTokenRepo)
+	public AuthService(IConfiguration config, UserRefreshTokenRepository refreshTokenRepo)
 	{
 		this.config = config;
-		this.repo = userRefreshTokenRepo;
+		this.refreshTokenRepo = refreshTokenRepo;
 	}
 
 
 
-	public User CreateUser(UserDto request)
-	{
-		CreatePasswordHash(request.Password, out byte[] passwordHash, out byte[] passwordSalt);
-
-		return new User()
-		{
-			Name = request.Name,
-			PasswordHash = passwordHash,
-			PasswordSalt = passwordSalt,
-		};
-	}
-
-	private static void CreatePasswordHash(string password, out byte[] passwordHash, out byte[] passwordSalt)
+	public void CreatePasswordHash(string password, out byte[] passwordHash, out byte[] passwordSalt)
 	{
 		using var hmac = new HMACSHA512();
 
@@ -48,7 +41,7 @@ public class AuthService
 		passwordHash = hmac.ComputeHash(Encoding.UTF8.GetBytes(password));
 	}
 
-	public static bool VerifyPasswordHash(string password, byte[] passwordHash, byte[] passwordSalt)
+	public bool VerifyPasswordHash(string password, byte[] passwordHash, byte[] passwordSalt)
 	{
 		using var hmac = new HMACSHA512(passwordSalt);
 
@@ -58,15 +51,14 @@ public class AuthService
 
 
 
-	public string CreateAccessToken(User user) => CreateAccessToken(user.Id, user.Name);
+	public string CreateAccessToken(User user) => CreateAccessToken(user.PublicID);
 
-	public string CreateAccessToken(long userID, string userName)
+	public string CreateAccessToken(string userPublicID)
 	{
 		var claims = new Claim[]
 		{
-			new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
-			new Claim(JwtRegisteredClaimNames.Sub, userID.ToString()),
-			new Claim(JwtRegisteredClaimNames.Name, userName),
+			new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+			new(JwtRegisteredClaimNames.Sub, userPublicID.ToString()),
 		};
 
 		var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(config["Jwt:Key"]!));
@@ -86,39 +78,33 @@ public class AuthService
 		return tokenHandler.WriteToken(token);
 	}
 
-	public static UserTokenInfo GetUserInfoFromAccessToken(string accessToken)
-	{
-		var decodedToken = DecodeJwtToken(accessToken);
-		return GetUserInfoFromAccessToken(decodedToken);
-	}
-
 	public static async Task<UserTokenInfo?> TryGetUserInfoFromHttpContextAsync(HttpContext context)
 	{
-		var accessToken = await context.GetTokenAsync(AuthEndpoint.ACCESS_TOKEN_COOKIE_NAME);
+		var accessToken = await context.GetTokenAsync(ACCESS_TOKEN_COOKIE_NAME);
 		if (accessToken is null) return null;
 
 		return GetUserInfoFromAccessToken(accessToken);
 	}
 
+	public static UserTokenInfo GetUserInfoFromAccessToken(string accessToken)
+	{
+		var tokenHandler = new JwtSecurityTokenHandler();
+		var decodedToken = tokenHandler.ReadJwtToken(accessToken);
+
+		return GetUserInfoFromAccessToken(decodedToken);
+	}
+
 	public static UserTokenInfo GetUserInfoFromAccessToken(JwtSecurityToken accessToken)
 	{
-		long userID = long.Parse(accessToken.Claims.FirstOrDefault(x => x.Type == JwtRegisteredClaimNames.Sub)!.Value);
-		string userName = accessToken.Claims.FirstOrDefault(x => x.Type == JwtRegisteredClaimNames.Name)!.Value;
+		string publicID = accessToken.Claims.FirstOrDefault(x => x.Type == JwtRegisteredClaimNames.Sub)!.Value;
 
 		return new UserTokenInfo()
 		{
-			ID = userID,
-			Name = userName,
+			PublicID = publicID,
 		};
 	}
 
-	public static JwtSecurityToken DecodeJwtToken(string token)
-	{
-		var tokenHandler = new JwtSecurityTokenHandler();
-		return tokenHandler.ReadJwtToken(token);
-	}
-
-	/// <returns><see cref="JwtSecurityToken"/> if token is valid. Null if it's not.</returns>
+	/// <returns> <see cref="JwtSecurityToken"/> if token is valid. Null if it's not. </returns>
 	public async Task<JwtSecurityToken?> ValidateAccessTokenAsync(string? accessToken)
 	{
 		if (accessToken is null)
@@ -132,7 +118,7 @@ public class AuthService
 			: null;
 	}
 
-	/// <returns><see cref="JwtSecurityToken"/> if token is valid. Null if it's not.</returns>
+	/// <returns> <see cref="JwtSecurityToken"/> if token is valid. Null if it's not. </returns>
 	public async Task<JwtSecurityToken?> ValidateAccessTokenAsync_DontCheckExpireDate(string? accessToken)
 	{
 		if (accessToken is null)
@@ -155,34 +141,36 @@ public class AuthService
 			: null;
 	}
 
-	public async Task<UserRefreshToken?> FindUserRefreshTokenAsync(long userId, string deviceID)
-		=> await repo.GetAsync(userId, deviceID);
+	public Task<UserRefreshToken?> GetUserRefreshTokenAsync(string userPublicID, string deviceID)
+	{
+		return refreshTokenRepo.GetAsync(userPublicID, deviceID);
+	}
 
-	public async Task<RefreshToken?> CreateRefreshTokenAsync(long userID, string deviceID)
+	public Task<RefreshToken?> CreateRefreshTokenAsync(long userID, string deviceID)
 	{
 		var token = CreateRefreshToken();
-		return await repo.AddRefreshTokenAsync(userID, deviceID, token);
+		return refreshTokenRepo.AddRefreshTokenAsync(userID, deviceID, token);
 	}
 
-	public async Task<RefreshToken?> UpdateUserRefreshTokenAsync(UserRefreshToken userRefreshToken)
+	public Task<RefreshToken?> UpdateUserRefreshTokenAsync(UserRefreshToken userRefreshToken)
 	{
 		var token = CreateRefreshToken();
-		return await repo.UpdateRefreshTokenAsync(userRefreshToken, token);
+		return refreshTokenRepo.UpdateRefreshTokenAsync(userRefreshToken, token);
 	}
 
-	public async Task<bool> LogoutFromDevice(long userID, string deviceID)
+	public Task<bool> LogoutFromDevice(string userPublicID, string deviceID)
 	{
-		return await repo.RemoveUserTokenDevice(userID, deviceID);
+		return refreshTokenRepo.RemoveUserTokenDeviceAsync(userPublicID, deviceID);
 	}
 
-	public async Task<bool> LogoutFromAllDevices(long userID)
+	public Task<bool> LogoutFromAllDevices(string userPublicID)
 	{
-		return await repo.RemoveAllUserTokens(userID);
+		return refreshTokenRepo.RemoveAllUserTokensAsync(userPublicID);
 	}
 
-	public async Task<bool> LogoutFromAllDevices_ExceptOne(long userID, string deviceID)
+	public Task<bool> LogoutFromAllDevices_ExceptOne(string userPublicID, string deviceID)
 	{
-		return await repo.RemoveUserTokensExceptOneDevice(userID, deviceID);
+		return refreshTokenRepo.RemoveUserTokensExceptOneDeviceAsync(userPublicID, deviceID);
 	}
 
 
@@ -195,5 +183,73 @@ public class AuthService
 			TokenCreated = DateTime.UtcNow,
 			TokenExpires = DateTime.UtcNow.Add(refreshTokenLifetime)
 		};
+	}
+
+
+
+	public async Task<bool> AddNewTokenPairToResponseCookies(HttpContext context, User user)
+	{
+		string? deviceID = context.Request.GetDeviceIdCookie();
+		deviceID ??= Guid.NewGuid().ToString();
+
+		var refreshToken = await CreateRefreshTokenAsync(user.ID, deviceID);
+		if (refreshToken is null)
+			return false;
+
+		var accessToken = CreateAccessToken(user);
+		AddTokenCookiesToResponse(context.Response, deviceID, accessToken, refreshToken);
+
+		return true;
+	}
+
+	public void AddTokenCookiesToResponse(HttpResponse response, string deviceID, string accessToken, RefreshToken refreshToken)
+	{
+		response.Cookies.Append(DEVICE_ID_COOKIE_NAME, deviceID, new CookieOptions()
+		{
+			Path = AuthEndpoint.AUTH_PATH,
+			SameSite = SameSiteMode.Strict,
+			Secure = false,
+			HttpOnly = true,
+			Expires = DateTime.UtcNow.Add(deviceID_CookieLifetime),
+		});
+
+		response.Cookies.Append(ACCESS_TOKEN_COOKIE_NAME, accessToken, new CookieOptions()
+		{
+			Path = "/",
+			SameSite = SameSiteMode.Strict,
+			Secure = false,
+			HttpOnly = true,
+			Expires = refreshToken.TokenExpires,
+		});
+
+		response.Cookies.Append(REFRESH_TOKEN_COOKIE_NAME, refreshToken.Token, new CookieOptions()
+		{
+			Path = AuthEndpoint.REFRESH_TOKEN_PATH,
+			SameSite = SameSiteMode.Strict,
+			Secure = false,
+			HttpOnly = true,
+			Expires = refreshToken.TokenExpires,
+		});
+	}
+
+	public void DeleteTokenCookies(HttpResponse response)
+	{
+		response.Cookies.Append(ACCESS_TOKEN_COOKIE_NAME, "", new CookieOptions()
+		{
+			Path = "/",
+			SameSite = SameSiteMode.Strict,
+			Secure = true,
+			HttpOnly = true,
+			Expires = DateTime.UnixEpoch,
+		});
+
+		response.Cookies.Append(REFRESH_TOKEN_COOKIE_NAME, "", new CookieOptions()
+		{
+			Path = AuthEndpoint.REFRESH_TOKEN_PATH,
+			SameSite = SameSiteMode.Strict,
+			Secure = true,
+			HttpOnly = true,
+			Expires = DateTime.UnixEpoch,
+		});
 	}
 }

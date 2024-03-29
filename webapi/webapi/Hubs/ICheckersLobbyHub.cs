@@ -4,6 +4,6 @@ public interface ICheckersLobbyHub
 {
 	Task GameStarted();
 	Task LobbyClosed();
-	Task UserConnected(long userID);
-	Task UserDisconnected(long userID);
+	Task UserConnected(string userPublicID);
+	Task UserDisconnected(string userPublicID);
 }

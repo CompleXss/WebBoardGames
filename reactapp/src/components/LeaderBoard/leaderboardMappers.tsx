@@ -1,6 +1,6 @@
-import { CheckersLeaderboardData } from "./leaderboardTypes"
+import { UserGameStats } from "../../utilities/Api_DataTypes"
 
-export function mapCheckers(leaderboard: CheckersLeaderboardData[]) {
+export function mapCheckers(leaderboard: UserGameStats[]) {
     if (leaderboard.length === 0) return null
 
     return <table>

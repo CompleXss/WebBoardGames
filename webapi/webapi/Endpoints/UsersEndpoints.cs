@@ -1,5 +1,4 @@
-﻿using webapi.Data;
-using webapi.Models;
+﻿using webapi.Models;
 using webapi.Repositories;
 using webapi.Services;
 
@@ -16,7 +15,7 @@ public static class UsersEndpoints
 		app.MapGet("/user", GetAsync)
 			.Produces<User>();
 
-		app.MapGet("/user/{userID}", GetByIDAsync)
+		app.MapGet("/user/{userPublicID}", GetByPublicIDAsync)
 			.AllowAnonymous()
 			.Produces<User>();
 
@@ -25,44 +24,48 @@ public static class UsersEndpoints
 
 
 
-	internal static async Task<IResult> GetAllAsync(UsersRepository users)
+	internal static async Task<IResult> GetAllAsync(UsersRepository usersRepository)
 	{
-		return Results.Ok(await users.GetAllAsync());
+		return Results.Ok(await usersRepository.GetAllAsync());
 	}
 
-	internal static async Task<IResult> GetAsync(HttpContext context, UsersRepository users)
+	internal static async Task<IResult> GetAsync(HttpContext context, UsersRepository usersRepository)
 	{
 		var userInfo = await AuthService.TryGetUserInfoFromHttpContextAsync(context);
 		if (userInfo is null) return Results.Unauthorized();
 
-		var user = await users.GetAsync(userInfo.ID);
+		var user = await usersRepository.GetByPublicIdAsync(userInfo.PublicID);
 
 		return user != null
 			? Results.Ok(user)
-			: Results.NotFound($"User '{userInfo.Name}' not found.");
+			: Results.NotFound("User not found");
 	}
 
-	internal static async Task<IResult> GetByIDAsync(UsersRepository users, long userID)
+	internal static async Task<IResult> GetByPublicIDAsync(UsersRepository usersRepository, string userPublicID)
 	{
-		var user = await users.GetAsync(userID);
+		var user = await usersRepository.GetByPublicIdAsync(userPublicID);
 
 		return user != null
 			? Results.Ok(user)
-			: Results.NotFound($"User with ID '{userID}' not found.");
+			: Results.NotFound("User not found");
 	}
 
-	internal static async Task<IResult> DeleteAsync(HttpContext context, UsersRepository users, AppDbContext db)
+	internal static async Task<IResult> DeleteAsync(HttpContext context, UsersRepository usersRepository, AuthService auth)
 	{
-		var user = await AuthService.TryGetUserInfoFromHttpContextAsync(context);
-		if (user is null) return Results.Unauthorized();
+		var userInfo = await AuthService.TryGetUserInfoFromHttpContextAsync(context);
+		if (userInfo is null) return Results.Unauthorized();
 
-		bool deleted = await users.DeleteAsync(user.ID);
+		var user = await usersRepository.GetByPublicIdAsync(userInfo.PublicID);
+		if (user is null)
+			return Results.BadRequest("Could not delete. User not found");
+
+		bool deleted = await usersRepository.DeleteAsync(user);
 		if (deleted)
 		{
-			AuthEndpoint.DeleteTokenCookies(context.Response);
-			return Results.Ok($"User '{user.Name}' was deleted.");
+			auth.DeleteTokenCookies(context.Response);
+			return Results.Ok($"User `{user.Name}` was deleted");
 		}
 
-		return Results.BadRequest($"Can not delete user '{user.Name}'.");
+		return Results.BadRequest($"Could not delete user `{user.Name}`");
 	}
 }

@@ -2,15 +2,15 @@
 
 public partial class UserRefreshToken
 {
-	public long UserId { get; set; }
+	public long UserID { get; set; }
 
-	public string DeviceId { get; set; } = null!;
+	public string DeviceID { get; set; } = null!;
 
 	public byte[] RefreshTokenHash { get; set; } = null!;
 
-	public string TokenCreated { get; set; } = null!;
+	public DateTime TokenCreated { get; set; }
 
-	public string TokenExpires { get; set; } = null!;
+	public DateTime TokenExpires { get; set; }
 
 	public virtual User User { get; set; } = null!;
 }

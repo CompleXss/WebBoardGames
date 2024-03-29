@@ -1,7 +1,12 @@
 ﻿namespace webapi.Models;
 
-public record UserDto
+public record UserLoginDto
 {
-    public required string Name { get; init; }
-    public required string Password { get; init; }
+	public required string Login { get; init; }
+	public required string Password { get; init; }
+}
+
+public record UserRegisterDto : UserLoginDto
+{
+	public required string Name { get; init; }
 }
