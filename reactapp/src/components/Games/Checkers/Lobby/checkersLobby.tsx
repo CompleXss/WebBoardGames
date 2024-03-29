@@ -43,12 +43,11 @@ export default function CheckersLobby() {
     }, [])
 
     // create connection
-    const { connection, loading, setLoading, error }
-        = useWebsocketConnection(ENDPOINTS.Hubs.CHECKERS_LOBBY, {
-            whenCreatingConnection: clearLobbyInfo,
-            whenConnectionCreated: addEventHandlers,
-            debugInConsole: true,
-        })
+    const { connection, loading, setLoading, error } = useWebsocketConnection(ENDPOINTS.Hubs.CHECKERS_LOBBY, {
+        whenCreatingConnection: clearLobbyInfo,
+        whenConnectionCreated: addEventHandlers,
+        debugInConsole: true,
+    })
 
     // server side event handlers
     function addEventHandlers(connection: HubConnection) {

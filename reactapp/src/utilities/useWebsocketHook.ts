@@ -43,7 +43,7 @@ export function useWebsocketConnection(url: string, params?: UseWebsocketHookPar
 
 
 
-interface UseWebsocketHookParams {
+type UseWebsocketHookParams = {
     debugInConsole?: boolean,
     whenCreatingConnection?: () => void,
     whenConnectionCreated?: (connection: HubConnection) => void,
