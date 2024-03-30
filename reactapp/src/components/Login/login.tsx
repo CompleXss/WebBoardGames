@@ -52,7 +52,7 @@ export default function Login() {
     }
 
     function getErrorMessage(e: any) {
-        return (e?.response?.data?.message || e?.message || 'Server Error')
+        return (e?.response?.data?.message || 'Server Error')
     }
 
     function login(login: string, password: string) {
