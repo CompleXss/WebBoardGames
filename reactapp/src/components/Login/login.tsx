@@ -52,9 +52,7 @@ export default function Login() {
     }
 
     function getErrorMessage(e: any) {
-        return (e?.response?.data?.errors && e?.response?.data?.errors[0])
-            || e?.response?.data
-            || e?.message
+        return (e?.response?.data?.message || e?.message || 'Server Error')
     }
 
     function login(login: string, password: string) {
@@ -68,7 +66,7 @@ export default function Login() {
             showWarningText('Вход успешен!', 'green')
             setTimeout(() => navigate(redirectAfterLogin), 1000)
         }).catch(e => {
-            console.log(e)
+            console.log(e?.response?.data || e?.message || e)
             showWarningText(getErrorMessage(e))
         })
     }
@@ -85,7 +83,7 @@ export default function Login() {
             showWarningText('Регистрация успешна!', 'green')
             setTimeout(() => navigate(redirectAfterLogin), 1000)
         }).catch(e => {
-            console.log(e)
+            console.log(e?.response?.data || e?.message || e)
             showWarningText(getErrorMessage(e))
         })
     }
