@@ -7,10 +7,17 @@ public class RegisterValidation : AbstractValidator<UserRegisterDto>
 {
 	public RegisterValidation()
 	{
+		ClassLevelCascadeMode = CascadeMode.Stop;
+
 		Include(new LoginValidation());
+
+		RuleFor(x => x.Login)
+			.Must(x => x.All(c => !char.IsWhiteSpace(c)))
+			.WithErrorCode("WhiteSpaceValidator")
+			.WithMessage(x => $"'{nameof(x.Login)}' should not have white spaces.");
 
 		RuleFor(x => x.Name)
 			.NotEmpty()
-			.MinimumLength(3);
+			.MinimumLength(1);
 	}
 }

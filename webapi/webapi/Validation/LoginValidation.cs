@@ -7,10 +7,11 @@ public class LoginValidation : AbstractValidator<UserLoginDto>
 {
 	public LoginValidation()
 	{
+		ClassLevelCascadeMode = CascadeMode.Stop;
+
 		RuleFor(x => x.Login)
 			.NotEmpty()
-			.Length(3, 32)
-			.Must(x => x.All(c => !char.IsWhiteSpace(c))); // should not have white spaces
+			.Length(3, 32);
 
 		// TODO: password validation
 		RuleFor(x => x.Password)
