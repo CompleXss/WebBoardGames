@@ -98,14 +98,10 @@ public class CheckersGameHub : Hub<ICheckersGameHub>
 		game = gameService.TryMakeMove(game, user.PublicID, moves, out string error);
 		if (game is null) return Results.BadRequest(error);
 
-		await Clients.Group(game.Key).GameStateChanged();
-
 		if (game.WinnerID is not null)
-		{
-			gameService.CloseGame(game);
 			await gameService.AddGameToHistory(gameHistoryService, usersRepository, game);
-		}
 
+		await Clients.Group(game.Key).GameStateChanged();
 		return Results.Ok();
 	}
 
