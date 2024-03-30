@@ -72,17 +72,14 @@ public sealed class CheckersGame : IDisposable
 		if (playerColor == CheckersCellStates.None)
 			return (Array.Empty<Draught>(), Array.Empty<Draught>());
 
-		var myList = new List<Draught>();
-		var enemyList = new List<Draught>();
+		var myList = new List<Draught>(12);
+		var enemyList = new List<Draught>(12);
 
 		var enemyColor = playerColor == CheckersCellStates.Black ? CheckersCellStates.White : CheckersCellStates.Black;
 		bool reverse = ShouldMirrorMove(playerColor);
 
-		int len1 = Board.GetLength(0);
-		int len2 = Board.GetLength(1);
-
-		for (int x = 0; x < len1; x++)
-			for (int y = 0; y < len2; y++)
+		for (int x = 0; x < 8; x++)
+			for (int y = 0; y < 8; y++)
 				if (Board[x, y].DraughtColor == playerColor)
 				{
 					if (reverse)
@@ -113,14 +110,14 @@ public sealed class CheckersGame : IDisposable
 		IsWhiteTurn = !IsWhiteTurn;
 
 		int whiteCount = CountCellWithState(CheckersCellStates.White);
-		if (whiteCount == 0)
+		if (whiteCount == 0 || CheckersGameRuler.IsToiletForPlayer(Board, CheckersCellStates.White))
 		{
 			WinnerID = BlackPlayerID;
 			return;
 		}
 
 		int blackCount = CountCellWithState(CheckersCellStates.Black);
-		if (blackCount == 0)
+		if (blackCount == 0 || CheckersGameRuler.IsToiletForPlayer(Board, CheckersCellStates.Black))
 		{
 			WinnerID = WhitePlayerID;
 			return;

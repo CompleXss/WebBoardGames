@@ -141,6 +141,71 @@ public static class CheckersGameRuler
 
 
 
+	public static bool IsToiletForPlayer(CheckersCell[,] board, CheckersCellStates playerColor)
+	{
+		if (playerColor == CheckersCellStates.Black)
+			board = CloneAndReverse(board);
+
+		var enemyColor = playerColor == CheckersCellStates.Black ? CheckersCellStates.White : CheckersCellStates.Black;
+
+		for (int x = 0; x < 8; x++)
+			for (int y = 0; y < 8; y++)
+			{
+				if (board[x, y].DraughtColor != playerColor)
+					continue;
+
+				bool isQueen = board[x, y].IsQueen;
+
+				// up left
+				bool canMoveUpLeft =
+					(x > 0 && y < 7 && board[x - 1, y + 1].DraughtColor == CheckersCellStates.None) ||
+					(x > 1 && y < 6 && board[x - 1, y + 1].DraughtColor == enemyColor && board[x - 2, y + 2].DraughtColor == CheckersCellStates.None);
+
+				if (canMoveUpLeft) return false;
+
+				// up right
+				bool canMoveUpRight =
+					(x < 7 && y < 7 && board[x + 1, y + 1].DraughtColor == CheckersCellStates.None) ||
+					(x < 6 && y < 6 && board[x + 1, y + 1].DraughtColor == enemyColor && board[x + 2, y + 2].DraughtColor == CheckersCellStates.None);
+
+				if (canMoveUpRight) return false;
+
+				// down left
+				bool canMoveDownLeft =
+					(isQueen && x > 0 && y > 0 && board[x - 1, y - 1].DraughtColor == CheckersCellStates.None) ||
+					(x > 1 && y > 1 && board[x - 1, y - 1].DraughtColor == enemyColor && board[x - 2, y - 2].DraughtColor == CheckersCellStates.None);
+
+				if (canMoveDownLeft) return false;
+
+				// down right
+				bool canMoveDownRight =
+					(isQueen && x < 7 && y > 0 && board[x + 1, y - 1].DraughtColor == CheckersCellStates.None) ||
+					(x < 6 && y > 1 && board[x + 1, y - 1].DraughtColor == enemyColor && board[x + 2, y - 2].DraughtColor == CheckersCellStates.None);
+
+				if (canMoveDownRight) return false;
+			}
+
+		return true;
+	}
+
+	public static CheckersCell[,] CloneAndReverse(CheckersCell[,] board)
+	{
+		var boardCopy = new CheckersCell[8, 8];
+
+		for (int x = 0; x < 8; x++)
+			for (int y = 0; y < 8; y++)
+			{
+				if (board[x, y].DraughtColor == CheckersCellStates.None)
+					continue;
+
+				boardCopy[7 - x, 7 - y] = board[x, y];
+			}
+
+		return boardCopy;
+	}
+
+
+
 	//private static bool CheckCanDraughtEat(List<Draught> draughts, Draught draught, Player pl)
 	//{
 	//	CheckQueen(draught, pl);

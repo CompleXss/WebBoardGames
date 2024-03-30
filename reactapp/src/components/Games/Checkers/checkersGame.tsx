@@ -19,7 +19,7 @@ interface GameData {
     allyPositions: DraughtInfo[]
     enemyPositions: DraughtInfo[]
     isMyTurn: boolean
-    winnerID: number | null
+    winnerID?: string
     //lastMove?: { from: Point, to: Point }[]
 }
 
@@ -118,7 +118,7 @@ export default function CheckersGame() {
 
     // Определение победителя
     useEffect(() => {
-        if (!gameData || gameData.winnerID === null || gameData.winnerID === undefined) return
+        if (!gameData?.winnerID) return
         if (!winnerBanner.current) {
             console.error('Не могу найти winnerBanner')
             return
@@ -147,7 +147,7 @@ export default function CheckersGame() {
 
 
 
-    function getWinnerName(winnerID: number) {
+    function getWinnerName(winnerID: string) {
         setLoadingWinnerName(true)
         axios.get(ENDPOINTS.Users.GET_USER_INFO_BY_ID_URL + winnerID)
             .then(response => {
