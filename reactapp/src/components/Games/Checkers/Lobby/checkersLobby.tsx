@@ -265,7 +265,7 @@ export default function CheckersLobby() {
 
         <dialog ref={joinLobbyDialog}>
             <p>Введите код комнаты</p>
-            <input ref={lobbyKeyInput} onKeyDown={lobbyKeyInputOnKeyDown} type="text" maxLength={4} autoFocus />
+            <input ref={lobbyKeyInput} onKeyDown={lobbyKeyInputOnKeyDown} type="text" maxLength={4} autoFocus placeholder="xxxx" />
             <p id="lobbyKeyWarningMessage" ref={lobbyKeyWarningMessage}></p>
             <button className="enterLobbyBtn" onClick={joinLobby}>Войти</button>
             <button className="exitBtn" onClick={hideJoinDialog}>Отмена</button>

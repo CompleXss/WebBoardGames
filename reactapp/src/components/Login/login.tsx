@@ -1,52 +1,54 @@
 import axios from 'axios'
-import React, { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import React, { useEffect, useRef, useState } from 'react'
+import { useNavigate, useSearchParams } from 'react-router-dom'
+import { REDIRECT_QUERY_PARAM_NAME } from '../RequireComponents/RequireAuth'
 import ENDPOINTS from '../../utilities/Api_Endpoints'
 import './login.css'
 
 // TODO: add request timeout
 
+const MIN_LOGIN_LENGTH = 3
+const MIN_PASSWORD_LENGTH = 3
+
 export default function Login() {
-    const [switchModeText, setswitchModeText] = useState('Нет аккаунта? Регистрируйся')
-    const [isLogin, setIsLogin] = useState(true)
+    const loginBtn = useRef<HTMLButtonElement>(null)
+    const registerBtn = useRef<HTMLButtonElement>(null)
+    const loginHeader = useRef<HTMLHeadingElement>(null)
+    const registerHeader = useRef<HTMLHeadingElement>(null)
+    const loginWarningText = useRef<HTMLParagraphElement>(null)
+
+    const loginInput = useRef<HTMLInputElement>(null)
+    const nameInput = useRef<HTMLInputElement>(null)
+    const passwordInput = useRef<HTMLInputElement>(null)
+    const repeatPasswordInput = useRef<HTMLInputElement>(null)
+
+    const [switchModeText, setSwitchModeText] = useState('Нет аккаунта? Регистрируйся')
+    const [isLoginMode, setIsLoginMode] = useState(true)
     const navigate = useNavigate()
+
+    const [searchParams] = useSearchParams()
+    const redirectAfterLogin = searchParams.get(REDIRECT_QUERY_PARAM_NAME) ?? '/'
 
     useEffect(() => {
         document.title = 'Авторизация'
     }, [])
 
     function switchMode() {
-        let loginBtn = document.getElementById('loginBtn')
-        let registerBtn = document.getElementById('registerBtn')
-        let loginHeader = document.getElementById('loginHeader')
-        let registerHeader = document.getElementById('registerHeader')
-
-        if (!loginBtn || !registerBtn || !loginHeader || !registerHeader) {
+        if (!loginBtn.current || !registerBtn.current || !loginHeader.current || !registerHeader.current || !nameInput.current || !repeatPasswordInput.current) {
             console.error('Не найдены нужные элементы на странице логина!')
             return
         }
         showWarningText(false)
 
-        if (isLogin) {
-            showBtn(loginBtn, false)
-            showBtn(registerBtn, true)
+        showBtn(loginBtn.current, !isLoginMode)
+        showBtn(registerBtn.current, isLoginMode)
+        showHeader(loginHeader.current, !isLoginMode)
+        showHeader(registerHeader.current, isLoginMode)
+        showInput(nameInput.current, isLoginMode)
+        showInput(repeatPasswordInput.current, isLoginMode)
+        setSwitchModeText(isLoginMode ? 'Всё-таки есть аккаунт?' : 'Нет аккаунта? Регистрируйся')
 
-            showHeader(loginHeader, false)
-            showHeader(registerHeader, true)
-
-            setswitchModeText('Всё-таки есть аккаунт?')
-        }
-        else {
-            showBtn(loginBtn, true)
-            showBtn(registerBtn, false)
-
-            showHeader(loginHeader, true)
-            showHeader(registerHeader, false)
-
-            setswitchModeText('Нет аккаунта? Регистрируйся')
-        }
-
-        setIsLogin(!isLogin)
+        setIsLoginMode(!isLoginMode)
     }
 
     function getErrorMessage(e: any) {
@@ -64,23 +66,24 @@ export default function Login() {
         }).then(() => {
             console.log('logged in as: ' + login)
             showWarningText('Вход успешен!', 'green')
-            setTimeout(() => navigate('/'), 1000)
+            setTimeout(() => navigate(redirectAfterLogin), 1000)
         }).catch(e => {
             console.log(e)
             showWarningText(getErrorMessage(e))
         })
     }
 
-    function register(login: string, password: string) {
+    function register(login: string, name: string, password: string) {
         console.log('trying to register ' + login)
 
         axios.post(ENDPOINTS.Auth.POST_REGISTER_URL, {
             login: login,
+            name: name,
             password: password,
         }).then(() => {
-            console.log(login + ' registered')
+            console.log('registration complete for: ' + login)
             showWarningText('Регистрация успешна!', 'green')
-            setTimeout(() => navigate('/'), 1000)
+            setTimeout(() => navigate(redirectAfterLogin), 1000)
         }).catch(e => {
             console.log(e)
             showWarningText(getErrorMessage(e))
@@ -89,15 +92,102 @@ export default function Login() {
 
     function loginInputOnKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
         if (e.key !== 'Enter') return
+        nameInput.current?.focus()
+    }
 
-        document.getElementById('loginPassword')?.focus()
+    function nameInputOnKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
+        if (e.key !== 'Enter') return
+        passwordInput.current?.focus()
     }
 
     function passInputOnKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
         if (e.key !== 'Enter') return
 
-        if (isLogin) getInputAnd(login)
-        else getInputAnd(register)
+        if (isLoginMode) getInputAndLogin()
+        else getInputAndRegister()
+    }
+
+
+
+    function getInputAndLogin() {
+        if (!loginInput.current || !passwordInput.current) return
+
+        const loginValue = loginInput.current.value.trim()
+        const passwordValue = passwordInput.current.value
+
+        if (isLoginInputValid(loginValue, passwordValue)) {
+            login(loginValue, passwordValue)
+        }
+    }
+
+    function getInputAndRegister() {
+        if (!loginInput.current || !passwordInput.current || !nameInput.current || !repeatPasswordInput.current) return
+
+        const loginValue = loginInput.current.value.trim()
+        const nameValue = nameInput.current.value.trim()
+        const passwordValue = passwordInput.current.value
+        const repeatPasswordValue = repeatPasswordInput.current.value
+
+        if (isRegisterInputValid(loginValue, nameValue, passwordValue, repeatPasswordValue)) {
+            register(loginValue, nameValue, passwordValue)
+        }
+    }
+
+    function isLoginInputValid(login: string, password: string): boolean {
+        if (!login || !password || login === '' || password === '') {
+            showWarningText('Заполните все поля')
+            return false
+        }
+
+        if (login.length < MIN_LOGIN_LENGTH) {
+            showWarningText('Длина логина должна быть больше ' + (MIN_LOGIN_LENGTH - 1))
+            return false
+        }
+
+        if (login.includes(' ')) {
+            showWarningText('Логин не должен содержать пробелов')
+            return false
+        }
+
+        if (password.length < MIN_PASSWORD_LENGTH) {
+            showWarningText('Длина пароля должна быть больше ' + (MIN_PASSWORD_LENGTH - 1))
+            return false
+        }
+
+        showWarningText(false)
+        return true
+    }
+
+    function isRegisterInputValid(login: string, name: string, password: string, repeatPassword: string): boolean {
+        if (!isLoginInputValid(login, password)) {
+            return false
+        }
+
+        if (!name || !password || !repeatPassword || name === '' || password === '' || repeatPassword === '') {
+            showWarningText('Заполните все поля')
+            return false
+        }
+
+        if (password !== repeatPassword) {
+            showWarningText('Пароли не совпадают')
+            return false
+        }
+
+        showWarningText(false)
+        return true
+    }
+
+    function showWarningText(show: string | false, color?: string) {
+        if (!loginWarningText.current) {
+            console.log('Не могу найти элемент loginWarningText')
+            return
+        }
+
+        if (show) {
+            loginWarningText.current.textContent = show
+        }
+        loginWarningText.current.style.opacity = show ? '1' : '0';
+        loginWarningText.current.style.color = color ?? 'red'
     }
 
 
@@ -106,17 +196,25 @@ export default function Login() {
         <div id='loginWrapper'>
             <div id='loginHeaderWrapper'>
                 <h1 id='dummyHeader'>dummy</h1>
-                <h1 id='loginHeader'>Авторизация</h1>
-                <h1 id='registerHeader'>Регистрация</h1>
+                <h1 id='loginHeader' ref={loginHeader}>Авторизация</h1>
+                <h1 id='registerHeader' ref={registerHeader}>Регистрация</h1>
             </div>
             <div className='inputContainer'>
-                <input id='loginName' name='name' type='text' placeholder='Имя пользователя' maxLength={32} onKeyDown={loginInputOnKeyDown} />
-                <input id='loginPassword' name='password' type='password' placeholder='Пароль' maxLength={64} onKeyDown={passInputOnKeyDown} />
-                <p id='loginWarningText'>Введите имя и пароль</p>
+
+                <input ref={loginInput} name='login' type='text' placeholder='Логин' maxLength={32} onKeyDown={loginInputOnKeyDown} />
+                <div className='expandable'>
+                    <input ref={nameInput} name='name' type='text' placeholder='Отображаемое имя' maxLength={32} onKeyDown={nameInputOnKeyDown} />
+                </div>
+                <input ref={passwordInput} name='password' type='password' placeholder='Пароль' maxLength={64} onKeyDown={passInputOnKeyDown} />
+                <div className='expandable'>
+                    <input ref={repeatPasswordInput} name='password' type='password' placeholder='Повторите пароль' maxLength={64} onKeyDown={passInputOnKeyDown} />
+                </div>
+                <p id='loginWarningText' ref={loginWarningText}>Введите имя и пароль</p>
+
                 <div className='btnContainer'>
                     <button id='dummyBtn'>dummy</button>
-                    <button id='loginBtn' onClick={() => getInputAnd(login)}>Войти</button>
-                    <button id='registerBtn' onClick={() => getInputAnd(register)}>Зарегистрироваться</button>
+                    <button id='loginBtn' ref={loginBtn} onClick={getInputAndLogin}>Войти</button>
+                    <button id='registerBtn' ref={registerBtn} onClick={getInputAndRegister}>Зарегистрироваться</button>
                 </div>
             </div>
 
@@ -127,55 +225,21 @@ export default function Login() {
 
 
 
-function getInputAnd(action: (login: string, password: string) => void) {
-    const loginName = document.getElementById('loginName') as HTMLInputElement
-    const loginPassword = document.getElementById('loginPassword') as HTMLInputElement
-    if (!loginName || !loginPassword) return
-
-    const login = loginName.value.trim()
-    const password = loginPassword.value.trim()
-
-    if (login === '' || password === '') {
-        showWarningText('Введите имя и пароль')
-        return
-    }
-
-    if (login.length < 3) {
-        showWarningText('Длина имени должна быть больше или равна 3')
-        return
-    }
-
-    if (password.length < 3) {
-        showWarningText('Длина пароля должна быть больше или равна 3')
-        return
-    }
-
-    showWarningText(false)
-    action(login, password);
-}
-
 function showBtn(button: HTMLElement, show: boolean) {
     button.style.opacity = show ? '1' : '0'
-    button.style.marginRight = show ? '16px' : '60%'
+    // button.style.marginRight = show ? '16px' : '60%'
     button.style.zIndex = show ? '0' : '-1'
 }
 
 function showHeader(header: HTMLElement, show: boolean) {
     header.style.opacity = show ? '1' : '0'
-    header.style.marginRight = show ? '0' : '30%'
+    // header.style.marginRight = show ? '0' : '30%'
     header.style.zIndex = show ? '0' : '-1'
 }
 
-function showWarningText(show: string | false, color?: string) {
-    let text = document.getElementById('loginWarningText')
-    if (!text) {
-        console.log('Не могу найти элемент loginWarningText')
-        return
-    }
+function showInput(input: HTMLElement, show: boolean) {
+    if (!input.parentElement || !input.parentElement.className.includes('expandable')) return
 
-    if (show) {
-        text.textContent = show
-    }
-    text.style.opacity = show ? '1' : '0';
-    text.style.color = color ?? 'red'
+    input.parentElement.className = show ? 'expandable open' : 'expandable'
+    input.parentElement.style.opacity = show ? '1' : '0'
 }

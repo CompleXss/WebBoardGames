@@ -1,5 +1,7 @@
 @import url(globalStyles/tables.css);
 @import url(globalStyles/buttons.css);
+@import url(globalStyles/input.css);
+@import url(globalStyles/expandable.css);
 
 .wrapper {
     min-height: 100vh;

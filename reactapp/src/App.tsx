@@ -10,9 +10,9 @@ import Leaderboard from './components/LeaderBoard/leaderboard';
 import About from './components/About/about';
 import CheckersLobby from './components/Games/Checkers/Lobby/checkersLobby';
 import CheckersGame from './components/Games/Checkers/checkersGame';
+import RequireActiveGame from './components/RequireComponents/RequireActiveGame';
 import { setNavigateFunc } from './utilities/auth';
 import './App.css'
-import RequireActiveGame from './components/RequireComponents/RequireActiveGame';
 
 export default function App() {
   setNavigateFunc(useNavigate())
@@ -23,13 +23,15 @@ export default function App() {
     <main>
       <Routes>
         <Route path='/' element={<Home />} />
-        <Route path='/login' element={<RequireAuth onOk={<Login />} redirect='/profile' inverse />} />
+        <Route path='/login' element={<RequireAuth inverse onOk={<Login />} redirect='/profile' />} />
         <Route path='/profile' element={<RequireAuth onOk={<Profile />} />} />
         <Route path='/history' element={<RequireAuth onOk={<History />} />} />
         <Route path='/leaderboard' element={<Leaderboard />} />
         <Route path='/about' element={<About />} />
+
         <Route path='/lobby/checkers' element={<RequireAuth onOk={<RequireActiveGame inverse onOk={<CheckersLobby />} redirect='/play/checkers' />} />} />
         <Route path='/play/checkers' element={<RequireAuth onOk={<RequireActiveGame onOk={<CheckersGame />} redirect='/lobby/checkers' />} />} />
+
         <Route path='*' element={<Navigate to={'/'} replace={true} />} />
       </Routes>
     </main>

@@ -238,7 +238,7 @@ public class AuthService
 		{
 			Path = "/",
 			SameSite = SameSiteMode.Strict,
-			Secure = true,
+			Secure = false,
 			HttpOnly = true,
 			Expires = DateTime.UnixEpoch,
 		});
@@ -247,7 +247,7 @@ public class AuthService
 		{
 			Path = AuthEndpoint.REFRESH_TOKEN_PATH,
 			SameSite = SameSiteMode.Strict,
-			Secure = true,
+			Secure = false,
 			HttpOnly = true,
 			Expires = DateTime.UnixEpoch,
 		});

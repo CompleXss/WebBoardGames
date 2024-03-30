@@ -3,9 +3,22 @@ import { Navigate, useLocation } from "react-router-dom"
 import { isAuthorized } from "../../utilities/auth"
 import Loading from "../Loading/loading"
 
-export default function RequireAuth({ onOk, redirect, inverse, cascadeRedirect }: { onOk: JSX.Element, redirect?: string, inverse?: boolean, cascadeRedirect?: boolean }) {
-    const state = useLocation().state
-    if (!redirect) redirect = '/login'
+type Props = {
+    onOk: JSX.Element
+    redirect?: string
+    inverse?: boolean
+    cascadeRedirect?: boolean
+}
+
+export const REDIRECT_QUERY_PARAM_NAME = 'redirect'
+
+export default function RequireAuth({ onOk, redirect, inverse, cascadeRedirect }: Props) {
+    const location = useLocation()
+    const state = location.state
+
+    if (!redirect) {
+        redirect = `/login?${REDIRECT_QUERY_PARAM_NAME}=${location.pathname}`
+    }
 
     const { data, isLoading, isFetching } = useQuery(['isAuthorized', redirect], isAuthorized, {
         retry: false,

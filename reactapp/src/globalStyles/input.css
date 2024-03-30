@@ -1,0 +1,17 @@
+input {
+    display: block;
+    box-sizing: border-box;
+    font-size: 1.1em;
+    border-radius: 8px;
+    border: none;
+    background-color: var(--foreground);
+    color: whitesmoke;
+
+    padding: 12px 20px;
+    margin: 6px 0;
+}
+
+input:focus {
+    outline: 2px solid white;
+    transition: outline 0.1s;
+}

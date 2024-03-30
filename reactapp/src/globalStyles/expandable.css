@@ -1,0 +1,32 @@
+:root {
+    --transition-time: 0.3s;
+}
+
+.expandable {
+    display: grid;
+    grid-template-rows: 0fr;
+    opacity: 0;
+
+    transition:
+        grid-template-rows var(--transition-time) ease-in-out,
+        opacity var(--transition-time) ease-in-out;
+}
+
+.expandable.open {
+    grid-template-rows: 1fr;
+}
+
+.expandable > * {
+    overflow: hidden;
+
+    transition:
+        margin var(--transition-time) ease-in-out,
+        padding var(--transition-time) ease-in-out;
+}
+
+.expandable:not(.open) > * {
+    padding-top: 0;
+    padding-bottom: 0;
+    margin-top: 0;
+    margin-bottom: 0;
+}
