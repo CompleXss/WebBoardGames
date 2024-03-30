@@ -7,10 +7,10 @@ export default function About() {
     }, [])
 
     return <div className='aboutContainer'>
-        <h1> Этот сайт — курсовая работа студента 3 курса под ником </h1>
+        <h1> Это приложение — дипломная работа студента 4 курса под ником </h1>
         <h1 className='nick'>CompleX</h1>
         <hr />
-        <a href='https://github.com/CompleXss'>Github</a>
-        <a href='https://github.com/CompleXss/WebBoardGames'>Этот сайт на том же Github</a>
+        <a href='https://github.com/CompleXss'>Мой Github</a>
+        <a href='https://github.com/CompleXss/WebBoardGames'>Репозиторий этого приложения на Github</a>
     </div>
 }
