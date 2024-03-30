@@ -12,7 +12,6 @@ public sealed class CheckersGame : IDisposable
 	public string BlackPlayerID { get; init; }
 
 	public int PlayersAlive { get; set; }
-	public List<string> ConnectionIDs { get; } = [];
 
 	public bool IsWhiteTurn { get; set; } = true;
 	public string? WinnerID { get; private set; }

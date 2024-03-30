@@ -25,7 +25,7 @@ public class GameHistoryService
 	{
 		using var transaction = await db.Database.BeginTransactionAsync();
 		string gameName = history.Game.ToString();
-		var tasks = new List<Task>(2 * (history.Winners.Length + history.Loosers.Length));
+		var tasks = new List<Task<bool>>(2 * (history.Winners.Length + history.Loosers.Length));
 
 		try
 		{
@@ -38,7 +38,7 @@ public class GameHistoryService
 				DateTimeEnd = history.DateTimeEnd
 			};
 			await gameHistoryRepo.AddAsync(historyEntry);
-			//await db.SaveChangesAsync();
+			await db.SaveChangesAsync();
 
 
 
@@ -47,7 +47,6 @@ public class GameHistoryService
 			{
 				UserID = winner.ID,
 				GameHistory = historyEntry,
-				//GameHistoryId = historyEntry.Id,
 				IsWinner = true,
 			})));
 
@@ -55,7 +54,6 @@ public class GameHistoryService
 			{
 				UserID = looser.ID,
 				GameHistory = historyEntry,
-				//GameHistoryId = historyEntry.Id,
 				IsWinner = false,
 			})));
 
@@ -70,9 +68,8 @@ public class GameHistoryService
 
 
 
-			await Task.WhenAll(tasks);
-
-			bool succeeded = await db.SaveChangesAsync() > 0;
+			var results = await Task.WhenAll(tasks);
+			bool succeeded = results.All(x => x);
 
 			if (succeeded)
 				await transaction.CommitAsync();

@@ -23,6 +23,12 @@ public class CheckersGameHub : Hub<ICheckersGameHub>
 
 	public async override Task OnConnectedAsync()
 	{
+		if (Context.ConnectionId is null)
+		{
+			await Clients.Caller.NotAllowed();
+			return;
+		}
+
 		var user = await GetUserInfoAsync();
 		if (user is null)
 		{
@@ -37,8 +43,14 @@ public class CheckersGameHub : Hub<ICheckersGameHub>
 			return;
 		}
 
+		if (game.WinnerID is not null)
+		{
+			gameService.CloseGame(game);
+			await Clients.Caller.NotAllowed();
+			return;
+		}
+
 		game.PlayersAlive++;
-		game.ConnectionIDs.Add(Context.ConnectionId);
 		await Clients.Group(game.Key).UserReconnected(user.PublicID);
 		await Groups.AddToGroupAsync(Context.ConnectionId, game.Key);
 
@@ -58,7 +70,6 @@ public class CheckersGameHub : Hub<ICheckersGameHub>
 		if (game is not null)
 		{
 			game.PlayersAlive--;
-			game.ConnectionIDs.Remove(Context.ConnectionId);
 			await Groups.RemoveFromGroupAsync(Context.ConnectionId, game.Key);
 
 			logger.LogInformation("User with ID {UserID} DISCONNECTED from checkers game hub.", user.PublicID);
@@ -87,10 +98,14 @@ public class CheckersGameHub : Hub<ICheckersGameHub>
 		game = gameService.TryMakeMove(game, user.PublicID, moves, out string error);
 		if (game is null) return Results.BadRequest(error);
 
-		if (game.WinnerID is not null)
-			await gameService.AddGameToHistory(gameHistoryService, usersRepository, game);
-
 		await Clients.Group(game.Key).GameStateChanged();
+
+		if (game.WinnerID is not null)
+		{
+			gameService.CloseGame(game);
+			await gameService.AddGameToHistory(gameHistoryService, usersRepository, game);
+		}
+
 		return Results.Ok();
 	}
 
