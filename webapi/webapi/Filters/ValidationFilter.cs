@@ -1,5 +1,5 @@
 ﻿using FluentValidation;
-using webapi.Validation;
+using webapi.Errors;
 
 namespace webapi.Filters;
 
@@ -21,7 +21,7 @@ public class ValidationFilter<T> : IEndpointFilter where T : class
 		var validationResult = await validator.ValidateAsync(validatable);
 
 		if (!validationResult.IsValid)
-			return Results.BadRequest(ValidationErrors.From(validationResult.Errors));
+			return ValidationErrors.FirstError(validationResult.Errors);
 
 		return await next(context);
 	}

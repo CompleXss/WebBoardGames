@@ -1,4 +1,5 @@
-﻿using webapi.Extensions;
+﻿using webapi.Errors;
+using webapi.Extensions;
 using webapi.Filters;
 using webapi.Models;
 using webapi.Repositories;
@@ -40,7 +41,7 @@ public static class AuthEndpoint
 	internal static async Task<IResult> RegisterAsync(HttpContext context, UsersRepository usersRepository, AuthService auth, UserRegisterDto userDto)
 	{
 		if (await usersRepository.GetByLoginAsync(userDto.Login) is not null)
-			return Results.BadRequest($"User with login `{userDto.Login}` already exists");
+			return AuthErrors.UserAlreadyExists(userDto.Login);
 
 		auth.CreatePasswordHash(userDto.Password, out var passwordHash, out var passwordSalt);
 		var user = new User
@@ -52,10 +53,10 @@ public static class AuthEndpoint
 		};
 
 		if (!await usersRepository.AddAsync(user))
-			return Results.Problem($"Could not create user `{userDto.Login}`");
+			return UserErrors.CouldNotCreate(userDto.Login);
 
 		if (!await auth.AddNewTokenPairToResponseCookies(context, user))
-			return Results.Problem("Could not add new token pair to cookies");
+			return AuthErrors.CouldNotCreateTokenPair();
 
 		return Results.Created($"/users/{user.Login}", user);
 	}
