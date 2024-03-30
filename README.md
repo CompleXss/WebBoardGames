@@ -1,2 +1,3 @@
-# WebBoardGames
- 
+# WebBoardGames (WIP)
+
+Currently under construction...
