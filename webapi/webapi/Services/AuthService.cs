@@ -69,8 +69,8 @@ public class AuthService
 			claims: claims,
 			issuer: config["Jwt:Issuer"],
 			audience: config["Jwt:Audience"],
-			expires: DateTime.UtcNow.Add(accessTokenLifetime),
-			notBefore: DateTime.UtcNow,
+			expires: DateTime.Now.Add(accessTokenLifetime),
+			notBefore: DateTime.Now,
 			signingCredentials: creds
 		);
 
@@ -180,8 +180,8 @@ public class AuthService
 		return new RefreshToken
 		{
 			Token = Convert.ToBase64String(RandomNumberGenerator.GetBytes(64)),
-			TokenCreated = DateTime.UtcNow,
-			TokenExpires = DateTime.UtcNow.Add(refreshTokenLifetime)
+			TokenCreated = DateTime.Now,
+			TokenExpires = DateTime.Now.Add(refreshTokenLifetime)
 		};
 	}
 
@@ -210,7 +210,7 @@ public class AuthService
 			SameSite = SameSiteMode.Strict,
 			Secure = false,
 			HttpOnly = true,
-			Expires = DateTime.UtcNow.Add(deviceID_CookieLifetime),
+			Expires = DateTime.Now.Add(deviceID_CookieLifetime),
 		});
 
 		response.Cookies.Append(ACCESS_TOKEN_COOKIE_NAME, accessToken, new CookieOptions()

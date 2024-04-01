@@ -24,8 +24,8 @@ public static class PlayHistoryEndpoint
 			{
 				Winners = x.GamePlayers.Where(x => x.IsWinner).Select(x => x.User).ToArray(),
 				Loosers = x.GamePlayers.Where(x => !x.IsWinner).Select(x => x.User).ToArray(),
-				DateTimeStart = x.DateTimeStart,
-				DateTimeEnd = x.DateTimeEnd,
+				DateTimeStart = x.DateTimeStart.ToUniversalTime(),
+				DateTimeEnd = x.DateTimeEnd.ToUniversalTime(),
 			});
 
 		return Results.Ok(new

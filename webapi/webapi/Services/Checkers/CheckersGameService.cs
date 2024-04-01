@@ -103,7 +103,7 @@ public class CheckersGameService(ILogger<CheckersGameService> logger)
 			Winners = [winner],
 			Loosers = [looser],
 			DateTimeStart = game.GameStarted,
-			DateTimeEnd = DateTime.UtcNow,
+			DateTimeEnd = DateTime.Now,
 		};
 
 		await gameHistoryService.AddAsync(playHistoryDto);

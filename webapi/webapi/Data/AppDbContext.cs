@@ -40,8 +40,8 @@ public partial class AppDbContext : DbContext
 			entity.Property(e => e.ID).HasColumnName("ID");
 			entity.Property(e => e.GameID).HasColumnName("GameID");
 
-			entity.Property(e => e.DateTimeStart).HasConversion(x => x.ToString(DATETIME_STRING_FORMAT), x => DateTime.Parse(x));
-			entity.Property(e => e.DateTimeEnd).HasConversion(x => x.ToString(DATETIME_STRING_FORMAT), x => DateTime.Parse(x));
+			entity.Property(e => e.DateTimeStart).HasConversion(x => x.ToUniversalTime().ToString(DATETIME_STRING_FORMAT), x => DateTime.Parse(x).ToLocalTime());
+			entity.Property(e => e.DateTimeEnd).HasConversion(x => x.ToUniversalTime().ToString(DATETIME_STRING_FORMAT), x => DateTime.Parse(x).ToLocalTime());
 
 			entity.HasOne(d => d.Game).WithMany(p => p.GameHistories)
 				.HasForeignKey(d => d.GameID)
@@ -99,8 +99,8 @@ public partial class AppDbContext : DbContext
 			entity.Property(e => e.UserID).HasColumnName("UserID");
 			entity.Property(e => e.DeviceID).HasColumnName("DeviceID");
 
-			entity.Property(e => e.TokenCreated).HasConversion(x => x.ToString(DATETIME_STRING_FORMAT), x => DateTime.Parse(x));
-			entity.Property(e => e.TokenExpires).HasConversion(x => x.ToString(DATETIME_STRING_FORMAT), x => DateTime.Parse(x));
+			entity.Property(e => e.TokenCreated).HasConversion(x => x.ToUniversalTime().ToString(DATETIME_STRING_FORMAT), x => DateTime.Parse(x).ToLocalTime());
+			entity.Property(e => e.TokenExpires).HasConversion(x => x.ToUniversalTime().ToString(DATETIME_STRING_FORMAT), x => DateTime.Parse(x).ToLocalTime());
 
 			entity.HasOne(d => d.User).WithMany(p => p.UserRefreshTokens).HasForeignKey(d => d.UserID);
 		});

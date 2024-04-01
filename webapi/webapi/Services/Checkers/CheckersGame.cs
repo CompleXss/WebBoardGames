@@ -31,7 +31,7 @@ public sealed class CheckersGame : IDisposable
 		WhitePlayerID = whitePlayerID;
 		BlackPlayerID = blackPlayerID;
 
-		GameStarted = DateTime.UtcNow;
+		GameStarted = DateTime.Now;
 	}
 
 	public static CheckersGame CreateNew(string whitePlayerID, string blackPlayerID)
