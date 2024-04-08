@@ -1,0 +1,2 @@
+cd reactapp
+npm start
