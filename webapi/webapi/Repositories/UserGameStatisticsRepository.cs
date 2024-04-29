@@ -10,7 +10,7 @@ public class UserGameStatisticsRepository(AppDbContext db, GamesRepository games
 	private readonly GamesRepository gamesRepository = gamesRepository;
 	private readonly ILogger<UserGameStatisticsRepository> logger = logger;
 
-	public async Task<UserGameStatistic?> GetUserInfoByIdAsync(long gameID, long userID)
+	public async Task<UserGameStatistic?> GetUserInfoByIdAsync(int gameID, long userID)
 	{
 		return await db.UserGameStatistics
 			.Where(x => x.GameID == gameID)
@@ -27,7 +27,7 @@ public class UserGameStatisticsRepository(AppDbContext db, GamesRepository games
 			.FirstOrDefaultAsync(x => x.UserID == userID);
 	}
 
-	public Task<List<UserGameStatistic>> GetTopUsersInfoByGameID(long gameID, int count)
+	public Task<List<UserGameStatistic>> GetTopUsersInfoByGameID(int gameID, int count)
 	{
 		return db.UserGameStatistics
 			.Where(x => x.GameID == gameID)
@@ -66,7 +66,7 @@ public class UserGameStatisticsRepository(AppDbContext db, GamesRepository games
 
 
 
-	public async Task<bool> AddAsync(string gameName, long userID, long playCountToAdd, long winCountToAdd)
+	public async Task<bool> AddAsync(string gameName, long userID, int playCountToAdd, int winCountToAdd)
 	{
 		try
 		{

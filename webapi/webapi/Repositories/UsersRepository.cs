@@ -25,6 +25,8 @@ public class UsersRepository(AppDbContext db)
 
 	public async Task<bool> AddAsync(User user)
 	{
+		user.PublicID = Guid.NewGuid().ToString("N");
+
 		try
 		{
 			await db.AddAsync(user);

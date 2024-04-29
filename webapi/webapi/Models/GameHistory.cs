@@ -8,7 +8,7 @@ public partial class GameHistory
 	public long ID { get; set; }
 
 	[JsonIgnore]
-	public long GameID { get; set; }
+	public int GameID { get; set; }
 
 	public DateTime DateTimeStart { get; set; }
 

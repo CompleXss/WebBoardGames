@@ -17,7 +17,7 @@ builder.Services.AddSignalR();
 
 builder.Services.AddDbContext<AppDbContext>(options =>
 {
-	options.UseSqlite(config.GetConnectionString("DefaultConnection"));
+	options.UseNpgsql(config.GetConnectionString("DefaultConnection"));
 });
 
 builder.Services.AddValidatorsFromAssemblyContaining<Program>();

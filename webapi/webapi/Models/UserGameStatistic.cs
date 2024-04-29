@@ -8,11 +8,11 @@ public partial class UserGameStatistic
 	public long UserID { get; set; }
 
 	[JsonIgnore]
-	public long GameID { get; set; }
+	public int GameID { get; set; }
 
-	public long PlayCount { get; set; }
+	public int PlayCount { get; set; }
 
-	public long WinCount { get; set; }
+	public int WinCount { get; set; }
 
 	[JsonIgnore]
 	public virtual Game Game { get; set; } = null!;

@@ -58,7 +58,7 @@ public class AuthService
 		var claims = new Claim[]
 		{
 			new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
-			new(JwtRegisteredClaimNames.Sub, userPublicID.ToString()),
+			new(JwtRegisteredClaimNames.Sub, userPublicID),
 		};
 
 		var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(config["Jwt:Key"]!));
@@ -190,7 +190,15 @@ public class AuthService
 	public async Task<bool> AddNewTokenPairToResponseCookies(HttpContext context, User user)
 	{
 		string? deviceID = context.Request.GetDeviceIdCookie();
-		deviceID ??= Guid.NewGuid().ToString();
+
+		if (deviceID is null)
+		{
+			deviceID = Guid.NewGuid().ToString("N");
+		}
+		else if (deviceID.Contains('-'))
+		{
+			deviceID = deviceID.Replace("-", "");
+		}
 
 		var refreshToken = await CreateRefreshTokenAsync(user.ID, deviceID);
 		if (refreshToken is null)

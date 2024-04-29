@@ -10,6 +10,7 @@ public partial class AppDbContext : DbContext
 	public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
 	{
 		Database.EnsureCreated();
+		// todo: ensure games are created: foreach game in games
 	}
 
 	public virtual DbSet<Game> Games { get; set; }
@@ -28,81 +29,139 @@ public partial class AppDbContext : DbContext
 	{
 		modelBuilder.Entity<Game>(entity =>
 		{
-			entity.HasIndex(e => e.Name, "IX_Games_Name").IsUnique();
+			entity.HasKey(e => e.ID).HasName("games_pkey");
 
-			entity.Property(e => e.ID).HasColumnName("ID");
+			entity.ToTable("games");
+
+			entity.HasIndex(e => e.Name, "games_name_key").IsUnique();
+
+			entity.Property(e => e.ID)
+				.UseIdentityAlwaysColumn()
+				.HasColumnName("id");
+			entity.Property(e => e.Name)
+				.HasColumnType("character varying")
+				.HasColumnName("name");
 		});
 
 		modelBuilder.Entity<GameHistory>(entity =>
 		{
-			entity.ToTable("Game_History");
+			entity.HasKey(e => e.ID).HasName("game_history_pkey");
 
-			entity.Property(e => e.ID).HasColumnName("ID");
-			entity.Property(e => e.GameID).HasColumnName("GameID");
+			entity.ToTable("game_history");
 
-			entity.Property(e => e.DateTimeStart).HasConversion(x => x.ToUniversalTime().ToString(DATETIME_STRING_FORMAT), x => DateTime.Parse(x).ToLocalTime());
-			entity.Property(e => e.DateTimeEnd).HasConversion(x => x.ToUniversalTime().ToString(DATETIME_STRING_FORMAT), x => DateTime.Parse(x).ToLocalTime());
+			entity.Property(e => e.ID)
+				.UseIdentityAlwaysColumn()
+				.HasColumnName("id");
+			entity.Property(e => e.DateTimeEnd)
+				.HasConversion(x => x.ToUniversalTime(), x => x.ToLocalTime())
+				.HasPrecision(0)
+				.HasColumnName("date_time_end");
+			entity.Property(e => e.DateTimeStart)
+				.HasConversion(x => x.ToUniversalTime(), x => x.ToLocalTime())
+				.HasPrecision(0)
+				.HasColumnName("date_time_start");
+			entity.Property(e => e.GameID).HasColumnName("game_id");
 
 			entity.HasOne(d => d.Game).WithMany(p => p.GameHistories)
 				.HasForeignKey(d => d.GameID)
-				.OnDelete(DeleteBehavior.ClientSetNull);
+				.HasConstraintName("game_history_game_id_fkey");
 		});
 
 		modelBuilder.Entity<GamePlayer>(entity =>
 		{
-			entity.HasKey(e => new { e.UserID, e.GameHistoryID });
+			entity.HasKey(e => new { e.GameHistoryID, e.UserID }).HasName("game_players_pkey");
 
-			entity.ToTable("Game_Players");
+			entity.ToTable("game_players");
 
-			entity.Property(e => e.UserID).HasColumnName("UserID");
-			entity.Property(e => e.GameHistoryID).HasColumnName("GameHistoryID");
+			entity.Property(e => e.GameHistoryID).HasColumnName("game_history_id");
+			entity.Property(e => e.UserID).HasColumnName("user_id");
+			entity.Property(e => e.IsWinner).HasColumnName("is_winner");
 
-			entity.HasOne(d => d.GameHistory).WithMany(p => p.GamePlayers).HasForeignKey(d => d.GameHistoryID);
+			entity.HasOne(d => d.GameHistory).WithMany(p => p.GamePlayers)
+				.HasForeignKey(d => d.GameHistoryID)
+				.HasConstraintName("game_players_game_history_id_fkey");
 
 			entity.HasOne(d => d.User).WithMany(p => p.GamePlayers)
 				.HasForeignKey(d => d.UserID)
-				.OnDelete(DeleteBehavior.SetNull);
+				.OnDelete(DeleteBehavior.SetNull)
+				.HasConstraintName("game_players_user_id_fkey");
 		});
 
 		modelBuilder.Entity<User>(entity =>
 		{
-			entity.HasIndex(e => e.Login, "IX_Users_Login").IsUnique();
+			entity.HasKey(e => e.ID).HasName("users_pkey");
 
-			entity.HasIndex(e => e.PublicID, "IX_Users_PublicID").IsUnique();
+			entity.ToTable("users");
 
-			entity.Property(e => e.ID).HasColumnName("ID");
-			entity.Property(e => e.PublicID).HasColumnName("PublicID");
+			entity.HasIndex(e => e.Login, "users_login_key").IsUnique();
+
+			entity.HasIndex(e => e.PublicID, "users_public_id_key").IsUnique();
+
+			entity.Property(e => e.ID)
+				.UseIdentityAlwaysColumn()
+				.HasColumnName("id");
+			entity.Property(e => e.Login)
+				.HasColumnType("character varying")
+				.HasColumnName("login");
+			entity.Property(e => e.Name)
+				.HasColumnType("character varying")
+				.HasColumnName("name");
+			entity.Property(e => e.PasswordHash).HasColumnName("password_hash");
+			entity.Property(e => e.PasswordSalt).HasColumnName("password_salt");
+			entity.Property(e => e.PublicID)
+				.HasMaxLength(32)
+				.IsFixedLength()
+				.HasColumnName("public_id");
 		});
 
 		modelBuilder.Entity<UserGameStatistic>(entity =>
 		{
-			entity.HasKey(e => new { e.UserID, e.GameID });
+			entity.HasKey(e => new { e.UserID, e.GameID }).HasName("user_game_statistics_pkey");
 
-			entity.ToTable("User_GameStatistics");
+			entity.ToTable("user_game_statistics");
 
-			entity.Property(e => e.UserID).HasColumnName("UserID");
-			entity.Property(e => e.GameID).HasColumnName("GameID");
+			entity.Property(e => e.UserID).HasColumnName("user_id");
+			entity.Property(e => e.GameID).HasColumnName("game_id");
+			entity.Property(e => e.PlayCount)
+				.HasDefaultValue(0)
+				.HasColumnName("play_count");
+			entity.Property(e => e.WinCount)
+				.HasDefaultValue(0)
+				.HasColumnName("win_count");
 
 			entity.HasOne(d => d.Game).WithMany(p => p.UserGameStatistics)
 				.HasForeignKey(d => d.GameID)
-				.OnDelete(DeleteBehavior.ClientSetNull);
+				.HasConstraintName("user_game_statistics_game_id_fkey");
 
-			entity.HasOne(d => d.User).WithMany(p => p.UserGameStatistics).HasForeignKey(d => d.UserID);
+			entity.HasOne(d => d.User).WithMany(p => p.UserGameStatistics)
+				.HasForeignKey(d => d.UserID)
+				.HasConstraintName("user_game_statistics_user_id_fkey");
 		});
 
 		modelBuilder.Entity<UserRefreshToken>(entity =>
 		{
-			entity.HasKey(e => new { e.UserID, e.DeviceID });
+			entity.HasKey(e => new { e.UserID, e.DeviceID }).HasName("user_refresh_token_pkey");
 
-			entity.ToTable("User_RefreshToken");
+			entity.ToTable("user_refresh_token");
 
-			entity.Property(e => e.UserID).HasColumnName("UserID");
-			entity.Property(e => e.DeviceID).HasColumnName("DeviceID");
+			entity.Property(e => e.UserID).HasColumnName("user_id");
+			entity.Property(e => e.DeviceID)
+				.HasMaxLength(32)
+				.IsFixedLength()
+				.HasColumnName("device_id");
+			entity.Property(e => e.RefreshTokenHash).HasColumnName("refresh_token_hash");
+			entity.Property(e => e.TokenCreated)
+				.HasConversion(x => x.ToUniversalTime(), x => x.ToLocalTime())
+				.HasPrecision(0)
+				.HasColumnName("token_created");
+			entity.Property(e => e.TokenExpires)
+				.HasConversion(x => x.ToUniversalTime(), x => x.ToLocalTime())
+				.HasPrecision(0)
+				.HasColumnName("token_expires");
 
-			entity.Property(e => e.TokenCreated).HasConversion(x => x.ToUniversalTime().ToString(DATETIME_STRING_FORMAT), x => DateTime.Parse(x).ToLocalTime());
-			entity.Property(e => e.TokenExpires).HasConversion(x => x.ToUniversalTime().ToString(DATETIME_STRING_FORMAT), x => DateTime.Parse(x).ToLocalTime());
-
-			entity.HasOne(d => d.User).WithMany(p => p.UserRefreshTokens).HasForeignKey(d => d.UserID);
+			entity.HasOne(d => d.User).WithMany(p => p.UserRefreshTokens)
+				.HasForeignKey(d => d.UserID)
+				.HasConstraintName("user_refresh_token_user_id_fkey");
 		});
 
 		OnModelCreatingPartial(modelBuilder);
