@@ -6,6 +6,7 @@ import ENDPOINTS from '../../utilities/Api_Endpoints'
 import './login.css'
 
 // TODO: add request timeout
+// TODO: disable button during request
 
 const MIN_LOGIN_LENGTH = 3
 const MIN_PASSWORD_LENGTH = 3
@@ -19,8 +20,9 @@ export default function Login() {
 
     const loginInput = useRef<HTMLInputElement>(null)
     const nameInput = useRef<HTMLInputElement>(null)
-    const passwordInput = useRef<HTMLInputElement>(null)
-    const repeatPasswordInput = useRef<HTMLInputElement>(null)
+
+    // IMPORTANT: passwordInput and repeatPasswordInput elements don't use refs
+    // because React can't update them properly when changing autoComplete option
 
     const [switchModeText, setSwitchModeText] = useState('Нет аккаунта? Регистрируйся')
     const [isLoginMode, setIsLoginMode] = useState(true)
@@ -33,21 +35,41 @@ export default function Login() {
         document.title = 'Авторизация'
     }, [])
 
-    function switchMode() {
-        if (!loginBtn.current || !registerBtn.current || !loginHeader.current || !registerHeader.current || !nameInput.current || !repeatPasswordInput.current) {
+    useEffect(() => {
+        const passElement = getPasswordInputElement()
+        const repeatPassElement = getRepeatPasswordInputElement()
+
+        if (!loginBtn.current || !registerBtn.current || !loginHeader.current || !registerHeader.current || !nameInput.current || !passElement || !repeatPassElement) {
             console.error('Не найдены нужные элементы на странице логина!')
             return
         }
         showWarningText(false)
 
-        showBtn(loginBtn.current, !isLoginMode)
-        showBtn(registerBtn.current, isLoginMode)
-        showHeader(loginHeader.current, !isLoginMode)
-        showHeader(registerHeader.current, isLoginMode)
-        showInput(nameInput.current, isLoginMode)
-        showInput(repeatPasswordInput.current, isLoginMode)
-        setSwitchModeText(isLoginMode ? 'Всё-таки есть аккаунт?' : 'Нет аккаунта? Регистрируйся')
+        showBtn(loginBtn.current, isLoginMode)
+        showBtn(registerBtn.current, !isLoginMode)
+        showHeader(loginHeader.current, isLoginMode)
+        showHeader(registerHeader.current, !isLoginMode)
+        showInput(nameInput.current, !isLoginMode)
+        showInput(repeatPassElement, !isLoginMode)
+        setSwitchModeText(isLoginMode ? 'Нет аккаунта? Регистрируйся' : 'Всё-таки есть аккаунт?')
 
+
+        // change password inputs' autoComplete option
+        passElement.autocomplete = isLoginMode ? 'current-password' : 'new-password'
+        const newElement = passElement.cloneNode(false) as HTMLInputElement // create new element because browser keeps using old value
+
+        const passOnKeyDown = executeOnEnterPress(focusElementAfterPasswordInput)
+        newElement.onkeydown = passOnKeyDown as any // bruh
+
+        passElement.replaceWith(newElement)
+
+        // prevent repeatPassElement.autocomplete overriding passElement.autocomplete
+        repeatPassElement.autocomplete = isLoginMode ? 'off' : 'new-password'
+
+        // eslint-disable-next-line
+    }, [isLoginMode])
+
+    function switchLoginMode() {
         setIsLoginMode(!isLoginMode)
     }
 
@@ -88,30 +110,35 @@ export default function Login() {
         })
     }
 
-    function loginInputOnKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
-        if (e.key !== 'Enter') return
-        nameInput.current?.focus()
+
+
+    function focusElementAfterLoginInput() {
+        const nextInput = isLoginMode ? getPasswordInputElement() : nameInput.current
+        nextInput?.focus()
     }
 
-    function nameInputOnKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
-        if (e.key !== 'Enter') return
-        passwordInput.current?.focus()
+    function focusElementAfterNameInput() {
+        const nextInput = getPasswordInputElement()
+        nextInput?.focus()
     }
 
-    function passInputOnKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
-        if (e.key !== 'Enter') return
-
-        if (isLoginMode) getInputAndLogin()
-        else getInputAndRegister()
+    function focusElementAfterPasswordInput() {
+        if (isLoginMode) {
+            getInputAndLogin()
+        }
+        else {
+            getRepeatPasswordInputElement()?.focus()
+        }
     }
 
 
 
     function getInputAndLogin() {
-        if (!loginInput.current || !passwordInput.current) return
+        const passwordInput = getPasswordInputElement()
+        if (!loginInput.current || !passwordInput) return
 
         const loginValue = loginInput.current.value.trim()
-        const passwordValue = passwordInput.current.value
+        const passwordValue = passwordInput.value
 
         if (isLoginInputValid(loginValue, passwordValue)) {
             login(loginValue, passwordValue)
@@ -119,12 +146,14 @@ export default function Login() {
     }
 
     function getInputAndRegister() {
-        if (!loginInput.current || !passwordInput.current || !nameInput.current || !repeatPasswordInput.current) return
+        const passwordInput = getPasswordInputElement()
+        const repeatPasswordInput = getRepeatPasswordInputElement()
+        if (!loginInput.current || !passwordInput || !nameInput.current || !repeatPasswordInput) return
 
         const loginValue = loginInput.current.value.trim()
         const nameValue = nameInput.current.value.trim()
-        const passwordValue = passwordInput.current.value
-        const repeatPasswordValue = repeatPasswordInput.current.value
+        const passwordValue = passwordInput.value
+        const repeatPasswordValue = repeatPasswordInput.value
 
         if (isRegisterInputValid(loginValue, nameValue, passwordValue, repeatPasswordValue)) {
             register(loginValue, nameValue, passwordValue)
@@ -199,13 +228,13 @@ export default function Login() {
             </div>
             <div className='inputContainer'>
 
-                <input ref={loginInput} name='login' type='text' placeholder='Логин' maxLength={32} onKeyDown={loginInputOnKeyDown} />
+                <input ref={loginInput} name='username' type='text' placeholder='Логин' maxLength={32} onKeyDown={executeOnEnterPress(focusElementAfterLoginInput)} />
                 <div className='expandable'>
-                    <input ref={nameInput} name='name' type='text' placeholder='Отображаемое имя' maxLength={32} onKeyDown={nameInputOnKeyDown} />
+                    <input ref={nameInput} name='name' type='text' placeholder='Отображаемое имя' maxLength={32} onKeyDown={executeOnEnterPress(focusElementAfterNameInput)} />
                 </div>
-                <input ref={passwordInput} name='password' type='password' placeholder='Пароль' maxLength={64} onKeyDown={passInputOnKeyDown} />
+                <input id='passwordInput' name='password' type='password' placeholder='Пароль' maxLength={64} autoComplete={isLoginMode ? 'current-password' : 'new-password'} onKeyDown={executeOnEnterPress(focusElementAfterPasswordInput)} />
                 <div className='expandable'>
-                    <input ref={repeatPasswordInput} name='password' type='password' placeholder='Повторите пароль' maxLength={64} onKeyDown={passInputOnKeyDown} />
+                    <input id='repeatPasswordInput' name='password' type='password' placeholder='Повторите пароль' maxLength={64} autoComplete={'new-password'} onKeyDown={executeOnEnterPress(getInputAndRegister)} />
                 </div>
                 <p id='loginWarningText' ref={loginWarningText}>Введите имя и пароль</p>
 
@@ -216,12 +245,28 @@ export default function Login() {
                 </div>
             </div>
 
-            <p id='loginSwitchMode' onClick={switchMode}>{switchModeText}</p>
+            <p id='loginSwitchMode' onClick={switchLoginMode}>{switchModeText}</p>
         </div>
     </div>
 }
 
 
+
+function getPasswordInputElement(): HTMLInputElement | null {
+    return document.getElementById('passwordInput') as HTMLInputElement
+}
+
+function getRepeatPasswordInputElement(): HTMLInputElement | null {
+    return document.getElementById('repeatPasswordInput') as HTMLInputElement
+}
+
+function executeOnEnterPress(action: Function) {
+    return (e: React.KeyboardEvent<HTMLInputElement>) => {
+        if (e.key !== 'Enter') return
+        console.log('enter')
+        action()
+    }
+}
 
 function showBtn(button: HTMLElement, show: boolean) {
     button.style.opacity = show ? '1' : '0'
