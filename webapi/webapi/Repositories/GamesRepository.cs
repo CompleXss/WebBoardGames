@@ -7,7 +7,7 @@ public class GamesRepository(AppDbContext db)
 {
 	private readonly AppDbContext db = db;
 
-	public Task<int> GetIdByName(string gameName)
+	public Task<int> GetIdByNameAsync(string gameName)
 	{
 		return db.Games.Where(x => x.Name == gameName).Select(x => x.ID).FirstAsync();
 	}

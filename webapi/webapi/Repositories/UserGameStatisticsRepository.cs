@@ -75,7 +75,7 @@ public class UserGameStatisticsRepository(AppDbContext db, GamesRepository games
 
 			if (info is null)
 			{
-				var gameID = await gamesRepository.GetIdByName(gameName);
+				var gameID = await gamesRepository.GetIdByNameAsync(gameName);
 
 				info = new UserGameStatistic
 				{

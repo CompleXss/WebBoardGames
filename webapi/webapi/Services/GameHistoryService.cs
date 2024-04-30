@@ -30,7 +30,7 @@ public class GameHistoryService
 		try
 		{
 			// create history entry
-			var gameID = await gamesRepository.GetIdByName(gameName);
+			var gameID = await gamesRepository.GetIdByNameAsync(gameName);
 			var historyEntry = new GameHistory()
 			{
 				GameID = gameID,
