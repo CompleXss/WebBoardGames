@@ -1,16 +1,44 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using webapi.Extensions;
 using webapi.Models;
 
 namespace webapi.Data;
 
 public partial class AppDbContext : DbContext
 {
-	private const string DATETIME_STRING_FORMAT = "yyyy-MM-dd HH:mm:ss";
-
 	public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
 	{
-		Database.EnsureCreated();
-		// todo: ensure games are created: foreach game in games
+	}
+
+	/// <summary> Ensures that the database contains all necessary default values. </summary>
+	/// <returns> The task result containing bad entries count in database. </returns>
+	public async Task<int> CreateMissingDefaultData(ILogger logger)
+	{
+		int badEntriesCount = 0;
+
+		// games table
+		foreach (var gameName in Enum.GetNames<Games>())
+			if (!await Games.AnyAsync(x => x.Name == gameName))
+			{
+				// if gameName is present but in different case
+				var invalidDbEntry = await Games.FirstOrDefaultAsync(x => x.Name.ToLower() == gameName.ToLower()); // StringComparison doesn't work
+				if (invalidDbEntry is not null)
+				{
+					badEntriesCount++;
+					logger.DatabaseHasDefaultEntryInDifferentCase(nameof(Games), invalidDbEntry.Name, gameName);
+					continue;
+				}
+
+				await Games.AddAsync(new Game()
+				{
+					Name = gameName,
+				});
+				logger.CreatedNewDefaultEntry(nameof(Games), gameName);
+
+				await SaveChangesAsync();
+			}
+
+		return badEntriesCount;
 	}
 
 	public virtual DbSet<Game> Games { get; set; }

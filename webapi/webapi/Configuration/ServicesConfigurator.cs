@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using webapi.Data;
 using webapi.Extensions;
 
 namespace webapi.Configuration;
@@ -72,5 +73,25 @@ public static class ServicesConfigurator
 				.RequireAuthenticatedUser()
 				.Build()
 			);
+	}
+
+
+
+	/// <summary> Ensure that database is created and contains all necessary default values. </summary>
+	/// <exception cref="Exception"></exception>
+	public static async Task EnsureDatabaseIsReadyAsync(this IServiceProvider services, ILogger logger)
+	{
+		using var scope = services.CreateScope();
+		using var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
+		bool databaseCreated = await context.Database.EnsureCreatedAsync();
+		if (databaseCreated)
+			logger.LogInformation("Database created");
+
+		int badEntriesCount = await context.CreateMissingDefaultData(logger);
+		if (badEntriesCount > 0)
+		{
+			throw new Exception($"Database contains {badEntriesCount} bad default values. See above messages for details");
+		}
 	}
 }

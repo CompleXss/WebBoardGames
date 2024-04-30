@@ -50,6 +50,7 @@ builder.Services.AddTransient<IConfigureOptions<SwaggerGenOptions>, ConfigureSwa
 
 
 var app = builder.Build();
+await app.Services.EnsureDatabaseIsReadyAsync(app.Logger);
 
 app.UseCORSPolicy();
 
