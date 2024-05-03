@@ -8,14 +8,12 @@ public class GameHistoryService
 {
 	private readonly AppDbContext db;
 	private readonly GameHistoryRepository gameHistoryRepo;
-	private readonly UserGameStatisticsRepository userStatsRepo;
 	private readonly GamesRepository gamesRepository;
 
-	public GameHistoryService(AppDbContext db, GameHistoryRepository gameHistoryRepo, UserGameStatisticsRepository userStatsRepo, GamesRepository gamesRepository)
+	public GameHistoryService(AppDbContext db, GameHistoryRepository gameHistoryRepo, GamesRepository gamesRepository)
 	{
 		this.db = db;
 		this.gameHistoryRepo = gameHistoryRepo;
-		this.userStatsRepo = userStatsRepo;
 		this.gamesRepository = gamesRepository;
 	}
 
@@ -56,15 +54,6 @@ public class GameHistoryService
 				GameHistory = historyEntry,
 				IsWinner = false,
 			})));
-
-
-
-			// update user stats
-			foreach (var winner in history.Winners)
-				tasks.Add(userStatsRepo.AddAsync(gameName, winner.ID, 1, 1));
-
-			foreach (var looser in history.Loosers)
-				tasks.Add(userStatsRepo.AddAsync(gameName, looser.ID, 1, 0));
 
 
 

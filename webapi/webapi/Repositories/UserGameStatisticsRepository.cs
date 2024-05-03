@@ -4,11 +4,9 @@ using webapi.Models;
 
 namespace webapi.Repositories;
 
-public class UserGameStatisticsRepository(AppDbContext db, GamesRepository gamesRepository, ILogger<UserGameStatisticsRepository> logger)
+public class UserGameStatisticsRepository(AppDbContext db)
 {
 	private readonly AppDbContext db = db;
-	private readonly GamesRepository gamesRepository = gamesRepository;
-	private readonly ILogger<UserGameStatisticsRepository> logger = logger;
 
 	public async Task<UserGameStatistic?> GetUserInfoByIdAsync(int gameID, long userID)
 	{
@@ -62,40 +60,5 @@ public class UserGameStatisticsRepository(AppDbContext db, GamesRepository games
 		}
 
 		return dict;
-	}
-
-
-
-	public async Task<bool> AddAsync(string gameName, long userID, int playCountToAdd, int winCountToAdd)
-	{
-		try
-		{
-			var info = await GetUserInfoByIdAsync(gameName, userID);
-			bool needToAdd = info is null;
-
-			if (info is null)
-			{
-				var gameID = await gamesRepository.GetIdByNameAsync(gameName);
-
-				info = new UserGameStatistic
-				{
-					UserID = userID,
-					GameID = gameID
-				};
-			}
-
-			info.PlayCount += playCountToAdd;
-			info.WinCount += winCountToAdd;
-
-			if (needToAdd)
-				await db.AddAsync(info);
-
-			return await db.SaveChangesAsync() > 0;
-		}
-		catch (Exception e)
-		{
-			logger.LogWarning("Could not add game stats info to DB. Error: {error}", e.Message);
-			return false;
-		}
 	}
 }
