@@ -1,6 +1,6 @@
 ﻿using System.Text.Json.Serialization;
 
-namespace webapi.Models;
+namespace webapi.Models.Data;
 
 public partial class UserGameStatistic
 {

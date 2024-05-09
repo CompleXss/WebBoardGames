@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using webapi.Extensions;
 using webapi.Models;
+using webapi.Models.Data;
 
 namespace webapi.Data;
 

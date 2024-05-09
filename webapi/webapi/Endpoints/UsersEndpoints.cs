@@ -1,4 +1,4 @@
-﻿using webapi.Models;
+﻿using webapi.Models.Data;
 using webapi.Repositories;
 using webapi.Services;
 

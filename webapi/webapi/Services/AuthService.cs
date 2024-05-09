@@ -9,6 +9,7 @@ using webapi.Repositories;
 using webapi.Configuration;
 using webapi.Endpoints;
 using webapi.Extensions;
+using webapi.Models.Data;
 
 namespace webapi.Services;
 

@@ -1,4 +1,5 @@
 ﻿using System.Text.Json.Serialization;
+using webapi.Models.Data;
 
 namespace webapi.Models;
 
