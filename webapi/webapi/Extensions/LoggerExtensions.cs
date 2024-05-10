@@ -29,6 +29,6 @@ public static partial class LoggerExtensions
 	[LoggerMessage(EventId = 104, Level = LogLevel.Information, Message = "Created new default value in DbSet '{dbSetName}': '{value}'")]
 	public static partial void CreatedNewDefaultEntry(this ILogger logger, string dbSetName, string value);
 
-	[LoggerMessage(EventId = 105, Level = LogLevel.Warning, Message = "App does not check if database model is correct. Besides tables, database contains triggers so please check if schema is correct beforehand")]
+	[LoggerMessage(EventId = 105, Level = LogLevel.Warning, Message = "App does not check whether database model is correct. Besides tables, database contains triggers so please check if schema is correct beforehand")]
 	public static partial void AppDoesNotKnowIfDatabaseSchemaIsCorrect(this ILogger logger);
 }
