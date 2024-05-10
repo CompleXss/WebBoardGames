@@ -1,8 +1,10 @@
-﻿namespace webapi.Models;
+﻿using webapi.Extensions;
+
+namespace webapi.Models;
 
 public class RandomItemPool<T>
 {
-	protected readonly HeapList<T> heapList;
+	protected readonly List<T> heapList; // don't care about items order
 	protected readonly Random random = new();
 
 	public RandomItemPool(int capacity)
@@ -20,7 +22,7 @@ public class RandomItemPool<T>
 	/// <summary>
 	/// Adds <paramref name="collection"/> to the pool.
 	/// </summary>
-	public void Add(IEnumerable<T> collection)
+	public void AddRange(IEnumerable<T> collection)
 	{
 		heapList.AddRange(collection);
 	}
@@ -32,7 +34,7 @@ public class RandomItemPool<T>
 	/// <see langword="true"/> if item is successfully retrieved<br/>
 	/// <see langword="false"/> if pool is empty
 	/// </returns>
-	public virtual bool TryGetRandom(out T? item)
+	public bool TryGetRandom(out T? item)
 	{
 		if (heapList.Count == 0)
 		{
@@ -43,7 +45,7 @@ public class RandomItemPool<T>
 		int index = random.Next(0, heapList.Count);
 
 		item = heapList[index];
-		heapList.RemoveAt(index);
+		heapList.RemoveBySwapAt(index);
 
 		return true;
 	}
