@@ -1,11 +1,12 @@
 ﻿using Microsoft.AspNetCore.SignalR;
+using webapi.Extensions;
 using webapi.Hubs;
 
 namespace webapi.Services.Checkers;
 
 public class CheckersLobbyService
 {
-	private readonly List<CheckersLobby> lobbies = [];
+	private readonly List<CheckersLobby> lobbies = []; // order is not preserved
 	private readonly HashSet<string> usersInLobby = [];
 
 	private readonly IHubContext<CheckersLobbyHub, ICheckersLobbyHub> hub;
@@ -99,7 +100,7 @@ public class CheckersLobbyService
 		if (lobby.SecondPlayerID is not null)
 			usersInLobby.Remove(lobby.SecondPlayerID);
 
-		lobbies.Remove(lobby);
+		lobbies.RemoveBySwap(lobby);
 
 		await hub.Clients.Group(lobby.Key).LobbyClosed();
 		await RemoveAllUsersFromLobbyGroup(lobby);

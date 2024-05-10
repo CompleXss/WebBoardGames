@@ -6,7 +6,7 @@ namespace webapi.Services.Checkers;
 
 public class CheckersGameService(ILogger<CheckersGameService> logger)
 {
-	private readonly List<CheckersGame> activeGames = [];
+	private readonly List<CheckersGame> activeGames = []; // order is not preserved
 	private readonly ILogger<CheckersGameService> logger = logger;
 
 
@@ -77,7 +77,7 @@ public class CheckersGameService(ILogger<CheckersGameService> logger)
 
 	public void CloseGame(CheckersGame game)
 	{
-		activeGames.Remove(game);
+		activeGames.RemoveBySwap(game);
 
 		logger.LogInformation("Checkers game with key {gameKey} was CLOSED.", game.Key);
 		game.Dispose();
