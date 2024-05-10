@@ -69,7 +69,6 @@ public class CheckersLobbyHub : Hub<ICheckersLobbyHub>
 		if (lobby is null)
 			return Results.BadRequest("Can not create lobby.");
 
-		logger.LogInformation("Lobby with key {LobbyKey} was CREATED.", lobby.Key);
 		return Results.Ok(new { lobby });
 	}
 
