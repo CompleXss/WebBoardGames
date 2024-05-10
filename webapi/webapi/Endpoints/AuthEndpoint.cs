@@ -2,6 +2,7 @@
 using webapi.Extensions;
 using webapi.Filters;
 using webapi.Models;
+using webapi.Models.Data;
 using webapi.Repositories;
 using webapi.Services;
 
