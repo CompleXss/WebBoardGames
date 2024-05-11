@@ -1,5 +1,5 @@
 import { NavLink } from "react-router-dom";
-import AccountIcon from '../../SVGs/account'
+import AccountIcon from '../../svg/account'
 import './navPanel.css'
 
 // TODO: can tab to hidden buttons in mobile mode
