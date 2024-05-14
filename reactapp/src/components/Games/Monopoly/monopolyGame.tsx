@@ -323,10 +323,10 @@ export default function MonopolyGame() {
 
 
 
-function getFirstLine(num: number) {
+function getFirstLine(cellsInLine: number) {
     let str = '"c0 c0 '
 
-    for (let i = 0; i < num; i++) {
+    for (let i = 0; i < cellsInLine; i++) {
         str += `l${i} `
     }
 
