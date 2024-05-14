@@ -14,3 +14,7 @@ export function sleep(duration: number) {
         setTimeout(resolve, duration)
     })
 }
+
+export interface StringMap<V> {
+    [key: string]: V
+}

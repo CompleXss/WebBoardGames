@@ -1,0 +1,179 @@
+@import url(monopolyCardDialog.css);
+
+.monopolyContainer {
+    display: grid;
+    align-self: center;
+    justify-content: center;
+    align-items: center;
+
+    grid-template-rows: max(70px, 10%) 1fr;
+    grid-template-columns: 100%;
+
+    gap: 0;
+    flex-grow: 1;
+    height: 100%;
+    width: 100%;
+}
+
+/* players */
+.monopolyContainer .playersContainer {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
+    width: 100%;
+
+    background-color: greenyellow;
+}
+
+.monopolyContainer .playersContainer .playerCard {
+    height: fit-content;
+    width: 120px;
+    
+    margin: 8px;
+    padding: 8px 12px;
+    border-radius: 8px;
+    background-color: var(--foreground);
+}
+
+
+
+/* board */
+.monopolyContainer .boardContainer {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    
+    height: 100%;
+    max-height: 100vw;
+    width: 100%;
+}
+
+.monopolyContainer .boardWrapper {
+    position: relative;
+    aspect-ratio: 1;
+    height: 100%;
+    max-width: 100%;
+}
+
+.monopolyContainer .board {
+    position: relative;
+    display: grid;
+    box-sizing: border-box;
+    font-size: 14px; /* fallback */
+    padding: 3%;
+    
+    aspect-ratio: 1;
+    height: 100%;
+    width: 100%;
+}
+
+
+
+/* cell */
+.monopolyContainer .board .cell {
+    box-sizing: border-box;
+    position: relative;
+    border: none;
+    overflow: visible;
+
+    margin: 0.1cqmin;
+    background-position: center;
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-color: white;
+}
+
+.monopolyContainer .board .cell .cell-body {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+
+    height: 100%;
+    width: 100%;
+}
+
+
+
+/* cell icon */
+.monopolyContainer .board .cell .cell-icon {
+    background-position: center;
+    background-size: contain;
+    background-repeat: no-repeat;
+    height: 70%;
+    width: 80%;
+}
+
+.monopolyContainer .board .cell[mnpl-rotate="1"] .cell-icon {
+    transform: rotate(180deg);
+}
+
+.monopolyContainer .board .cell[mnpl-line="0"] .cell-icon,
+.monopolyContainer .board .cell[mnpl-line="2"] .cell-icon {
+    transform: rotate(-90deg);
+    height: 35%;
+    width: 160%;
+}
+
+
+
+/* cell label */
+.monopolyContainer .board .cell .cell-label {
+    position: absolute;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+
+    container-type: size;
+}
+
+.monopolyContainer .board .cell .cell-label>div {
+    text-align: center;
+    user-select: none;
+}
+
+.monopolyContainer .board .cell .cell-label>div::after {
+    content: 'k';
+}
+
+
+
+.monopolyContainer .board .cell[mnpl-line="0"] .cell-label {
+    width: 100%;
+    height: 20%;
+    top: -20%;
+}
+
+.monopolyContainer .board .cell[mnpl-line="1"] .cell-label {
+    height: 100%;
+    width: 20%;
+    right: -20%;
+}
+
+.monopolyContainer .board .cell[mnpl-line="2"] .cell-label {
+    width: 100%;
+    height: 20%;
+    bottom: -20%;
+}
+
+.monopolyContainer .board .cell[mnpl-line="3"] .cell-label {
+    height: 100%;
+    width: 20%;
+    left: -20%;
+}
+
+.monopolyContainer .board .cell .cell-label>div {
+    font-size: 23cqmax;
+}
+
+.monopolyContainer .board .cell[mnpl-line="1"] .cell-label>div {
+    transform: rotate(90deg);
+}
+
+.monopolyContainer .board .cell[mnpl-line="3"] .cell-label>div {
+    transform: rotate(-90deg);
+}

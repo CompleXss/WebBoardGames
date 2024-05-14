@@ -1,0 +1,98 @@
+.monopolyContainer #cardInfoDialog[open] {
+    display: block;
+    height: auto;
+    width: 30%;
+    container-type: inline-size;
+    
+    overflow: hidden;
+    outline: none;
+    border: none;
+    box-shadow: 0 0 10px black;
+    background-color: white;
+    z-index: 3;
+    
+    padding: 0;
+    border-radius: 5px;
+    border-radius: 1cqw;
+}
+
+.monopolyContainer #cardInfoDialog[open] .cardInfoHeader {
+    display: flex;
+    flex-direction: column;
+    align-items: start;
+    justify-content: center;
+    border-start-start-radius: inherit;
+    border-start-end-radius: inherit;
+
+    color: white;
+    padding: 10px 14px;
+    padding: 7cqw;
+}
+
+.monopolyContainer #cardInfoDialog[open] .cardInfoBody {
+    display: flex;
+    flex-direction: column;
+    border-end-start-radius: inherit;
+    border-end-end-radius: inherit;
+    padding: 10px 14px;
+    padding: 5cqw 7cqw;
+
+    gap: 4cqw;
+}
+
+.monopolyContainer #cardInfoDialog[open] h1 {
+    text-align: start;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    font-weight: bold;
+    margin: 0;
+
+    font-size: 17px;
+    font-size: 8.5cqw;
+}
+
+.monopolyContainer #cardInfoDialog[open] h2,
+.monopolyContainer #cardInfoDialog[open] p {
+    text-align: start;
+    margin: 0;
+
+    font-size: 11px;
+    font-size: 5.5cqw;
+}
+
+
+
+.monopolyContainer #cardInfoDialog[open] .groupParamsLine {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    color: black;
+
+    margin-bottom: 2cqw;
+}
+
+.monopolyContainer #cardInfoDialog[open] .groupParamsLine p:nth-child(2) {
+    font-weight: bold;
+}
+
+.monopolyContainer #cardInfoDialog[open] .groupParamsLine .moneyValue::after {
+    content: ' k';
+    color: gray;
+}
+
+
+
+/* icons */
+.monopolyContainer #cardInfoDialog[open] .starIcon {
+    height: 1em;
+    width: auto;
+    color: gray;
+}
+
+.monopolyContainer #cardInfoDialog[open] .diceIcon {
+    height: 1.5em;
+    width: auto;
+    vertical-align: bottom;
+    color: gray;
+}

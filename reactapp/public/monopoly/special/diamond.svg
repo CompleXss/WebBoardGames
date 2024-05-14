@@ -1,0 +1,15 @@
+<svg
+    xmlns="http://www.w3.org/2000/svg" viewBox="0 0 801.08 677.54">
+    <defs>
+        <style>.cls-1{fill:#ffe182;}.cls-1,.cls-2,.cls-3,.cls-4{stroke:#000;stroke-miterlimit:10;stroke-width:0.5px;}.cls-2{fill:#ffcd73;}.cls-3{fill:#ffaa64;}.cls-4{fill:#ff8c5a;}</style>
+    </defs>
+    <title>diamond_2</title>
+    <polygon class="cls-1" points="563.24 207.41 400.54 676.37 800.54 207.41 563.24 207.41"/>
+    <polygon class="cls-2" points="166.06 0.51 0.54 207.41 237.84 207.41 166.06 0.51"/>
+    <polygon class="cls-2" points="563.24 207.41 800.54 207.41 635.02 0.51 563.24 207.41"/>
+    <polygon class="cls-2" points="563.24 207.41 400.54 0.51 237.84 207.41 563.24 207.41"/>
+    <polygon class="cls-3" points="400.54 0.51 166.06 0.51 237.84 207.41 400.54 0.51"/>
+    <polygon class="cls-1" points="635.02 0.51 400.54 0.51 563.24 207.41 635.02 0.51"/>
+    <polygon class="cls-3" points="237.84 207.41 400.54 676.37 563.24 207.41 237.84 207.41"/>
+    <polygon class="cls-4" points="0.54 207.41 400.54 676.37 237.84 207.41 0.54 207.41"/>
+</svg>

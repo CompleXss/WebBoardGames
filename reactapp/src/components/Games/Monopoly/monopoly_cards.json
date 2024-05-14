@@ -1,0 +1,240 @@
+{
+    "iconFolder": "/monopoly",
+    "translation": {
+        "rent_0": "Базовая рента",
+        "buyCost": "Стоимость поля",
+        "sellCost": "Залог поля",
+        "rebuyCost": "Выкуп поля",
+        "upgradeCost": "Покупка филиала"
+    },
+    "groupTypes": [
+        {
+            "type": "upgrade",
+            "description": "Стройте филиалы, чтобы увеличить ренту."
+        },
+        {
+            "type": "count",
+            "description": "Рента зависит от количества карточек из группы \"{groupName}\", которыми вы владеете."
+        },
+        {
+            "type": "dice",
+            "description": "Рента зависит от суммы чисел на кубиках и от количества карточек из группы \"{groupName}\", которыми вы владеете."
+        }
+    ],
+    "cornerCards": [
+        {
+            "id": "start",
+            "icon": ""
+        },
+        {
+            "id": "prison",
+            "icon": ""
+        },
+        {
+            "id": "casino",
+            "icon": ""
+        },
+        {
+            "id": "prisonEnter",
+            "icon": ""
+        }
+    ],
+    "eventCards": [
+        {
+            "id": "event_random",
+            "icon": "/special/question_mark.svg"
+        },
+        {
+            "id": "event_money",
+            "icon": "/special/money.svg"
+        },
+        {
+            "id": "event_star",
+            "icon": "/special/diamond.svg"
+        }
+    ],
+    "cardGroups": [
+        {
+            "id": "g_1",
+            "name": "Парфюмерия",
+            "color": "#c154c1",
+            "cards": [
+                {
+                    "name": "Chanel",
+                    "icon": "/brands/1/chanel.svg"
+                },
+                {
+                    "name": "Hugo Boss",
+                    "icon": "/brands/1/hugo_boss.svg"
+                }
+            ]
+        },
+        {
+            "id": "g_2",
+            "name": "Автомобили",
+            "color": "#da4553",
+            "cards": [
+                {
+                    "name": "Mercedes",
+                    "icon": "/brands/2/mercedes.svg"
+                },
+                {
+                    "name": "Audi",
+                    "icon": "/brands/2/audi.svg"
+                },
+                {
+                    "name": "Ford",
+                    "icon": "/brands/2/ford.svg"
+                },
+                {
+                    "name": "BMW",
+                    "icon": "/brands/2/bmw.svg"
+                }
+            ]
+        },
+        {
+            "id": "g_3",
+            "name": "Одежда",
+            "color": "#cc9933",
+            "cards": [
+                {
+                    "name": "Adidas",
+                    "icon": "/brands/3/adidas.svg"
+                },
+                {
+                    "name": "Puma",
+                    "icon": "/brands/3/puma.svg"
+                },
+                {
+                    "name": "Lacoste",
+                    "icon": "/brands/3/lacoste.svg"
+                }
+            ]
+        },
+        {
+            "id": "g_4",
+            "name": "Веб-сервисы",
+            "color": "#37bc9d",
+            "cards": [
+                {
+                    "name": "Вконтакте",
+                    "icon": "/brands/4/vk.svg"
+                },
+                {
+                    "name": "Facebook",
+                    "icon": "/brands/4/facebook.svg"
+                },
+                {
+                    "name": "Twitter",
+                    "icon": "/brands/4/twitter.svg"
+                }
+            ]
+        },
+        {
+            "id": "g_5",
+            "name": "Разработчики игр",
+            "color": "#660033",
+            "cards": [
+                {
+                    "name": "Rockstar Games",
+                    "icon": "/brands/5/rockstar_games.svg"
+                },
+                {
+                    "name": "Rovio",
+                    "icon": "/brands/5/rovio.svg"
+                }
+            ]
+        },
+        {
+            "id": "g_6",
+            "name": "Напитки",
+            "color": "#4b89dc",
+            "cards": [
+                {
+                    "name": "Coca-Cola",
+                    "icon": "/brands/6/coca_cola.svg"
+                },
+                {
+                    "name": "Pepsi",
+                    "icon": "/brands/6/pepsi.svg"
+                },
+                {
+                    "name": "Fanta",
+                    "icon": "/brands/6/fanta.svg"
+                }
+            ]
+        },
+        {
+            "id": "g_7",
+            "name": "Авиалинии",
+            "color": "#967bdc",
+            "cards": [
+                {
+                    "name": "American Airlines",
+                    "icon": "/brands/7/american_airlines.svg"
+                },
+                {
+                    "name": "Lufthansa",
+                    "icon": "/brands/7/lufthansa.svg"
+                },
+                {
+                    "name": "British Airways",
+                    "icon": "/brands/7/british_airways.svg"
+                }
+            ]
+        },
+        {
+            "id": "g_8",
+            "name": "Рестораны",
+            "color": "#44944a",
+            "cards": [
+                {
+                    "name": "KFC",
+                    "icon": "/brands/8/kfc.svg"
+                },
+                {
+                    "name": "Burger King",
+                    "icon": "/brands/8/burger_king.svg"
+                },
+                {
+                    "name": "McDonald's",
+                    "icon": "/brands/8/mcdonald.svg"
+                }
+            ]
+        },
+        {
+            "id": "g_9",
+            "name": "Отели",
+            "color": "#1dacd6",
+            "cards": [
+                {
+                    "name": "Holiday Inn",
+                    "icon": "/brands/9/holiday_inn.svg"
+                },
+                {
+                    "name": "Radisson Blu",
+                    "icon": "/brands/9/radisson_blu.svg"
+                },
+                {
+                    "name": "Novotel",
+                    "icon": "/brands/9/novotel.svg"
+                }
+            ]
+        },
+        {
+            "id": "g_10",
+            "name": "Электроника",
+            "color": "#656d78",
+            "cards": [
+                {
+                    "name": "Apple",
+                    "icon": "/brands/10/apple.svg"
+                },
+                {
+                    "name": "Nokia",
+                    "icon": "/brands/10/nokia.svg"
+                }
+            ]
+        }
+    ]
+}
