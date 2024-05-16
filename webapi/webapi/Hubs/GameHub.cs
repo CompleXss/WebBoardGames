@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.SignalR;
+using webapi.Games;
 using webapi.Models;
 using webapi.Services;
 

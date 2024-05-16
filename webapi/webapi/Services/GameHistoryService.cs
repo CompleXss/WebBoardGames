@@ -3,6 +3,7 @@ using webapi.Repositories;
 using webapi.Data;
 using webapi.Models.Data;
 using System.Data;
+using webapi.Games;
 
 namespace webapi.Services;
 

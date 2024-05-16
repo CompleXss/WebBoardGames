@@ -3,6 +3,7 @@ using webapi.Hubs;
 using webapi.Models;
 using webapi.Services;
 using webapi.Games.Checkers;
+using webapi.Games;
 
 namespace webapi.Configuration;
 

@@ -1,4 +1,4 @@
-﻿using webapi.Models;
+﻿using webapi.Games;
 
 namespace webapi.Services;
 
