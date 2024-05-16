@@ -2,6 +2,7 @@
 using webapi.Repositories;
 using webapi.Data;
 using webapi.Models.Data;
+using System.Data;
 
 namespace webapi.Services;
 
@@ -9,16 +10,44 @@ public class GameHistoryService
 {
 	private readonly AppDbContext db;
 	private readonly GameHistoryRepository gameHistoryRepo;
-	private readonly GamesRepository gamesRepository;
+	private readonly GamesRepository gamesRepo;
+	private readonly UsersRepository usersRepo;
 
-	public GameHistoryService(AppDbContext db, GameHistoryRepository gameHistoryRepo, GamesRepository gamesRepository)
+	public GameHistoryService(AppDbContext db, GameHistoryRepository gameHistoryRepo, GamesRepository gamesRepository, UsersRepository usersRepo)
 	{
 		this.db = db;
 		this.gameHistoryRepo = gameHistoryRepo;
-		this.gamesRepository = gamesRepository;
+		this.gamesRepo = gamesRepository;
+		this.usersRepo = usersRepo;
 	}
 
 
+
+	public async Task<bool> AddGameToHistoryAsync(PlayableGame game)
+	{
+		if (game.WinnerID is null) return false;
+
+		var winner = await usersRepo.GetByPublicIdAsync(game.WinnerID);
+		var loosers = await Task.WhenAll(game.PlayerIDs
+			.Where(x => x != game.WinnerID)
+			.Select(async x => await usersRepo.GetByPublicIdAsync(x))
+			.ToArray()
+		);
+
+		if (winner is null || loosers.Any(x => x is null))
+			return false;
+
+		var playHistoryDto = new GameHistoryDto()
+		{
+			Game = Games.checkers,
+			Winners = [winner],
+			Loosers = loosers!,
+			DateTimeStart = game.GameStarted,
+			DateTimeEnd = DateTime.Now,
+		};
+
+		return await AddAsync(playHistoryDto);
+	}
 
 	public async Task<bool> AddAsync(GameHistoryDto history)
 	{
@@ -29,7 +58,7 @@ public class GameHistoryService
 		try
 		{
 			// create history entry
-			var gameID = await gamesRepository.GetIdByNameAsync(gameName);
+			var gameID = await gamesRepo.GetIdByNameAsync(gameName);
 			var historyEntry = new GameHistory()
 			{
 				GameID = gameID,

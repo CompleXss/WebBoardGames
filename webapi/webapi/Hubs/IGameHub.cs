@@ -1,6 +1,6 @@
 ﻿namespace webapi.Hubs;
 
-public interface ICheckersGameHub
+public interface IGameHub
 {
 	Task NotAllowed();
 	Task GameStateChanged();

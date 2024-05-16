@@ -8,7 +8,6 @@ using webapi.Endpoints;
 using webapi.Repositories;
 using webapi.Services;
 using webapi.Configuration;
-using webapi.Services.Checkers;
 
 var builder = WebApplication.CreateBuilder(args);
 var config = builder.Configuration;
@@ -23,10 +22,9 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 builder.Services.AddValidatorsFromAssemblyContaining<Program>();
 
 // Configure services
-builder.Services.AddTransient<AuthService>();
-builder.Services.AddTransient<GameHistoryService>();
-builder.Services.AddSingleton<CheckersLobbyService>();
-builder.Services.AddSingleton<CheckersGameService>();
+builder.Services.AddTransient<AuthService>(); // singleton
+builder.Services.AddTransient<GameHistoryService>(); // singleton ???
+builder.Services.AddGameServices();
 
 // Configure repositories
 builder.Services.AddTransient<UsersRepository>();

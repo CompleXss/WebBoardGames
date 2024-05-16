@@ -1,43 +1,37 @@
-﻿using webapi.Models;
+﻿using webapi.Extensions;
+using webapi.Models;
 
 namespace webapi.Services.Checkers;
 
-public sealed class CheckersGame : IDisposable
+public sealed class CheckersGame : PlayableGame
 {
-	private static readonly HashSet<string> activeKeys = [];
-
-	public string Key { get; }
-
 	public string WhitePlayerID { get; init; }
 	public string BlackPlayerID { get; init; }
 
-	public int PlayersAlive { get; set; }
-
 	public bool IsWhiteTurn { get; set; } = true;
-	public string? WinnerID { get; private set; }
-
-	public DateTime GameStarted { get; }
 
 	public CheckersCell[,] Board { get; } = new CheckersCell[8, 8];
 
-	private CheckersGame(string whitePlayerID, string blackPlayerID)
+	public CheckersGame(GameCore gameCore, IReadOnlyList<string> playerIDs) : base(gameCore, playerIDs)
 	{
-		do
+		if (ErrorWhileCreating)
 		{
-			Key = Guid.NewGuid().ToString();
+			WhitePlayerID = string.Empty;
+			BlackPlayerID = string.Empty;
+			return;
 		}
-		while (!activeKeys.Add(Key));
 
-		WhitePlayerID = whitePlayerID;
-		BlackPlayerID = blackPlayerID;
-
-		GameStarted = DateTime.Now;
-	}
-
-	public static CheckersGame CreateNew(string whitePlayerID, string blackPlayerID)
-	{
-		var game = new CheckersGame(whitePlayerID, blackPlayerID);
-		var board = game.Board;
+		bool firstPlayerIsWhite = Random.Shared.NextBoolean();
+		if (firstPlayerIsWhite)
+		{
+			WhitePlayerID = playerIDs[0];
+			BlackPlayerID = playerIDs[1];
+		}
+		else
+		{
+			WhitePlayerID = playerIDs[1];
+			BlackPlayerID = playerIDs[0];
+		}
 
 		// Do not change 'whites at the bottom, blacks at the top' start state!
 
@@ -45,17 +39,15 @@ public sealed class CheckersGame : IDisposable
 		for (int i = 0; i < 3; i++)
 			for (int j = i & 1; j < 8; j += 2)
 			{
-				board[j, i] = new CheckersCell(CheckersCellStates.White, false);
+				Board[j, i] = new CheckersCell(CheckersCellStates.White, false);
 			}
 
 		// black
 		for (int i = 5; i < 8; i++)
 			for (int j = i & 1; j < 8; j += 2)
 			{
-				board[j, i] = new CheckersCell(CheckersCellStates.Black, false);
+				Board[j, i] = new CheckersCell(CheckersCellStates.Black, false);
 			}
-
-		return game;
 	}
 
 	public CheckersCellStates GetUserColor(string userID)
@@ -63,6 +55,31 @@ public sealed class CheckersGame : IDisposable
 		return BlackPlayerID == userID
 			? CheckersCellStates.Black
 			: CheckersCellStates.White;
+	}
+
+	public override bool IsPlayerTurn(string playerID)
+	{
+		var playerColor = GetUserColor(playerID);
+
+		return IsWhiteTurn && playerColor == CheckersCellStates.White
+			|| !IsWhiteTurn && playerColor == CheckersCellStates.Black;
+	}
+
+	public override object? GetRelativeState(string playerID)
+	{
+		var userColor = GetUserColor(playerID);
+		var (allyPositions, enemyPositions) = GetDraughtsRelativeTo(userColor);
+		bool isMyTurn = IsWhiteTurn && userColor == CheckersCellStates.White ||
+						!IsWhiteTurn && userColor == CheckersCellStates.Black;
+
+		return new
+		{
+			myColor = userColor.ToString().ToLower(),
+			allyPositions,
+			enemyPositions,
+			isMyTurn,
+			winnerID = WinnerID,
+		};
 	}
 
 
@@ -99,6 +116,26 @@ public sealed class CheckersGame : IDisposable
 	}
 
 
+
+	public override bool TryUpdateState(string playerID, object data, out string error)
+	{
+		if (data is not CheckersMove[] moves)
+		{
+			error = "Неправильные входные данные.";
+			return false;
+		}
+
+		var playerColor = GetUserColor(playerID);
+
+		DerelatifyMoves(moves, playerColor);
+		bool moveIsValid = CheckersGameRuler.Validate(Board, moves, playerColor, out error);
+
+		if (!moveIsValid)
+			return false;
+
+		ApplyMoves(moves);
+		return true;
+	}
 
 	public void ApplyMoves(CheckersMove[] moves)
 	{
@@ -186,10 +223,5 @@ public sealed class CheckersGame : IDisposable
 	private static bool ShouldMirrorMove(CheckersCellStates playerColor)
 	{
 		return playerColor == CheckersCellStates.Black;
-	}
-
-	public void Dispose()
-	{
-		activeKeys.Remove(Key);
 	}
 }

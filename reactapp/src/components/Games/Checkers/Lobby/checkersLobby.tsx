@@ -15,22 +15,24 @@ const ENTER_LOBBY = 'EnterLobby'
 const LEAVE_LOBBY = 'LeaveLobby'
 
 interface LobbyInfo {
-    hostID: number,
+    hostID: string,
     key: string,
-    secondPlayerID: number | null,
+    playerIDs: string[],
 }
 
-interface PLayerInfo {
-    id: number,
+interface PlayerInfo {
+    publicID: string,
     name: string,
 }
+
+// todo: onhostchanged
 
 export default function CheckersLobby() {
     const navigate = useNavigate()
 
     const [lobbyKey, setLobbyKey] = useState<string>()
     const [isHost, setIsHost] = useState(false)
-    const [lobbyPlayerInfos, setLobbyPlayerInfos] = useState<PLayerInfo[]>([])
+    const [lobbyPlayerInfos, setLobbyPlayerInfos] = useState<PlayerInfo[]>([])
     const [lobbyPlayers, setLobbyPlayers] = useState<JSX.Element[]>([])
 
     const joinLobbyDialog = useRef<HTMLDialogElement>(null)
@@ -51,8 +53,7 @@ export default function CheckersLobby() {
 
     // server side event handlers
     function addEventHandlers(connection: HubConnection) {
-        connection.on('UserConnected', async message => {
-            const userID = message as number
+        connection.on('UserConnected', async userID => {
             const userInfo = await getUserInfoByID(userID)
 
             setLobbyPlayerInfos(infos => {
@@ -60,11 +61,10 @@ export default function CheckersLobby() {
             })
         })
 
-        connection.on('UserDisconnected', message => {
-            const userID = message as number
-
+        connection.on('UserDisconnected', userID => {
             setLobbyPlayerInfos(infos => {
-                return infos.filter(x => x.id !== userID)
+                console.log(infos)
+                return infos.filter(x => x.publicID !== userID)
             })
         })
 
@@ -92,15 +92,9 @@ export default function CheckersLobby() {
         }
         setLobbyKey(lobby.key)
 
-        const hostInfo = await getUserInfoByID(lobby.hostID)
-
-        const secondPlayerInfo = lobby.secondPlayerID
-            ? await getUserInfoByID(lobby.secondPlayerID)
-            : null
-
-        const playerInfos: PLayerInfo[] = secondPlayerInfo
-            ? [hostInfo, secondPlayerInfo]
-            : [hostInfo]
+        const playerInfos = await Promise.all(lobby.playerIDs.map(async id => {
+            return await getUserInfoByID(id)
+        }))
 
         setLobbyPlayerInfos(playerInfos)
         return true
@@ -275,16 +269,16 @@ export default function CheckersLobby() {
 
 
 
-async function getUserInfoByID(userID: number) {
+async function getUserInfoByID(userID: string): Promise<PlayerInfo> {
     try {
         const response = await axios.get(ENDPOINTS.Users.GET_USER_INFO_BY_ID_URL + userID)
-        return response.data as PLayerInfo
+        return response.data as PlayerInfo
 
     } catch (error) {
         console.log('Can not get user info!')
 
         return {
-            id: userID,
+            publicID: userID,
             name: 'unknown',
         }
     }

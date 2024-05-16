@@ -1,4 +1,5 @@
 ﻿using webapi.Hubs;
+using webapi.Models;
 using webapi.Services;
 using webapi.Services.Checkers;
 
@@ -9,16 +10,17 @@ public static class GameEndpoints
 	public static void MapGameEndpoints(this WebApplication app)
 	{
 		// lobbies
-		app.MapHub<CheckersLobbyHub>("/lobby/checkers");
-
-		// is in game checks
-		app.MapGet("/isInGame/checkers", IsInCheckersGameAsync);
+		app.MapHub<LobbyHub<CheckersGame>>("/lobby/checkers");
 
 		// games
-		app.MapHub<CheckersGameHub>("/play/checkers");
+		app.MapHub<GameHub<CheckersGame>>("/play/checkers");
+
+		// is in game checks
+		app.MapGet("/isInGame/checkers", IsInGameAsync<CheckersGame>);
 	}
 
-	internal static async Task<IResult> IsInCheckersGameAsync(HttpContext context, CheckersGameService gameService)
+	internal static async Task<IResult> IsInGameAsync<TGame>(HttpContext context, GameService<TGame> gameService)
+		where TGame : PlayableGame
 	{
 		var userTokenInfo = await AuthService.TryGetUserInfoFromHttpContextAsync(context);
 		if (userTokenInfo is null) return Results.Unauthorized();

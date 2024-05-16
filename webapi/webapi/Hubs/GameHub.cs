@@ -1,21 +1,17 @@
 ﻿using Microsoft.AspNetCore.SignalR;
 using webapi.Models;
-using webapi.Repositories;
 using webapi.Services;
-using webapi.Services.Checkers;
 
 namespace webapi.Hubs;
 
-public class CheckersGameHub : Hub<ICheckersGameHub>
+public class GameHub<TGame> : Hub<IGameHub> where TGame : PlayableGame
 {
-	private readonly CheckersGameService gameService;
-	private readonly UsersRepository usersRepository;
-	private readonly ILogger<CheckersLobbyHub> logger;
+	private readonly IGameService gameService;
+	private readonly ILogger<GameHub<TGame>> logger;
 
-	public CheckersGameHub(CheckersGameService gameService, UsersRepository usersRepository, ILogger<CheckersLobbyHub> logger)
+	public GameHub(IGameService gameService, ILogger<GameHub<TGame>> logger)
 	{
 		this.gameService = gameService;
-		this.usersRepository = usersRepository;
 		this.logger = logger;
 	}
 
@@ -92,14 +88,16 @@ public class CheckersGameHub : Hub<ICheckersGameHub>
 		if (game is null)
 		{
 			await Clients.Caller.NotAllowed();
-			return Results.BadRequest("You don't have any active checkers game!");
+			return Results.BadRequest("You don't have any active checkers game.");
 		}
 
-		game = gameService.TryMakeMove(game, user.PublicID, moves, out string error);
-		if (game is null) return Results.BadRequest(error);
+		if (!gameService.TryUpdateGameState(game, user.PublicID, moves, out string error))
+			return Results.BadRequest(error);
 
 		if (game.WinnerID is not null)
-			await gameService.AddGameToHistory(gameHistoryService, usersRepository, game);
+			await gameHistoryService.AddGameToHistoryAsync(game);
+
+		// todo: close game
 
 		await Clients.Group(game.Key).GameStateChanged();
 		return Results.Ok();
@@ -114,11 +112,11 @@ public class CheckersGameHub : Hub<ICheckersGameHub>
 		if (game is null)
 		{
 			await Clients.Caller.NotAllowed();
-			return Results.BadRequest("You don't have any active checkers game!");
+			return Results.BadRequest("You don't have any active checkers game.");
 		}
 
 		var gameState = gameService.GetRelativeGameState(user.PublicID);
-		if (gameState is null) return Results.Problem("Can not get field state.");
+		if (gameState is null) return Results.Problem("Could not get game state.");
 
 		return Results.Ok(gameState);
 	}
