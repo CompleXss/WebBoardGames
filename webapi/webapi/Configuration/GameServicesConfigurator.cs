@@ -13,13 +13,13 @@ public static class GameServicesConfigurator
 		// checkers
 		services.AddServicesForGame<CheckersGame>(
 			new LobbyCore(
-				gameName: Games.checkers,
+				gameName: GameNames.checkers,
 				maxLobbiesCount: 10_000,
 				minPlayersToStartGame: 2,
 				maxPlayersIncludingHost: 2
 			),
 			new GameCore(
-				gameName: Games.checkers,
+				gameName: GameNames.checkers,
 				maxGamesCount: 10_000,
 				minPlayersCount: 2,
 				maxPlayersCount: 2

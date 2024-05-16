@@ -39,7 +39,7 @@ public class GameHistoryService
 
 		var playHistoryDto = new GameHistoryDto()
 		{
-			Game = Games.checkers,
+			Game = GameNames.checkers,
 			Winners = [winner],
 			Loosers = loosers!,
 			DateTimeStart = game.GameStarted,

@@ -18,7 +18,7 @@ public partial class AppDbContext : DbContext
 		int badEntriesCount = 0;
 
 		// games table
-		foreach (var gameName in Enum.GetNames<Games>())
+		foreach (var gameName in Enum.GetNames<GameNames>())
 			if (!await Games.AnyAsync(x => x.Name == gameName))
 			{
 				// if gameName is present but in different case

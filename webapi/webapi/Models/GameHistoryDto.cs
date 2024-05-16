@@ -6,7 +6,7 @@ namespace webapi.Models;
 public record GameHistoryDto
 {
 	[JsonIgnore]
-	public Games Game { get; init; }
+	public GameNames Game { get; init; }
 
 	public required User[] Winners { get; init; }
 	public required User[] Loosers { get; init; }

@@ -2,7 +2,7 @@
 
 // Don't change existing values
 // Case-sensitive!
-public enum Games
+public enum GameNames
 {
 	checkers
 }

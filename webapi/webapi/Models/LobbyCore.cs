@@ -2,7 +2,7 @@
 
 public class LobbyCore
 {
-	public Games GameName { get; }
+	public GameNames GameName { get; }
 
 	/// <summary>
 	/// Max number of lobbies that can use this core.
@@ -24,7 +24,7 @@ public class LobbyCore
 	/// </summary>
 	public int MaxPlayers { get; }
 
-	public LobbyCore(Games gameName, int maxLobbiesCount, int minPlayersToStartGame, int maxPlayersIncludingHost)
+	public LobbyCore(GameNames gameName, int maxLobbiesCount, int minPlayersToStartGame, int maxPlayersIncludingHost)
 	{
 		GameName = gameName;
 		MaxLobbiesCount = maxLobbiesCount;

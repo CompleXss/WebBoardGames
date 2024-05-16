@@ -2,7 +2,7 @@
 
 public class GameCore
 {
-	public Games GameName { get; }
+	public GameNames GameName { get; }
 
 	/// <summary>
 	/// Max number of games that can use this core.
@@ -18,7 +18,7 @@ public class GameCore
 
 	public int MaxPlayersCount { get; }
 
-	public GameCore(Games gameName, int maxGamesCount, int minPlayersCount, int maxPlayersCount)
+	public GameCore(GameNames gameName, int maxGamesCount, int minPlayersCount, int maxPlayersCount)
 	{
 		GameName = gameName;
 		MaxGamesCount = maxGamesCount;
