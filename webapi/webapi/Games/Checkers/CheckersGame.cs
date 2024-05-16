@@ -1,7 +1,7 @@
 ﻿using webapi.Extensions;
 using webapi.Models;
 
-namespace webapi.Services.Checkers;
+namespace webapi.Games.Checkers;
 
 public sealed class CheckersGame : PlayableGame
 {

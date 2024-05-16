@@ -1,7 +1,7 @@
-﻿using webapi.Hubs;
+﻿using webapi.Games.Checkers;
+using webapi.Hubs;
 using webapi.Models;
 using webapi.Services;
-using webapi.Services.Checkers;
 
 namespace webapi.Endpoints;
 

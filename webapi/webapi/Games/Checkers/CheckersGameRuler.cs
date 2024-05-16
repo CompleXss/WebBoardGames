@@ -1,7 +1,7 @@
 ﻿using System.Drawing;
 using webapi.Models;
 
-namespace webapi.Services.Checkers;
+namespace webapi.Games.Checkers;
 
 // TODO: Eating is mandatory ??? (шашки)
 
@@ -158,29 +158,29 @@ public static class CheckersGameRuler
 
 				// up left
 				bool canMoveUpLeft =
-					(x > 0 && y < 7 && board[x - 1, y + 1].DraughtColor == CheckersCellStates.None) ||
-					(x > 1 && y < 6 && board[x - 1, y + 1].DraughtColor == enemyColor && board[x - 2, y + 2].DraughtColor == CheckersCellStates.None);
+					x > 0 && y < 7 && board[x - 1, y + 1].DraughtColor == CheckersCellStates.None ||
+					x > 1 && y < 6 && board[x - 1, y + 1].DraughtColor == enemyColor && board[x - 2, y + 2].DraughtColor == CheckersCellStates.None;
 
 				if (canMoveUpLeft) return false;
 
 				// up right
 				bool canMoveUpRight =
-					(x < 7 && y < 7 && board[x + 1, y + 1].DraughtColor == CheckersCellStates.None) ||
-					(x < 6 && y < 6 && board[x + 1, y + 1].DraughtColor == enemyColor && board[x + 2, y + 2].DraughtColor == CheckersCellStates.None);
+					x < 7 && y < 7 && board[x + 1, y + 1].DraughtColor == CheckersCellStates.None ||
+					x < 6 && y < 6 && board[x + 1, y + 1].DraughtColor == enemyColor && board[x + 2, y + 2].DraughtColor == CheckersCellStates.None;
 
 				if (canMoveUpRight) return false;
 
 				// down left
 				bool canMoveDownLeft =
-					(isQueen && x > 0 && y > 0 && board[x - 1, y - 1].DraughtColor == CheckersCellStates.None) ||
-					(x > 1 && y > 1 && board[x - 1, y - 1].DraughtColor == enemyColor && board[x - 2, y - 2].DraughtColor == CheckersCellStates.None);
+					isQueen && x > 0 && y > 0 && board[x - 1, y - 1].DraughtColor == CheckersCellStates.None ||
+					x > 1 && y > 1 && board[x - 1, y - 1].DraughtColor == enemyColor && board[x - 2, y - 2].DraughtColor == CheckersCellStates.None;
 
 				if (canMoveDownLeft) return false;
 
 				// down right
 				bool canMoveDownRight =
-					(isQueen && x < 7 && y > 0 && board[x + 1, y - 1].DraughtColor == CheckersCellStates.None) ||
-					(x < 6 && y > 1 && board[x + 1, y - 1].DraughtColor == enemyColor && board[x + 2, y - 2].DraughtColor == CheckersCellStates.None);
+					isQueen && x < 7 && y > 0 && board[x + 1, y - 1].DraughtColor == CheckersCellStates.None ||
+					x < 6 && y > 1 && board[x + 1, y - 1].DraughtColor == enemyColor && board[x + 2, y - 2].DraughtColor == CheckersCellStates.None;
 
 				if (canMoveDownRight) return false;
 			}
