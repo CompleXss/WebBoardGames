@@ -30,7 +30,7 @@ public class RandomItemPool<T>
 	}
 
 	/// <summary>
-	/// Attempts to get a random item from the pool. Removes item from the pool.
+	/// Attempts to get a random item from the pool. Removes item from the pool on success.
 	/// </summary>
 	/// <returns>
 	/// <see langword="true"/> if item is successfully retrieved<br/>
