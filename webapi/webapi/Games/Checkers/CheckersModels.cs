@@ -1,6 +1,6 @@
 ﻿using System.Drawing;
 
-namespace webapi.Models;
+namespace webapi.Games.Checkers;
 
 public readonly struct CheckersCell
 {

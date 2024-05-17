@@ -1,5 +1,4 @@
 ﻿using System.Drawing;
-using webapi.Models;
 
 namespace webapi.Games.Checkers;
 
