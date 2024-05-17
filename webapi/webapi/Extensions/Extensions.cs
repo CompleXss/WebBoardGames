@@ -8,6 +8,17 @@ public static class Extensions
 		return random.Next() > int.MaxValue / 2;
 	}
 
+	public static int IndexOf<T>(this T[] arr, Predicate<T> match)
+	{
+		for (int i = 0; i < arr.Length; i++)
+			if (match(arr[i]))
+			{
+				return i;
+			}
+
+		return -1;
+	}
+
 	#region List
 	// O(1)
 	public static void RemoveBySwapAt<T>(this List<T> list, int index)

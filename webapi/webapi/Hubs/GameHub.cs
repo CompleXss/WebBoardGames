@@ -29,25 +29,24 @@ public class GameHub<TGame> : Hub<IGameHub> where TGame : PlayableGame
 		var user = await GetUserInfoAsync();
 		if (user is null)
 		{
-			logger.LogError("Can not get claims from Access Token!");
+			logger.LogError("Could not get claims from Access Token!");
 			return;
 		}
 
-		var game = gameService.GetUserGame(user.PublicID);
+		var game = gameService.ConnectPlayer(user.PublicID);
 		if (game is null)
 		{
 			await Clients.Caller.NotAllowed();
 			return;
 		}
 
-		if (game.WinnerID is not null)
-		{
-			gameService.CloseGame(game);
-			await Clients.Caller.NotAllowed();
-			return;
-		}
+		//if (game.WinnerID is not null)
+		//{
+		//	gameService.CloseGame(game.Key);
+		//	await Clients.Caller.NotAllowed();
+		//	return;
+		//}
 
-		game.PlayersAlive++;
 		await Clients.Group(game.Key).UserReconnected(user.PublicID);
 		await Groups.AddToGroupAsync(Context.ConnectionId, game.Key);
 
@@ -59,23 +58,20 @@ public class GameHub<TGame> : Hub<IGameHub> where TGame : PlayableGame
 		var user = await GetUserInfoAsync();
 		if (user is null)
 		{
-			logger.LogError("Can not get claims from Access Token!");
+			logger.LogError("Could not get claims from Access Token!");
 			return;
 		}
 
-		var game = gameService.GetUserGame(user.PublicID);
-		if (game is not null)
-		{
-			game.PlayersAlive--;
-			await Groups.RemoveFromGroupAsync(Context.ConnectionId, game.Key);
+		var game = gameService.DisconnectPlayer(user.PublicID);
+		if (game is null)
+			return;
 
-			logger.LogInformation("User with ID {UserID} DISCONNECTED from checkers game hub.", user.PublicID);
+		await Groups.RemoveFromGroupAsync(Context.ConnectionId, game.Key);
 
-			if (game.PlayersAlive == 0)
-				gameService.CloseGame(game);
-			else
-				await Clients.Group(game.Key).UserDisconnected(user.PublicID);
-		}
+		logger.LogInformation("User with ID {UserID} DISCONNECTED from checkers game hub.", user.PublicID);
+
+		if (game.Players.Any(x => x.isConnected))
+			await Clients.Group(game.Key).UserDisconnected(user.PublicID);
 	}
 
 
@@ -85,14 +81,14 @@ public class GameHub<TGame> : Hub<IGameHub> where TGame : PlayableGame
 		var user = await GetUserInfoAsync();
 		if (user is null) return Results.Unauthorized();
 
-		var game = gameService.GetUserGame(user.PublicID);
+		var game = gameService.GetUserGameInfo(user.PublicID);
 		if (game is null)
 		{
 			await Clients.Caller.NotAllowed();
 			return Results.BadRequest("You don't have any active checkers game.");
 		}
 
-		if (!gameService.TryUpdateGameState(game, user.PublicID, moves, out string error))
+		if (!gameService.TryUpdateGameState(game.Key, user.PublicID, moves, out string error))
 			return Results.BadRequest(error);
 
 		if (game.WinnerID is not null)
@@ -109,8 +105,7 @@ public class GameHub<TGame> : Hub<IGameHub> where TGame : PlayableGame
 		var user = await GetUserInfoAsync();
 		if (user is null) return Results.Unauthorized();
 
-		var game = gameService.GetUserGame(user.PublicID);
-		if (game is null)
+		if (!gameService.IsUserInGame(user.PublicID))
 		{
 			await Clients.Caller.NotAllowed();
 			return Results.BadRequest("You don't have any active checkers game.");

@@ -79,12 +79,12 @@ public class LobbyHub<TGame> : Hub<ILobbyHub> where TGame : PlayableGame
 		var user = await GetUserInfoAsync();
 		if (user is null) return Results.Unauthorized();
 
-		var lobby = lobbyService.GetUserLobby(user.PublicID);
+		var lobby = lobbyService.GetUserLobbyInfo(user.PublicID);
 		if (lobby is null) return Results.BadRequest("You're not in a lobby.");
 		if (lobby.HostID != user.PublicID) return Results.BadRequest("You're not a host of this lobby.");
 
 		await lobbyService.LeaveLobby(user.PublicID, Context.ConnectionId);
-		await lobbyService.CloseLobby(lobby, true);
+		await lobbyService.CloseLobby(lobby.Key, true);
 		return Results.Ok();
 	}
 
@@ -118,7 +118,7 @@ public class LobbyHub<TGame> : Hub<ILobbyHub> where TGame : PlayableGame
 		var user = await GetUserInfoAsync();
 		if (user is null) return Results.Unauthorized();
 
-		var lobby = lobbyService.GetUserLobby(user.PublicID);
+		var lobby = lobbyService.GetUserLobbyInfo(user.PublicID);
 		if (lobby is null) return Results.BadRequest("You're not in a lobby.");
 		if (lobby.HostID != user.PublicID) return Results.BadRequest("You're not a host of this lobby.");
 		if (!lobby.IsEnoughPlayersToStart) return Results.BadRequest("Not enough players to start the game.");
@@ -127,7 +127,7 @@ public class LobbyHub<TGame> : Hub<ILobbyHub> where TGame : PlayableGame
 		if (!gameStarted) return Results.BadRequest("Could not start the game.");
 
 		await Clients.Group(lobby.Key).GameStarted();
-		await lobbyService.CloseLobby(lobby, false);
+		await lobbyService.CloseLobby(lobby.Key, false);
 
 		return Results.Ok();
 	}

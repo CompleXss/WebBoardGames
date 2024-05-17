@@ -1,10 +1,10 @@
-﻿using webapi.Extensions;
+﻿using webapi.Types;
 
 namespace webapi.Models;
 
 public class RandomItemPool<T>
 {
-	protected readonly List<T> heapList; // don't care about items order
+	protected readonly ConcurrentList<T> heapList; // don't care about items order
 	protected readonly Random random = new();
 
 	public int Count => heapList.Count;

@@ -9,7 +9,7 @@ public sealed class Lobby : IDisposable
 	public string Key { get; }
 	private readonly int intKey;
 
-	public string? HostID { get; set; }
+	public string? HostID { get; private set; }
 
 	public IReadOnlyList<string> PlayerIDs => playerIDs;
 	private readonly List<string> playerIDs;
@@ -17,12 +17,27 @@ public sealed class Lobby : IDisposable
 	public IReadOnlyList<string> ConnectionIDs => connectionIDs;
 	private readonly List<string> connectionIDs;
 
+	public bool CanConnect
+	{
+		get
+		{
+			lock (this) return canConnect;
+		}
+
+		set
+		{
+			lock (this) canConnect = value;
+		}
+	}
+	private bool canConnect;
+
 	public bool IsEmpty => PlayerIDs.Count == 0;
 	public bool IsFull => PlayerIDs.Count >= lobbyCore.MaxPlayers;
 	public bool IsEnoughPlayersToStart => PlayerIDs.Count >= lobbyCore.MinPlayersToStartGame;
 
 	public event Action<string>? HostChanged;
-	private bool _disposed;
+	private bool isClosing;
+	private bool disposed;
 
 	private Lobby(LobbyCore lobbyCore, string hostID, string hostConnectionID, int intKey)
 	{
@@ -50,46 +65,97 @@ public sealed class Lobby : IDisposable
 		return new Lobby(lobbyCore, hostID, hostConnectionID, key);
 	}
 
+	public void MarkAsClosing()
+	{
+		isClosing = true;
+	}
+
 	/// <returns>
 	/// <see langword="true"/> if player was added successfully.<br/>
-	/// <see langword="false"/> if lobby is full.
+	/// <see langword="false"/> if lobby is full or <see cref="CanConnect"/> is <see langword="false"/>.
 	/// </returns>
 	public bool TryAddPlayer(string playerID, string connectionID)
 	{
-		if (IsFull)
+		if (isClosing || !CanConnect)
 			return false;
 
-		playerIDs.Add(playerID);
-		connectionIDs.Add(connectionID);
+		lock (this.playerIDs)
+		{
+			if (IsFull)
+				return false;
 
-		return true;
+			playerIDs.Add(playerID);
+			connectionIDs.Add(connectionID);
+
+			return true;
+		}
 	}
 
 	public void RemovePlayer(string playerID, string connectionID)
 	{
-		playerIDs.Remove(playerID);
-		connectionIDs.Remove(connectionID);
+		if (isClosing)
+			return;
 
-		// if host left the lobby, pick new host
-		if (HostID == playerID)
+		lock (this.playerIDs)
 		{
-			HostID = playerIDs.FirstOrDefault();
+			playerIDs.Remove(playerID);
+			connectionIDs.Remove(connectionID);
 
-			if (HostID is not null)
-				HostChanged?.Invoke(HostID);
+			// if host left the lobby, pick new host
+			if (HostID == playerID)
+			{
+				HostID = playerIDs.FirstOrDefault();
+
+				if (HostID is not null)
+					HostChanged?.Invoke(HostID);
+			}
 		}
+	}
+
+	public bool TrySetHostID(string newHostID)
+	{
+		lock (playerIDs)
+		{
+			if (!PlayerIDs.Contains(newHostID))
+				return false;
+
+			HostID = newHostID;
+		}
+
+		return true;
+	}
+
+	public LobbyInfo GetInfo()
+	{
+		string[] playerIDsCopy;
+
+		lock (this.playerIDs)
+			playerIDsCopy = this.PlayerIDs.ToArray();
+
+		return new()
+		{
+			HostID = this.HostID,
+			Key = this.Key,
+			PlayerIDs = playerIDsCopy,
+			Settings = this.Settings,
+			IsFull = this.IsFull,
+			IsEnoughPlayersToStart = this.IsEnoughPlayersToStart,
+		};
 	}
 
 
 
 	public void Dispose()
 	{
-		if (_disposed)
-			return;
+		lock (this)
+		{
+			if (disposed)
+				return;
 
-		lobbyCore.KeyPool.Return(intKey);
-		HostChanged = null;
+			lobbyCore.KeyPool.Return(intKey);
+			HostChanged = null;
 
-		_disposed = true;
+			disposed = true;
+		}
 	}
 }

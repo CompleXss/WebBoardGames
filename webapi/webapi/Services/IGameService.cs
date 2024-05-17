@@ -1,12 +1,15 @@
-﻿using webapi.Games;
+﻿using webapi.Models;
 
 namespace webapi.Services;
 
 public interface IGameService
 {
 	bool TryStartNewGame(IReadOnlyList<string> playerIDs, object? settings);
-	PlayableGame? GetUserGame(string userID);
+	bool IsUserInGame(string userID);
+	PlayableGameInfo? GetUserGameInfo(string userID);
 	object? GetRelativeGameState(string userID);
-	bool TryUpdateGameState(PlayableGame game, string playerID, object data, out string error);
-	void CloseGame(PlayableGame game);
+	PlayableGameInfo? ConnectPlayer(string playerID);
+	PlayableGameInfo? DisconnectPlayer(string playerID);
+	bool TryUpdateGameState(string gameKey, string playerID, object data, out string error);
+	void CloseGame(string gameKey);
 }

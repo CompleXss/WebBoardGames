@@ -1,16 +1,15 @@
 ﻿using Microsoft.AspNetCore.SignalR;
-using webapi.Extensions;
 using webapi.Games;
 using webapi.Hubs;
 using webapi.Models;
+using webapi.Types;
 
 namespace webapi.Services;
 
 public class LobbyService<TGame> : ILobbyService where TGame : PlayableGame
 {
 	private readonly LobbyCore lobbyCore;
-	private readonly List<Lobby> lobbies = []; // order is not preserved
-	private readonly HashSet<string> usersInLobby = [];
+	private readonly ConcurrentList<Lobby> lobbies = []; // order is not preserved
 
 	private readonly IHubContext<LobbyHub<TGame>, ILobbyHub> hub;
 	private readonly ILogger<LobbyService<TGame>> logger;
@@ -24,14 +23,26 @@ public class LobbyService<TGame> : ILobbyService where TGame : PlayableGame
 
 
 
-	public Lobby? GetUserLobby(string userID)
+	private Lobby? GetLobbyByKey(string lobbyKey)
 	{
-		return lobbies.FirstOrDefault(x => x.PlayerIDs.Contains(userID));
+		return lobbies.Find(x => x.Key == lobbyKey);
 	}
 
-	public async Task<Lobby?> TryCreateLobbyAsync(string hostID, string hostConnectionID)
+	private Lobby? GetUserLobby(string userID)
 	{
-		if (!usersInLobby.Add(hostID))
+		return lobbies.Find(x => x.PlayerIDs.Contains(userID));
+	}
+
+
+
+	public LobbyInfo? GetUserLobbyInfo(string userID)
+	{
+		return GetUserLobby(userID)?.GetInfo();
+	}
+
+	public async Task<LobbyInfo?> TryCreateLobbyAsync(string hostID, string hostConnectionID)
+	{
+		if (GetUserLobby(hostID) is not null)
 			return null;
 
 		var lobby = Lobby.TryCreateNew(lobbyCore, hostID, hostConnectionID);
@@ -47,26 +58,25 @@ public class LobbyService<TGame> : ILobbyService where TGame : PlayableGame
 		await hub.Groups.AddToGroupAsync(hostConnectionID, lobby.Key);
 
 		logger.LogInformation("New {gameName} lobby with key {lobbyKey} was CREATED", lobbyCore.GameName, lobby.Key);
-		return lobby;
+		return lobby.GetInfo();
 	}
 
-	public async Task<(Lobby? lobby, IResult errorResult)> TryEnterLobbyAsync(string userID, string connectionID, string lobbyKey)
+	public async Task<(LobbyInfo? lobby, IResult errorResult)> TryEnterLobbyAsync(string userID, string connectionID, string lobbyKey)
 	{
-		if (usersInLobby.Contains(userID))
+		if (GetUserLobby(userID) is not null)
 			return (null, Results.BadRequest("You are already in a lobby."));
 
-		var lobby = lobbies.Find(x => x.Key == lobbyKey);
+		var lobby = GetLobbyByKey(lobbyKey);
 		if (lobby is null)
 			return (null, Results.NotFound($"Lobby with the given key ({lobbyKey}) does not exist."));
 
 		if (!lobby.TryAddPlayer(userID, connectionID))
 			return (null, Results.BadRequest("Lobby is already full."));
 
-		usersInLobby.Add(userID);
 		await hub.Clients.Group(lobbyKey).UserConnected(userID);
 		await hub.Groups.AddToGroupAsync(connectionID, lobbyKey);
 
-		return (lobby, Results.Empty);
+		return (lobby.GetInfo(), Results.Empty);
 	}
 
 	/// <summary> Disconnects user from the lobby. </summary>
@@ -79,11 +89,10 @@ public class LobbyService<TGame> : ILobbyService where TGame : PlayableGame
 		try
 		{
 			await hub.Groups.RemoveFromGroupAsync(connectionID, lobby.Key);
-			lobby.RemovePlayer(userID, connectionID);
 		}
 		catch (Exception) { }
 
-		usersInLobby.Remove(userID);
+		lobby.RemovePlayer(userID, connectionID);
 
 		if (lobby.IsEmpty)
 		{
@@ -97,18 +106,46 @@ public class LobbyService<TGame> : ILobbyService where TGame : PlayableGame
 		return lobby.Key;
 	}
 
-	public async Task CloseLobby(Lobby lobby, bool notifyUsers)
+	public bool SetLobbySettings(string lobbyKey, object? settings)
+	{
+		var lobby = GetLobbyByKey(lobbyKey);
+		if (lobby is null)
+			return false;
+
+		lobby.Settings = settings;
+		return true;
+	}
+
+	public bool SetLobbyHost(string lobbyKey, string userID)
+	{
+		var lobby = GetLobbyByKey(lobbyKey);
+		if (lobby is null)
+			return false;
+
+		return lobby.TrySetHostID(userID);
+	}
+
+
+
+	public Task CloseLobby(string lobbyKey, bool notifyUsers)
+	{
+		var lobby = GetLobbyByKey(lobbyKey);
+		if (lobby is null)
+			return Task.CompletedTask;
+
+		return CloseLobby(lobby, notifyUsers);
+	}
+
+	private async Task CloseLobby(Lobby lobby, bool notifyUsers)
 	{
 		if (!lobbies.Contains(lobby))
 			return;
 
+		lobby.MarkAsClosing();
 		lobbies.RemoveBySwap(lobby);
 
 		if (!lobby.IsEmpty)
 		{
-			foreach (var playerID in lobby.PlayerIDs)
-				usersInLobby.Remove(playerID);
-
 			if (notifyUsers)
 				await hub.Clients.Group(lobby.Key).LobbyClosed();
 
@@ -126,6 +163,10 @@ public class LobbyService<TGame> : ILobbyService where TGame : PlayableGame
 		for (int i = 0; i < lobby.ConnectionIDs.Count; i++)
 			tasks[i] = hub.Groups.RemoveFromGroupAsync(lobby.ConnectionIDs[i], lobby.Key);
 
-		await Task.WhenAll(tasks);
+		try
+		{
+			await Task.WhenAll(tasks);
+		}
+		catch (Exception) { }
 	}
 }

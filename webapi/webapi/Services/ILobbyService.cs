@@ -4,9 +4,10 @@ namespace webapi.Services;
 
 public interface ILobbyService
 {
-	Lobby? GetUserLobby(string userID);
-	Task<Lobby?> TryCreateLobbyAsync(string hostID, string connectionID);
-	Task<(Lobby? lobby, IResult errorResult)> TryEnterLobbyAsync(string userID, string connectionID, string lobbyKey);
+	LobbyInfo? GetUserLobbyInfo(string userID);
+	Task<LobbyInfo?> TryCreateLobbyAsync(string hostID, string connectionID);
+	Task<(LobbyInfo? lobby, IResult errorResult)> TryEnterLobbyAsync(string userID, string connectionID, string lobbyKey);
 	Task<string?> LeaveLobby(string userID, string connectionID);
-	Task CloseLobby(Lobby lobby, bool notifyUsers);
+	bool SetLobbySettings(string lobbyKey, object? settings);
+	Task CloseLobby(string lobbyKey, bool notifyUsers);
 }

@@ -25,7 +25,7 @@ public static class GameEndpoints
 		var userTokenInfo = await AuthService.TryGetUserInfoFromHttpContextAsync(context);
 		if (userTokenInfo is null) return Results.Unauthorized();
 
-		var activeGame = gameService.GetUserGame(userTokenInfo.PublicID);
-		return Results.Ok(activeGame is not null);
+		bool isInGame = gameService.IsUserInGame(userTokenInfo.PublicID);
+		return Results.Ok(isInGame);
 	}
 }
