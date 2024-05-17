@@ -76,7 +76,7 @@ public class GameHub<TGame> : Hub<IGameHub> where TGame : PlayableGame
 
 
 
-	public async Task<IResult> MakeMove(GameHistoryService gameHistoryService, CheckersMove[] moves)
+	public async Task<IResult> MakeMove(GameHistoryService gameHistoryService, object move)
 	{
 		var user = await GetUserInfoAsync();
 		if (user is null) return Results.Unauthorized();
@@ -88,7 +88,7 @@ public class GameHub<TGame> : Hub<IGameHub> where TGame : PlayableGame
 			return Results.BadRequest("You don't have any active checkers game.");
 		}
 
-		if (!gameService.TryUpdateGameState(game.Key, user.PublicID, moves, out string error))
+		if (!gameService.TryUpdateGameState(game.Key, user.PublicID, move, out string error))
 			return Results.BadRequest(error);
 
 		if (game.WinnerID is not null)
