@@ -2,7 +2,7 @@
 
 namespace webapi.Games.Checkers;
 
-internal readonly struct CheckersCell
+public readonly struct CheckersCell
 {
 	public CheckersCellStates DraughtColor { get; init; }
 	public bool IsQueen { get; init; }
@@ -14,14 +14,14 @@ internal readonly struct CheckersCell
 	}
 }
 
-internal enum CheckersCellStates
+public enum CheckersCellStates
 {
 	None,
 	Black,
 	White,
 }
 
-internal readonly struct CheckersMove
+public readonly struct CheckersMove
 {
 	public Point From { get; init; }
 	public Point To { get; init; }
@@ -33,7 +33,7 @@ internal readonly struct CheckersMove
 	}
 }
 
-internal readonly struct Draught
+public readonly struct Draught
 {
 	public int X { get; init; }
 	public int Y { get; init; }
