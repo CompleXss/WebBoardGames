@@ -8,10 +8,21 @@ public static class Extensions
 		return random.Next() > int.MaxValue / 2;
 	}
 
-	public static int IndexOf<T>(this T[] arr, Predicate<T> match)
+	public static int IndexOf<T>(this IReadOnlyList<T> arr, Predicate<T> match)
 	{
-		for (int i = 0; i < arr.Length; i++)
+		for (int i = 0; i < arr.Count; i++)
 			if (match(arr[i]))
+			{
+				return i;
+			}
+
+		return -1;
+	}
+
+	public static int IndexOf<T>(this IReadOnlyList<T> arr, T value)
+	{
+		for (int i = 0; i < arr.Count; i++)
+			if (value is not null && value.Equals(arr[i]))
 			{
 				return i;
 			}
