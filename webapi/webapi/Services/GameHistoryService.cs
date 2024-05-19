@@ -28,9 +28,9 @@ public class GameHistoryService
 		if (game.WinnerID is null) return false;
 
 		var winner = await usersRepo.GetByPublicIdAsync(game.WinnerID);
-		var loosers = await Task.WhenAll(game.Players
-			.Where(x => x.playerID != game.WinnerID)
-			.Select(async x => await usersRepo.GetByPublicIdAsync(x.playerID))
+		var loosers = await Task.WhenAll(game.PlayerIDs
+			.Where(x => x != game.WinnerID)
+			.Select(async x => await usersRepo.GetByPublicIdAsync(x))
 			.ToArray()
 		);
 

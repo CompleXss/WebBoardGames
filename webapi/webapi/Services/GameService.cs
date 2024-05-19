@@ -1,4 +1,6 @@
-﻿using webapi.Games;
+﻿using Microsoft.AspNetCore.SignalR;
+using webapi.Games;
+using webapi.Hubs;
 using webapi.Models;
 using webapi.Types;
 
@@ -6,29 +8,30 @@ namespace webapi.Services;
 
 public class GameService<TGame> : IGameService where TGame : PlayableGame
 {
+	public GameNames GameName => gameCore.GameName;
 	private readonly GameCore gameCore;
 	private readonly PlayableGame.Factory gameFactory;
 	private readonly ConcurrentList<PlayableGame> activeGames = []; // order is not preserved
+	private readonly IHubContext<GameHub<TGame>, IGameHub> hub;
 	private readonly ILogger<GameService<TGame>> logger;
 
-	public GameService(GameCore gameCore, PlayableGame.Factory gameFactory, ILogger<GameService<TGame>> logger)
+	public GameService(GameCore gameCore, PlayableGame.Factory gameFactory, IHubContext<GameHub<TGame>, IGameHub> hub, ILogger<GameService<TGame>> logger)
 	{
 		this.gameCore = gameCore;
 		this.gameFactory = gameFactory;
+		this.hub = hub;
 		this.logger = logger;
 	}
 
-
-
 	public bool TryStartNewGame(IReadOnlyList<string> playerIDs, object? settings)
 	{
-		var game = gameFactory(gameCore, playerIDs, settings);
+		var game = gameFactory(gameCore, (IHubContext)hub, playerIDs, settings);
 		if (game.ErrorWhileCreating)
 			return false;
 
 		activeGames.Add(game);
 
-		logger.LogInformation("New {gameName} game with key {gameKey} was CREATED.", gameCore.GameName, game.Key);
+		logger.LogInformation("New {gameName} game with key {gameKey} was CREATED.", GameName, game.Key);
 		return true;
 	}
 
@@ -44,7 +47,7 @@ public class GameService<TGame> : IGameService where TGame : PlayableGame
 
 	private PlayableGame? GetUserGame(string userID)
 	{
-		return activeGames.Find(x => x.Players.Any(x => x.playerID == userID));
+		return activeGames.Find(x => x.PlayerIDs.Contains(userID));
 	}
 
 	public object? GetRelativeGameState(string userID)
@@ -79,7 +82,7 @@ public class GameService<TGame> : IGameService where TGame : PlayableGame
 
 
 
-	public bool TryUpdateGameState(string gameKey, string playerID, object moves, out string error)
+	public bool TryUpdateGameState(string gameKey, string playerID, object data, out string error)
 	{
 		var game = activeGames.Find(x => x.Key == gameKey);
 		if (game is null)
@@ -94,7 +97,7 @@ public class GameService<TGame> : IGameService where TGame : PlayableGame
 			return false;
 		}
 
-		return game.TryUpdateState(playerID, moves, out error);
+		return game.TryUpdateState(playerID, data, out error);
 	}
 
 	public void CloseGame(string gameKey)
@@ -109,7 +112,7 @@ public class GameService<TGame> : IGameService where TGame : PlayableGame
 	{
 		activeGames.RemoveBySwap(game);
 
-		logger.LogInformation("{gameName} game with key {gameKey} was CLOSED.", gameCore.GameName, game.Key);
+		logger.LogInformation("{gameName} game with key {gameKey} was CLOSED.", GameName, game.Key);
 		game.Dispose();
 	}
 }

@@ -1,31 +1,37 @@
-﻿using webapi.Extensions;
+﻿using Microsoft.AspNetCore.SignalR;
+using webapi.Extensions;
 using webapi.Models;
 
 namespace webapi.Games;
 
 public abstract class PlayableGame : IDisposable
 {
-	public delegate PlayableGame Factory(GameCore gameCore, IReadOnlyList<string> playerIDs, object? settings);
+	public delegate PlayableGame Factory(GameCore gameCore, IHubContext hub, IReadOnlyList<string> playerIDs, object? settings);
 
 	private readonly GameCore gameCore;
+	private readonly IHubContext hub;
 
 	public string Key { get; }
 	private readonly int key;
 
-	public IReadOnlyList<PlayerInfo> Players => players;
-	private readonly PlayerInfo[] players;
+	public IReadOnlyList<string> PlayerIDs => playerIDs;
+	private readonly string[] playerIDs;
+
+	public IReadOnlyList<bool> PlayersConnected => playersConnected;
+	private readonly bool[] playersConnected;
 
 	public string? WinnerID { get; protected set; }
 	public DateTime GameStarted { get; }
 	public bool ErrorWhileCreating { get; protected set; }
-	public bool NoPlayersConnected => !Players.Any(x => x.isConnected);
+	public bool NoPlayersConnected => !PlayersConnected.Contains(true);
 
 	private bool keyCaptured;
 	private bool _disposed;
 
-	public PlayableGame(GameCore gameCore, IReadOnlyList<string> playerIDs)
+	public PlayableGame(GameCore gameCore, IHubContext hub, IReadOnlyList<string> playerIDs)
 	{
 		this.gameCore = gameCore;
+		this.hub = hub;
 
 		this.keyCaptured = gameCore.KeyPool.TryGetRandom(out key);
 		this.ErrorWhileCreating = !keyCaptured;
@@ -33,50 +39,80 @@ public abstract class PlayableGame : IDisposable
 		if (playerIDs.Count < gameCore.MinPlayersCount || playerIDs.Count > gameCore.MaxPlayersCount)
 		{
 			this.ErrorWhileCreating = true;
-			this.Key = string.Empty;
-			this.players = [];
+			this.Key = null!;
+			this.playerIDs = null!;
+			this.playersConnected = null!;
 			return;
 		}
 
 		this.Key = key.ToString();
 		this.GameStarted = DateTime.Now;
-		this.players = playerIDs.Select(x => new PlayerInfo(x, false)).ToArray();
+		this.playerIDs = playerIDs.ToArray();
+		this.playersConnected = Enumerable.Repeat(false, playerIDs.Count).ToArray();
 	}
 
-	public abstract bool IsPlayerTurn(string playerID);
-	public abstract object? GetRelativeState(string playerID);
-	public abstract bool TryUpdateState(string playerID, object data, out string error);
+	protected void SendHubMessage(string method, object? arg)
+	{
+		hub.Clients.Groups(Key).SendAsync(method, arg); // todo: execute sync ?
+	}
+
+	public bool IsPlayerTurn(string playerID)
+	{
+		lock (this)
+		{
+			return IsPlayerTurn_Internal(playerID);
+		}
+	}
+	protected abstract bool IsPlayerTurn_Internal(string playerID);
+
+	public object? GetRelativeState(string playerID)
+	{
+		lock (this)
+		{
+			return GetRelativeState_Internal(playerID);
+		}
+	}
+	protected abstract object? GetRelativeState_Internal(string playerID);
+
+	public bool TryUpdateState(string playerID, object data, out string error)
+	{
+		lock (this)
+		{
+			return TryUpdateState_Internal(playerID, data, out error);
+		}
+	}
+	protected abstract bool TryUpdateState_Internal(string playerID, object data, out string error);
+
+
 
 	public bool ConnectPlayer(string playerID)
 	{
-		int index = players.IndexOf(x => x.playerID == playerID);
+		int index = PlayerIDs.IndexOf(playerID);
 		if (index == -1)
 			return false;
 
-		var item = players[index];
-		if (item.isConnected)
+		if (PlayersConnected[index])
 			return true;
 
-		lock (players)
+		lock (playersConnected)
 		{
-			players[index] = new PlayerInfo(item.playerID, true);
+			playersConnected[index] = true;
 		}
 		return true;
 	}
 
 	public bool DisconnectPlayer(string playerID)
 	{
-		int index = players.IndexOf(x => x.playerID == playerID);
+		int index = PlayerIDs.IndexOf(playerID);
 		if (index == -1)
 			return false;
 
-		var item = players[index];
-		if (!item.isConnected)
+		if (!PlayersConnected[index])
 			return true;
 
-		lock (players)
+		lock (playersConnected)
 		{
-			players[index] = new PlayerInfo(item.playerID, false);
+			playersConnected[index] = false;
 		}
 		return true;
 	}
@@ -84,7 +120,8 @@ public abstract class PlayableGame : IDisposable
 	public PlayableGameInfo GetInfo() => new()
 	{
 		Key = this.Key,
-		Players = this.Players.ToArray(),
+		PlayerIDs = this.PlayerIDs.ToArray(),
+		PlayersConnected = this.PlayersConnected.ToArray(),
 		WinnerID = this.WinnerID,
 		GameStarted = this.GameStarted,
 		ErrorWhileCreating = this.ErrorWhileCreating,
@@ -116,16 +153,4 @@ public abstract class PlayableGame : IDisposable
 		_disposed = true;
 	}
 	#endregion
-
-	public readonly struct PlayerInfo
-	{
-		public readonly string playerID;
-		public readonly bool isConnected;
-
-		public PlayerInfo(string playerID, bool isConnected)
-		{
-			this.playerID = playerID;
-			this.isConnected = isConnected;
-		}
-	}
 }

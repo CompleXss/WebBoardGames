@@ -4,6 +4,7 @@ namespace webapi.Services;
 
 public interface IGameService
 {
+	GameNames GameName { get; }
 	bool TryStartNewGame(IReadOnlyList<string> playerIDs, object? settings);
 	bool IsUserInGame(string userID);
 	PlayableGameInfo? GetUserGameInfo(string userID);

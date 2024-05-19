@@ -1,4 +1,5 @@
-﻿using webapi.Extensions;
+﻿using Microsoft.AspNetCore.SignalR;
+using webapi.Extensions;
 using webapi.Models;
 
 namespace webapi.Games.Checkers;
@@ -12,7 +13,8 @@ public sealed class CheckersGame : PlayableGame
 
 	public CheckersCell[,] Board { get; } = new CheckersCell[8, 8];
 
-	public CheckersGame(GameCore gameCore, IReadOnlyList<string> playerIDs) : base(gameCore, playerIDs)
+	public CheckersGame(GameCore gameCore, IHubContext hub, IReadOnlyList<string> playerIDs)
+		: base(gameCore, hub, playerIDs)
 	{
 		if (ErrorWhileCreating)
 		{
@@ -57,7 +59,7 @@ public sealed class CheckersGame : PlayableGame
 			: CheckersCellStates.White;
 	}
 
-	public override bool IsPlayerTurn(string playerID)
+	protected override bool IsPlayerTurn_Internal(string playerID)
 	{
 		var playerColor = GetUserColor(playerID);
 
@@ -65,7 +67,7 @@ public sealed class CheckersGame : PlayableGame
 			|| !IsWhiteTurn && playerColor == CheckersCellStates.Black;
 	}
 
-	public override object? GetRelativeState(string playerID)
+	protected override object? GetRelativeState_Internal(string playerID)
 	{
 		var userColor = GetUserColor(playerID);
 		var (allyPositions, enemyPositions) = GetDraughtsRelativeTo(userColor);
@@ -117,7 +119,7 @@ public sealed class CheckersGame : PlayableGame
 
 
 
-	public override bool TryUpdateState(string playerID, object data, out string error)
+	protected override bool TryUpdateState_Internal(string playerID, object data, out string error)
 	{
 		if (data is not CheckersMove[] moves)
 		{

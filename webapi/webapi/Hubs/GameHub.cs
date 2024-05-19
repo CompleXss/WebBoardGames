@@ -50,7 +50,7 @@ public class GameHub<TGame> : Hub<IGameHub> where TGame : PlayableGame
 		await Clients.Group(game.Key).UserReconnected(user.PublicID);
 		await Groups.AddToGroupAsync(Context.ConnectionId, game.Key);
 
-		logger.LogInformation("User with ID {UserID} CONNECTED to checkers game hub.", user.PublicID);
+		logger.LogInformation("User with ID {userID} CONNECTED to {gameName} game hub.", user.PublicID, gameService.GameName);
 	}
 
 	public async override Task OnDisconnectedAsync(Exception? exception)
@@ -68,15 +68,15 @@ public class GameHub<TGame> : Hub<IGameHub> where TGame : PlayableGame
 
 		await Groups.RemoveFromGroupAsync(Context.ConnectionId, game.Key);
 
-		logger.LogInformation("User with ID {UserID} DISCONNECTED from checkers game hub.", user.PublicID);
+		logger.LogInformation("User with ID {userID} DISCONNECTED from {gameName} game hub.", user.PublicID, gameService.GameName);
 
-		if (game.Players.Any(x => x.isConnected))
+		if (game.PlayersConnected.Contains(true))
 			await Clients.Group(game.Key).UserDisconnected(user.PublicID);
 	}
 
 
 
-	public async Task<IResult> MakeMove(GameHistoryService gameHistoryService, object move)
+	public async Task<IResult> MakeMove(GameHistoryService gameHistoryService, object data)
 	{
 		var user = await GetUserInfoAsync();
 		if (user is null) return Results.Unauthorized();
@@ -85,10 +85,10 @@ public class GameHub<TGame> : Hub<IGameHub> where TGame : PlayableGame
 		if (game is null)
 		{
 			await Clients.Caller.NotAllowed();
-			return Results.BadRequest("You don't have any active checkers game.");
+			return Results.BadRequest($"You don't have any active {gameService.GameName} game.");
 		}
 
-		if (!gameService.TryUpdateGameState(game.Key, user.PublicID, move, out string error))
+		if (!gameService.TryUpdateGameState(game.Key, user.PublicID, data, out string error))
 			return Results.BadRequest(error);
 
 		if (game.WinnerID is not null)
@@ -108,7 +108,7 @@ public class GameHub<TGame> : Hub<IGameHub> where TGame : PlayableGame
 		if (!gameService.IsUserInGame(user.PublicID))
 		{
 			await Clients.Caller.NotAllowed();
-			return Results.BadRequest("You don't have any active checkers game.");
+			return Results.BadRequest($"You don't have any active {gameService.GameName} game.");
 		}
 
 		var gameState = gameService.GetRelativeGameState(user.PublicID);

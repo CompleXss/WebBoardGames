@@ -25,7 +25,7 @@ public static class GameServicesConfigurator
 				minPlayersCount: 2,
 				maxPlayersCount: 2
 			),
-			(gameCore, playerIDs, _) => new CheckersGame(gameCore, playerIDs)
+			(gameCore, hub, playerIDs, _) => new CheckersGame(gameCore, hub, playerIDs)
 		);
 
 		// monopoly
@@ -37,9 +37,10 @@ public static class GameServicesConfigurator
 		// register game service
 		services.AddSingleton(serviceProvider =>
 		{
+			var hub = serviceProvider.GetRequiredService<IHubContext<GameHub<TGame>, IGameHub>>();
 			var logger = serviceProvider.GetRequiredService<ILogger<GameService<TGame>>>();
 
-			return new GameService<TGame>(gameCore, gameFactory, logger);
+			return new GameService<TGame>(gameCore, gameFactory, hub, logger);
 		});
 
 		// register lobby service
