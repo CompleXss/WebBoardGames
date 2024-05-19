@@ -56,6 +56,16 @@ public abstract class PlayableGame : IDisposable
 		hub.Clients.Groups(Key).SendAsync(method, arg); // todo: execute sync ?
 	}
 
+	public void SendChatMessage(string message)
+	{
+		lock (this)
+		{
+			SendChatMessage_Internal(message);
+		}
+	}
+
+	protected virtual void SendChatMessage_Internal(string message) { }
+
 	public bool IsPlayerTurn(string playerID)
 	{
 		lock (this)

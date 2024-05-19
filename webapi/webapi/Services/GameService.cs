@@ -50,6 +50,11 @@ public class GameService<TGame> : IGameService where TGame : PlayableGame
 		return activeGames.Find(x => x.PlayerIDs.Contains(userID));
 	}
 
+	private PlayableGame? GetGameByKey(string gameKey)
+	{
+		return activeGames.Find(x => x.Key == gameKey);
+	}
+
 	public object? GetRelativeGameState(string userID)
 	{
 		return GetUserGame(userID)?.GetRelativeState(userID);
@@ -84,7 +89,7 @@ public class GameService<TGame> : IGameService where TGame : PlayableGame
 
 	public bool TryUpdateGameState(string gameKey, string playerID, object data, out string error)
 	{
-		var game = activeGames.Find(x => x.Key == gameKey);
+		var game = GetGameByKey(gameKey);
 		if (game is null)
 		{
 			error = "Не найдена игра с указанным ID.";
@@ -100,9 +105,18 @@ public class GameService<TGame> : IGameService where TGame : PlayableGame
 		return game.TryUpdateState(playerID, data, out error);
 	}
 
+	public void SendChatMessage(string gameKey, string message)
+	{
+		var game = GetGameByKey(gameKey);
+		if (game is null)
+			return;
+
+		game.SendChatMessage(message);
+	}
+
 	public void CloseGame(string gameKey)
 	{
-		var game = activeGames.Find(x => x.Key == gameKey);
+		var game = GetGameByKey(gameKey);
 		if (game is null) return;
 
 		CloseGame(game);

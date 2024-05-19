@@ -100,6 +100,22 @@ public class GameHub<TGame> : Hub<IGameHub> where TGame : PlayableGame
 		return Results.Ok();
 	}
 
+	public async Task<IResult> SendChatMessage(string message)
+	{
+		var user = await GetUserInfoAsync();
+		if (user is null) return Results.Unauthorized();
+
+		var game = gameService.GetUserGameInfo(user.PublicID);
+		if (game is null)
+		{
+			await Clients.Caller.NotAllowed();
+			return Results.BadRequest($"You don't have any active {gameService.GameName} game.");
+		}
+
+		gameService.SendChatMessage(game.Key, message);
+		return Results.Ok();
+	}
+
 	public async Task<IResult> GetGameState()
 	{
 		var user = await GetUserInfoAsync();

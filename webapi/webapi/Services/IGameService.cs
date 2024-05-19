@@ -12,5 +12,6 @@ public interface IGameService
 	PlayableGameInfo? ConnectPlayer(string playerID);
 	PlayableGameInfo? DisconnectPlayer(string playerID);
 	bool TryUpdateGameState(string gameKey, string playerID, object data, out string error);
+	void SendChatMessage(string gameKey, string message);
 	void CloseGame(string gameKey);
 }
