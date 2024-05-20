@@ -25,9 +25,6 @@ export default function RequireActiveGame({ gameName, onOk, redirect, inverse, c
     if (isLoading || isFetching) return <Loading />
 
     const isOk = inverse ? !data : data
-    // console.log('fetching... redirect: ', redirect)
-    // console.log(!isOk)
-
     const nextState = cascadeRedirect ? null : { doNotRedirect: true }
 
     return isOk
