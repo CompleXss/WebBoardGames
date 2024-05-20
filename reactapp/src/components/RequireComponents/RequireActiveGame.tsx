@@ -4,8 +4,6 @@ import { Navigate, useLocation } from "react-router-dom"
 import ENDPOINTS from "../../utilities/Api_Endpoints"
 import Loading from "../Loading/loading"
 
-// todo отвязать от шашек
-
 type Props = {
     gameName: string
     onOk: JSX.Element
