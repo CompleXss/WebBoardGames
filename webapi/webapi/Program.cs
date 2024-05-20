@@ -27,11 +27,11 @@ builder.Services.AddScoped<GameHistoryService>();
 builder.Services.AddGameServices();
 
 // Configure repositories
-builder.Services.AddTransient<UsersRepository>();
-builder.Services.AddTransient<UserRefreshTokenRepository>();
-builder.Services.AddTransient<GamesRepository>();
-builder.Services.AddTransient<GameHistoryRepository>();
-builder.Services.AddTransient<UserGameStatisticsRepository>();
+builder.Services.AddScoped<UsersRepository>();
+builder.Services.AddScoped<UserRefreshTokenRepository>();
+builder.Services.AddScoped<GamesRepository>();
+builder.Services.AddScoped<GameHistoryRepository>();
+builder.Services.AddScoped<UserGameStatisticsRepository>();
 
 // Configure Authentication & Authorization
 builder.Services.ConfigureAuthentication(config);
