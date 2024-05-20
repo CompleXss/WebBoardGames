@@ -22,8 +22,8 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 builder.Services.AddValidatorsFromAssemblyContaining<Program>();
 
 // Configure services
-builder.Services.AddTransient<AuthService>(); // singleton
-builder.Services.AddTransient<GameHistoryService>(); // singleton ???
+builder.Services.AddScoped<AuthService>();
+builder.Services.AddScoped<GameHistoryService>();
 builder.Services.AddGameServices();
 
 // Configure repositories
