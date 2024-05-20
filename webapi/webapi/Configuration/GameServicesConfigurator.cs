@@ -37,7 +37,7 @@ public static class GameServicesConfigurator
 		// register game service
 		services.AddSingleton(serviceProvider =>
 		{
-			var hub = serviceProvider.GetRequiredService<IHubContext<GameHub<TGame>, IGameHub>>();
+			var hub = serviceProvider.GetRequiredService<IHubContext<GameHub<TGame>>>();
 			var logger = serviceProvider.GetRequiredService<ILogger<GameService<TGame>>>();
 
 			return new GameService<TGame>(gameCore, gameFactory, hub, logger);

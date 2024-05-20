@@ -12,10 +12,10 @@ public class GameService<TGame> : IGameService where TGame : PlayableGame
 	private readonly GameCore gameCore;
 	private readonly PlayableGame.Factory gameFactory;
 	private readonly ConcurrentList<PlayableGame> activeGames = []; // order is not preserved
-	private readonly IHubContext<GameHub<TGame>, IGameHub> hub;
+	private readonly IHubContext<GameHub<TGame>> hub;
 	private readonly ILogger<GameService<TGame>> logger;
 
-	public GameService(GameCore gameCore, PlayableGame.Factory gameFactory, IHubContext<GameHub<TGame>, IGameHub> hub, ILogger<GameService<TGame>> logger)
+	public GameService(GameCore gameCore, PlayableGame.Factory gameFactory, IHubContext<GameHub<TGame>> hub, ILogger<GameService<TGame>> logger)
 	{
 		this.gameCore = gameCore;
 		this.gameFactory = gameFactory;
