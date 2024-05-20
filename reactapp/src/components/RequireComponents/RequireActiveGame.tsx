@@ -4,11 +4,21 @@ import { Navigate, useLocation } from "react-router-dom"
 import ENDPOINTS from "../../utilities/Api_Endpoints"
 import Loading from "../Loading/loading"
 
-export default function RequireActiveGame({ onOk, redirect, inverse, cascadeRedirect }: { onOk: JSX.Element, redirect?: string, inverse?: boolean, cascadeRedirect?: boolean }) {
+// todo отвязать от шашек
+
+type Props = {
+    gameName: string
+    onOk: JSX.Element
+    redirect?: string
+    inverse?: boolean
+    cascadeRedirect?: boolean
+}
+
+export default function RequireActiveGame({ gameName, onOk, redirect, inverse, cascadeRedirect }: Props) {
     const state = useLocation().state
     if (!redirect) redirect = '/login'
 
-    const { data, isLoading, isFetching } = useQuery(['isInGame', redirect], isInGame, {
+    const { data, isLoading, isFetching } = useQuery(['isInGame ' + gameName, redirect], () => isInGame(gameName), {
         retry: false,
         enabled: !(state?.doNotRedirect)
     })
@@ -27,9 +37,9 @@ export default function RequireActiveGame({ onOk, redirect, inverse, cascadeRedi
         : <Navigate to={redirect} state={nextState} />
 }
 
-async function isInGame() {
+async function isInGame(gameName: string) {
     try {
-        var response = await axios.get(ENDPOINTS.GET_IS_IN_GAME)
+        var response = await axios.get(ENDPOINTS.GET_IS_IN_GAME + gameName)
         return Boolean(response?.data)
 
     } catch (error) {

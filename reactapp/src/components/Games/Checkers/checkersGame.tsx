@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { HubConnection } from '@microsoft/signalr';
 import { useWebsocketConnection } from '../../../utilities/useWebsocketHook';
+import { GameNames } from 'src/utilities/GameNames';
 import LoadingContent from '../../LoadingContent/loadingContent';
 import ENDPOINTS from '../../../utilities/Api_Endpoints';
 import Loading from "../../Loading/loading";
@@ -25,6 +26,8 @@ interface GameData {
 
 
 
+const gameName = GameNames.checkers
+
 export default function CheckersGame() {
     const navigate = useNavigate()
     const [gameData, setGameData] = useState<GameData | undefined>()
@@ -44,7 +47,7 @@ export default function CheckersGame() {
     // create connection
     const [reloading, setReloading] = useState(false)
     const { connection, loading, error }
-        = useWebsocketConnection(ENDPOINTS.Hubs.CHECKERS_GAME, {
+        = useWebsocketConnection(ENDPOINTS.Hubs.GAME + gameName, {
             whenConnectionCreated: addEventHandlers,
             whenConnected: getBoardState,
             debugInConsole: true,
