@@ -32,11 +32,12 @@ public abstract class PlayableGame : IDisposable
 	{
 		this.gameCore = gameCore;
 		this.hub = hub;
-
 		this.keyCaptured = gameCore.KeyPool.TryGetRandom(out key);
 		this.ErrorWhileCreating = !keyCaptured;
 
-		if (playerIDs.Count < gameCore.MinPlayersCount || playerIDs.Count > gameCore.MaxPlayersCount)
+		int playersCount = playerIDs.Count;
+
+		if (playersCount < gameCore.MinPlayersCount || playersCount > gameCore.MaxPlayersCount)
 		{
 			this.ErrorWhileCreating = true;
 			this.Key = null!;
@@ -47,11 +48,14 @@ public abstract class PlayableGame : IDisposable
 
 		this.Key = key.ToString();
 		this.GameStarted = DateTime.Now;
+
 		this.playerIDs = playerIDs.ToArray();
-		this.playersConnected = Enumerable.Repeat(false, playerIDs.Count).ToArray();
+		Random.Shared.Shuffle(this.playerIDs);
+
+		this.playersConnected = Enumerable.Repeat(false, playersCount).ToArray();
 	}
 
-	protected void SendHubMessage(string method, object? arg)
+	protected void SendHubMessage(string method, object? arg = null)
 	{
 		hub.Clients.Groups(Key).SendAsync(method, arg); // todo: execute sync ?
 	}
