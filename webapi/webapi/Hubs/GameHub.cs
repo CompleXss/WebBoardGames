@@ -33,19 +33,19 @@ public class GameHub<TGame> : Hub<IGameHub> where TGame : PlayableGame
 			return;
 		}
 
-		var game = gameService.ConnectPlayer(user.PublicID);
+		var game = gameService.ConnectPlayer(user.PublicID, Context.ConnectionId);
 		if (game is null)
 		{
 			await Clients.Caller.NotAllowed();
 			return;
 		}
 
-		//if (game.WinnerID is not null)
-		//{
-		//	gameService.CloseGame(game.Key);
-		//	await Clients.Caller.NotAllowed();
-		//	return;
-		//}
+		if (game.WinnerID is not null)
+		{
+			gameService.CloseGame(game.Key);
+			await Clients.Caller.NotAllowed();
+			return;
+		}
 
 		await Clients.Group(game.Key).UserReconnected(user.PublicID);
 		await Groups.AddToGroupAsync(Context.ConnectionId, game.Key);
@@ -95,6 +95,7 @@ public class GameHub<TGame> : Hub<IGameHub> where TGame : PlayableGame
 			await gameHistoryService.AddGameToHistoryAsync(game);
 
 		// todo: close game
+		gameService.CloseGame(game.Key);
 
 		await Clients.Group(game.Key).GameStateChanged();
 		return Results.Ok();

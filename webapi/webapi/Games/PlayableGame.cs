@@ -17,13 +17,13 @@ public abstract class PlayableGame : IDisposable
 	public IReadOnlyList<string> PlayerIDs => playerIDs;
 	private readonly string[] playerIDs;
 
-	public IReadOnlyList<bool> PlayersConnected => playersConnected;
-	private readonly bool[] playersConnected;
+	public IReadOnlyList<string?> ConnectionIDs => connectionIDs;
+	private readonly string?[] connectionIDs;
 
 	public string? WinnerID { get; protected set; }
 	public DateTime GameStarted { get; }
 	public bool ErrorWhileCreating { get; protected set; }
-	public bool NoPlayersConnected => !PlayersConnected.Contains(true);
+	public bool NoPlayersConnected => ConnectionIDs.All(x => x is null);
 
 	private bool keyCaptured;
 	private bool _disposed;
@@ -42,7 +42,7 @@ public abstract class PlayableGame : IDisposable
 			this.ErrorWhileCreating = true;
 			this.Key = null!;
 			this.playerIDs = null!;
-			this.playersConnected = null!;
+			this.connectionIDs = null!;
 			return;
 		}
 
@@ -52,13 +52,40 @@ public abstract class PlayableGame : IDisposable
 		this.playerIDs = playerIDs.ToArray();
 		Random.Shared.Shuffle(this.playerIDs);
 
-		this.playersConnected = Enumerable.Repeat(false, playersCount).ToArray();
+		this.connectionIDs = Enumerable.Repeat<string?>(null, playersCount).ToArray();
 	}
 
-	protected void SendHubMessage(string method, object? arg = null)
+
+
+	public bool IsPlayerConnected(string playerID)
 	{
+		int playerIndex = PlayerIDs.IndexOf(playerID);
+		if (playerIndex == -1)
+			return false;
+
+		return IsPlayerConnected(playerIndex);
+	}
+
+	public bool IsPlayerConnected(int playerIndex) => ConnectionIDs[playerIndex] is not null;
+
+
+
+	protected void SendHubMessage(string method, int? targetPlayerIndex, object? arg = null)
+	{
+		if (targetPlayerIndex.HasValue)
+		{
+			var connectionID = ConnectionIDs[targetPlayerIndex.Value];
+			if (connectionID is null)
+				return;
+
+			hub.Clients.Client(connectionID).SendAsync(method, arg);
+			return;
+		}
+
 		hub.Clients.Groups(Key).SendAsync(method, arg); // todo: execute sync ?
 	}
+
+
 
 	public void SendChatMessage(string message)
 	{
@@ -99,18 +126,18 @@ public abstract class PlayableGame : IDisposable
 
 
 
-	public bool ConnectPlayer(string playerID)
+	public bool ConnectPlayer(string playerID, string connectionID)
 	{
 		int index = PlayerIDs.IndexOf(playerID);
 		if (index == -1)
 			return false;
 
-		if (PlayersConnected[index])
+		if (IsPlayerConnected(index))
 			return true;
 
-		lock (playersConnected)
+		lock (connectionIDs)
 		{
-			playersConnected[index] = true;
+			connectionIDs[index] = connectionID;
 		}
 		return true;
 	}
@@ -121,12 +148,12 @@ public abstract class PlayableGame : IDisposable
 		if (index == -1)
 			return false;
 
-		if (!PlayersConnected[index])
+		if (!IsPlayerConnected(index))
 			return true;
 
-		lock (playersConnected)
+		lock (connectionIDs)
 		{
-			playersConnected[index] = false;
+			connectionIDs[index] = null;
 		}
 		return true;
 	}
@@ -135,7 +162,7 @@ public abstract class PlayableGame : IDisposable
 	{
 		Key = this.Key,
 		PlayerIDs = this.PlayerIDs.ToArray(),
-		PlayersConnected = this.PlayersConnected.ToArray(),
+		PlayersConnected = this.ConnectionIDs.Select(x => x is not null).ToArray(),
 		WinnerID = this.WinnerID,
 		GameStarted = this.GameStarted,
 		ErrorWhileCreating = this.ErrorWhileCreating,

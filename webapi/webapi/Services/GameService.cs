@@ -60,13 +60,13 @@ public class GameService<TGame> : IGameService where TGame : PlayableGame
 		return GetUserGame(userID)?.GetRelativeState(userID);
 	}
 
-	public PlayableGameInfo? ConnectPlayer(string playerID)
+	public PlayableGameInfo? ConnectPlayer(string playerID, string connectionID)
 	{
 		var game = GetUserGame(playerID);
 		if (game is null)
 			return null;
 
-		bool connected = game.ConnectPlayer(playerID);
+		bool connected = game.ConnectPlayer(playerID, connectionID);
 		return connected ? game.GetInfo() : null;
 	}
 
