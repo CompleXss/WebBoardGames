@@ -24,19 +24,19 @@
     "cornerCards": [
         {
             "id": "start",
-            "icon": ""
+            "icon": "/corner/rocket.svg"
         },
         {
             "id": "prison",
-            "icon": ""
+            "icon": "/corner/prison.svg"
         },
         {
-            "id": "casino",
-            "icon": ""
+            "id": "portal",
+            "icon": "/corner/airplane.svg"
         },
         {
             "id": "prisonEnter",
-            "icon": ""
+            "icon": "/corner/policeman.svg"
         }
     ],
     "eventCards": [
