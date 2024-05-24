@@ -80,8 +80,21 @@ public sealed class CheckersGame : PlayableGame
 			allyPositions,
 			enemyPositions,
 			isMyTurn,
-			winnerID = WinnerID,
 		};
+	}
+
+	protected override bool Surrender_Internal(string playerID)
+	{
+		WinnerID = playerID == WhitePlayerID
+			? BlackPlayerID
+			: WhitePlayerID;
+
+		return true;
+	}
+
+	protected override bool Request_Internal(string playerID, object? data)
+	{
+		return false;
 	}
 
 

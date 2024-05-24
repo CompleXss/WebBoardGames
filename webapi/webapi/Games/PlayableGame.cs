@@ -20,7 +20,24 @@ public abstract class PlayableGame : IDisposable
 	public IReadOnlyList<string?> ConnectionIDs => connectionIDs;
 	private readonly string?[] connectionIDs;
 
-	public string? WinnerID { get; protected set; }
+	public string? WinnerID
+	{
+		get => winnerID;
+		protected set
+		{
+			winnerID = value;
+
+			if (value is not null)
+				WinnerDefined?.Invoke();
+		}
+	}
+	private string? winnerID;
+
+	public event Action? WinnerDefined;
+	public event Action? ClosedWithNoResult;
+	protected event Action<int>? PlayerConnected;
+	protected event Action<int>? PlayerDisconnected;
+
 	public DateTime GameStarted { get; }
 	public bool ErrorWhileCreating { get; protected set; }
 	public bool NoPlayersConnected => ConnectionIDs.All(x => x is null);
@@ -53,6 +70,8 @@ public abstract class PlayableGame : IDisposable
 		Random.Shared.Shuffle(this.playerIDs);
 
 		this.connectionIDs = Enumerable.Repeat<string?>(null, playersCount).ToArray();
+
+		SetupGameCloseTimeout();
 	}
 
 
@@ -70,6 +89,9 @@ public abstract class PlayableGame : IDisposable
 
 
 
+	/// <summary>
+	/// To broadcast to all players in this game, leave <paramref name="targetPlayerIndex"/> = <see langword="null"/>.
+	/// </summary>
 	protected void SendHubMessage(string method, int? targetPlayerIndex, object? arg = null)
 	{
 		if (targetPlayerIndex.HasValue)
@@ -83,6 +105,11 @@ public abstract class PlayableGame : IDisposable
 		}
 
 		hub.Clients.Groups(Key).SendAsync(method, arg); // todo: execute sync ?
+	}
+
+	protected void CloseGameWithNoWinner()
+	{
+		ClosedWithNoResult?.Invoke();
 	}
 
 
@@ -105,6 +132,26 @@ public abstract class PlayableGame : IDisposable
 		}
 	}
 	protected abstract bool IsPlayerTurn_Internal(string playerID);
+
+	public bool Surrender(string playerID)
+	{
+		lock (this)
+		{
+			return Surrender_Internal(playerID);
+		}
+	}
+	protected abstract bool Surrender_Internal(string playerID);
+
+	public bool Request(string playerID, object? data)
+	{
+		lock (this)
+		{
+			return Request_Internal(playerID, data);
+		}
+	}
+	protected abstract bool Request_Internal(string playerID, object? data);
+
+
 
 	public object? GetRelativeState(string playerID)
 	{
@@ -139,6 +186,8 @@ public abstract class PlayableGame : IDisposable
 		{
 			connectionIDs[index] = connectionID;
 		}
+
+		PlayerConnected?.Invoke(index);
 		return true;
 	}
 
@@ -155,8 +204,59 @@ public abstract class PlayableGame : IDisposable
 		{
 			connectionIDs[index] = null;
 		}
+
+		PlayerDisconnected?.Invoke(index);
 		return true;
 	}
+
+	private void SetupGameCloseTimeout()
+	{
+		CancellationTokenSource? cts = null;
+
+		PlayerDisconnected += async _ =>
+		{
+			lock (connectionIDs)
+			{
+				if (!NoPlayersConnected || cts is not null)
+					return;
+
+				cts = new CancellationTokenSource();
+			}
+
+			try
+			{
+				await Task.Delay(TimeSpan.FromMinutes(1), cts.Token);
+
+				CloseGameWithNoWinner();
+				DisposeCTS();
+			}
+			catch (Exception) { }
+		};
+
+		PlayerConnected += _ =>
+		{
+			lock (connectionIDs)
+			{
+				if (cts is null)
+					return;
+
+				try
+				{
+					DisposeCTS();
+				}
+				catch (Exception) { }
+			}
+		};
+
+		void DisposeCTS()
+		{
+			cts.Cancel();
+			cts.Dispose();
+			cts = null;
+		}
+	}
+
+
 
 	public PlayableGameInfo GetInfo() => new()
 	{
@@ -189,6 +289,11 @@ public abstract class PlayableGame : IDisposable
 				gameCore.KeyPool.Return(key);
 				keyCaptured = false;
 			}
+
+			WinnerDefined = null;
+			ClosedWithNoResult = null;
+			PlayerConnected = null;
+			PlayerDisconnected = null;
 		}
 
 		_disposed = true;

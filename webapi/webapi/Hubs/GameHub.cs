@@ -76,7 +76,7 @@ public class GameHub<TGame> : Hub<IGameHub> where TGame : PlayableGame
 
 
 
-	public async Task<IResult> MakeMove(GameHistoryService gameHistoryService, object data)
+	public async Task<IResult> MakeMove(object data)
 	{
 		var user = await GetUserInfoAsync();
 		if (user is null) return Results.Unauthorized();
@@ -91,15 +91,45 @@ public class GameHub<TGame> : Hub<IGameHub> where TGame : PlayableGame
 		if (!gameService.TryUpdateGameState(game.Key, user.PublicID, data, out string error))
 			return Results.BadRequest(error);
 
-		if (game.WinnerID is not null)
-			await gameHistoryService.AddGameToHistoryAsync(game);
-
-		// todo: close game
-		gameService.CloseGame(game.Key);
-
 		await Clients.Group(game.Key).GameStateChanged();
 		return Results.Ok();
 	}
+
+	public async Task<IResult> Surrender()
+	{
+		var user = await GetUserInfoAsync();
+		if (user is null) return Results.Unauthorized();
+
+		var game = gameService.GetUserGameInfo(user.PublicID);
+		if (game is null)
+		{
+			await Clients.Caller.NotAllowed();
+			return Results.BadRequest($"You don't have any active {gameService.GameName} game.");
+		}
+
+		return gameService.Surrender(user.PublicID)
+			? Results.Ok()
+			: Results.BadRequest("You can not surrender.");
+	}
+
+	public async Task<IResult> Request(object? data)
+	{
+		var user = await GetUserInfoAsync();
+		if (user is null) return Results.Unauthorized();
+
+		var game = gameService.GetUserGameInfo(user.PublicID);
+		if (game is null)
+		{
+			await Clients.Caller.NotAllowed();
+			return Results.BadRequest($"You don't have any active {gameService.GameName} game.");
+		}
+
+		return gameService.Request(user.PublicID, data)
+			? Results.Ok()
+			: Results.BadRequest("You can not make this request.");
+	}
+
+
 
 	public async Task<IResult> SendChatMessage(string message)
 	{

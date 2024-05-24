@@ -2,8 +2,9 @@
 using webapi.Hubs;
 using webapi.Models;
 using webapi.Services;
-using webapi.Games.Checkers;
 using webapi.Games;
+using webapi.Games.Checkers;
+using webapi.Games.Monopoly;
 
 namespace webapi.Configuration;
 
@@ -29,6 +30,21 @@ public static class GameServicesConfigurator
 		);
 
 		// monopoly
+		services.AddServicesForGame<MonopolyGame>(
+			new LobbyCore(
+				gameName: GameNames.monopoly,
+				maxLobbiesCount: 10_000,
+				minPlayersToStartGame: 1,
+				maxPlayersIncludingHost: 5
+			),
+			new GameCore(
+				gameName: GameNames.monopoly,
+				maxGamesCount: 10_000,
+				minPlayersCount: 1,
+				maxPlayersCount: 5
+			),
+			(gameCore, hub, playerIDs, _) => new MonopolyGame(gameCore, hub, playerIDs)
+		);
 	}
 
 	private static void AddServicesForGame<TGame>(this IServiceCollection services, LobbyCore lobbyCore, GameCore gameCore, PlayableGame.Factory gameFactory)
@@ -38,9 +54,10 @@ public static class GameServicesConfigurator
 		services.AddSingleton(serviceProvider =>
 		{
 			var hub = serviceProvider.GetRequiredService<IHubContext<GameHub<TGame>>>();
+			var typedHub = serviceProvider.GetRequiredService<IHubContext<GameHub<TGame>, IGameHub>>();
 			var logger = serviceProvider.GetRequiredService<ILogger<GameService<TGame>>>();
 
-			return new GameService<TGame>(gameCore, gameFactory, hub, logger);
+			return new GameService<TGame>(gameCore, gameFactory, hub, typedHub, serviceProvider, logger);
 		});
 
 		// register lobby service

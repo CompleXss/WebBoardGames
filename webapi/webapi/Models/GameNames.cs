@@ -4,5 +4,6 @@
 // Case-sensitive!
 public enum GameNames
 {
-	checkers
+	checkers,
+	monopoly
 }

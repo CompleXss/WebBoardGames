@@ -13,13 +13,17 @@ public class GameService<TGame> : IGameService where TGame : PlayableGame
 	private readonly PlayableGame.Factory gameFactory;
 	private readonly ConcurrentList<PlayableGame> activeGames = []; // order is not preserved
 	private readonly IHubContext<GameHub<TGame>> hub;
+	private readonly IHubContext<GameHub<TGame>, IGameHub> typedHub;
+	private readonly IServiceProvider serviceProvider;
 	private readonly ILogger<GameService<TGame>> logger;
 
-	public GameService(GameCore gameCore, PlayableGame.Factory gameFactory, IHubContext<GameHub<TGame>> hub, ILogger<GameService<TGame>> logger)
+	public GameService(GameCore gameCore, PlayableGame.Factory gameFactory, IHubContext<GameHub<TGame>> hub, IHubContext<GameHub<TGame>, IGameHub> typedHub, IServiceProvider serviceProvider, ILogger<GameService<TGame>> logger)
 	{
 		this.gameCore = gameCore;
 		this.gameFactory = gameFactory;
 		this.hub = hub;
+		this.typedHub = typedHub;
+		this.serviceProvider = serviceProvider;
 		this.logger = logger;
 	}
 
@@ -30,6 +34,21 @@ public class GameService<TGame> : IGameService where TGame : PlayableGame
 			return false;
 
 		activeGames.Add(game);
+
+		game.WinnerDefined += async () =>
+		{
+			CloseGame(game);
+
+			// add game to history
+			using var scope = serviceProvider.CreateScope();
+			var gameHistoryService = scope.ServiceProvider.GetRequiredService<GameHistoryService>();
+			await gameHistoryService.AddGameToHistoryAsync(game.GetInfo());
+		};
+
+		game.ClosedWithNoResult += () =>
+		{
+			CloseGame(game);
+		};
 
 		logger.LogInformation("New {gameName} game with key {gameKey} was CREATED.", GameName, game.Key);
 		return true;
@@ -77,12 +96,26 @@ public class GameService<TGame> : IGameService where TGame : PlayableGame
 			return null;
 
 		bool disconnected = game.DisconnectPlayer(playerID);
-
-		// todo: rework CloseGame on all players disconnect
-		if (game.NoPlayersConnected)
-			CloseGame(game);
-
 		return disconnected ? game.GetInfo() : null;
+	}
+
+	public bool Surrender(string playerID)
+	{
+		var game = GetUserGame(playerID);
+		if (game is null)
+			return false;
+
+		return game.Surrender(playerID);
+	}
+
+	public bool Request(string playerID, object? data)
+	{
+		var game = GetUserGame(playerID);
+		if (game is null)
+			return false;
+
+		bool success = game.Request(playerID, data);
+		return success;
 	}
 
 
@@ -125,8 +158,29 @@ public class GameService<TGame> : IGameService where TGame : PlayableGame
 	private void CloseGame(PlayableGame game)
 	{
 		activeGames.RemoveBySwap(game);
+		RemoveAllUsersFromGameGroup(game);
+
+		typedHub.Clients.Group(game.Key).GameClosed(game.WinnerID);
 
 		logger.LogInformation("{gameName} game with key {gameKey} was CLOSED.", GameName, game.Key);
 		game.Dispose();
+	}
+
+	private void RemoveAllUsersFromGameGroup(PlayableGame game)
+	{
+		var connectionIDs = game.ConnectionIDs.Where(x => x is not null).ToArray();
+		if (connectionIDs.Length == 0)
+			return;
+
+		var tasks = new Task[connectionIDs.Length];
+
+		for (int i = 0; i < connectionIDs.Length; i++)
+			tasks[i] = hub.Groups.RemoveFromGroupAsync(connectionIDs[i]!, game.Key);
+
+		try
+		{
+			Task.WhenAll(tasks);
+		}
+		catch (Exception) { }
 	}
 }

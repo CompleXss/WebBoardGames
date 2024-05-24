@@ -20,7 +20,6 @@ interface GameData {
     allyPositions: DraughtInfo[]
     enemyPositions: DraughtInfo[]
     isMyTurn: boolean
-    winnerID?: string
     //lastMove?: { from: Point, to: Point }[]
 }
 
@@ -81,6 +80,39 @@ export default function CheckersGame() {
         connection.onclose(() => {
             navigate('/')
         })
+
+        // Определение победителя
+        connection.on('GameClosed', winnerID => {
+            if (!winnerID) {
+                navigate('/')
+                return
+            }
+
+            if (!winnerBanner.current) {
+                console.error('Не могу найти winnerBanner')
+                return
+            }
+            if (!gameIsClosingIn.current) {
+                console.error('Не могу найти gameIsClosingIn')
+                return
+            }
+
+            winnerBanner.current.showModal()
+
+            let counter = 5
+            const timer = setInterval(() => {
+                if (!gameIsClosingIn.current) return
+                gameIsClosingIn.current.textContent = `Игра закроется через ${counter}...`
+
+                counter--
+                if (counter === 0) {
+                    clearInterval(timer)
+                    navigate('/')
+                }
+            }, 1000)
+
+            getWinnerName(winnerID)
+        })
     }
 
     function getBoardState() {
@@ -117,35 +149,6 @@ export default function CheckersGame() {
             whosTurn.current.style.backgroundColor = '#3a3a3a'
         }
 
-    }, [gameData])
-
-    // Определение победителя
-    useEffect(() => {
-        if (!gameData?.winnerID) return
-        if (!winnerBanner.current) {
-            console.error('Не могу найти winnerBanner')
-            return
-        }
-        if (!gameIsClosingIn.current) {
-            console.error('Не могу найти gameIsClosingIn')
-            return
-        }
-
-        winnerBanner.current.showModal()
-
-        let counter = 5
-        const timer = setInterval(() => {
-            if (!gameIsClosingIn.current) return
-            gameIsClosingIn.current.textContent = `Игра закроется через ${counter}...`
-
-            counter--
-            if (counter === 0) {
-                clearInterval(timer)
-                navigate('/')
-            }
-        }, 1000)
-
-        getWinnerName(gameData.winnerID)
     }, [gameData])
 
 

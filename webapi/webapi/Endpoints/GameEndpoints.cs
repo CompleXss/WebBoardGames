@@ -1,5 +1,6 @@
 ﻿using webapi.Games;
 using webapi.Games.Checkers;
+using webapi.Games.Monopoly;
 using webapi.Hubs;
 using webapi.Models;
 using webapi.Services;
@@ -11,6 +12,7 @@ public static class GameEndpoints
 	public static void MapGameEndpoints(this WebApplication app)
 	{
 		MapGame<CheckersGame>(app, GameNames.checkers);
+		MapGame<MonopolyGame>(app, GameNames.monopoly);
 	}
 
 	internal static void MapGame<TGame>(WebApplication app, GameNames gameName)
