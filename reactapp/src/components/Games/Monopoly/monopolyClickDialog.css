@@ -1,0 +1,122 @@
+.monopolyContainer #clickDialog[open] {
+    display: block;
+    width: 65%;
+    height: fit-content;
+    max-width: 500px;
+    container-type: inline-size;
+    
+    overflow: hidden;
+    outline: none;
+    border: none;
+    box-shadow: 0 0 10px black;
+    background-color: white;
+    top: 20cqw;
+    z-index: 5;
+
+    padding: 0;
+    /* padding: 0 3cqw; */
+    border-radius: 5px;
+    /* border-radius: 1cqw; */
+}
+
+.monopolyContainer #clickDialog[open]::backdrop {
+    background-color: transparent;
+}
+
+.monopolyContainer #clickDialog[open] > div {
+    padding: 3cqw 4cqw;
+}
+
+.monopolyContainer #clickDialog[open] h1 {
+    text-align: start;
+    font-size: 25px;
+    font-size: 5cqw;
+    margin: 0;
+    margin-bottom: 1.5cqw;
+
+    color: var(--almost-black);
+}
+
+.monopolyContainer #clickDialog[open] p {
+    font-size: 15px;
+    font-size: 3cqw;
+    margin: 0;
+}
+
+.monopolyContainer #clickDialog[open] .buttons {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+
+    margin: 0;
+    margin-top: 2.5cqw;
+    gap: 2cqw;
+}
+
+.monopolyContainer #clickDialog[open] button {
+    width: 100%;
+    height: 30px;
+    height: 7cqw;
+
+    cursor: pointer;
+    outline: none;
+    border: none;
+    border-radius: 5px;
+    border-radius: 1cqw;
+
+    font-size: 15px;
+    font-size: 3cqw;
+}
+
+
+
+/* yes button */
+.monopolyContainer #clickDialog[open] button:nth-of-type(1) {
+    color: white;
+    background-color: var(--dark-aquamarine);
+}
+
+.monopolyContainer #clickDialog[open] button:nth-of-type(1):not(:disabled):hover {
+    background-color: var(--dark-aquamarine-hover);
+}
+
+.monopolyContainer #clickDialog[open] button:nth-of-type(1):not(:disabled):active {
+    background-color: var(--dark-aquamarine-active);
+}
+
+/* yes disabled */
+.monopolyContainer #clickDialog[open] button:nth-of-type(1):disabled {
+    cursor: default;
+    color: var(--almost-black);
+    background-color: var(--gray-btn-active);
+}
+
+.monopolyContainer #clickDialog[open] button:nth-of-type(1):disabled::after {
+    position: absolute;
+    display: inline-block;
+    content: ' ';
+    background-image: url(/public/icons/lock.svg);
+    background-size: contain;
+    background-repeat: no-repeat;
+    width: 3.5cqw;
+    height: 3.5cqw;
+
+    left: 0;
+    margin-left: 10cqw;
+}
+
+
+/* no button */
+.monopolyContainer #clickDialog[open] button:nth-of-type(2) {
+    color: var(--almost-black);
+    background-color: var(--gray-btn);
+}
+
+.monopolyContainer #clickDialog[open] button:nth-of-type(2):not(:disabled):hover {
+    background-color: var(--gray-btn-hover);
+}
+
+.monopolyContainer #clickDialog[open] button:nth-of-type(2):not(:disabled):active {
+    background-color: var(--gray-btn-active);
+}

@@ -8,6 +8,19 @@ public static class Extensions
 		return random.Next() > int.MaxValue / 2;
 	}
 
+	public static IEnumerable<T> Shuffle<T>(this IReadOnlyList<T> arr)
+	{
+		return arr.Shuffle(Random.Shared);
+	}
+
+	public static IEnumerable<T> Shuffle<T>(this IReadOnlyList<T> arr, Random random)
+	{
+		return arr
+			.Select(x => (x, random.Next()))
+			.OrderBy(tuple => tuple.Item2)
+			.Select(tuple => tuple.x);
+	}
+
 	public static int IndexOf<T>(this IReadOnlyList<T> arr, Predicate<T> match)
 	{
 		for (int i = 0; i < arr.Count; i++)

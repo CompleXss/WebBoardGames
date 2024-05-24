@@ -1,4 +1,5 @@
 @import url(monopolyCardDialog.css);
+@import url(monopolyClickDialog.css);
 
 .monopolyContainer {
     display: grid;
@@ -24,6 +25,7 @@
     height: 100%;
     width: 100%;
 
+    overflow: hidden;
     background-color: greenyellow;
 }
 
@@ -55,6 +57,8 @@
     aspect-ratio: 1;
     height: 100%;
     max-width: 100%;
+
+    container-type: inline-size;
 }
 
 .monopolyContainer .board {
@@ -118,6 +122,16 @@
     width: 160%;
 }
 
+.monopolyContainer .board .cell[mnpl-corner] .cell-icon  {
+    margin: auto;
+    height: 100%;
+    width: 70%;
+}
+
+.monopolyContainer .board .cell[mnpl-corner="1"] .cell-icon {
+    width: 100%;
+}
+
 
 
 /* cell label */
@@ -176,4 +190,42 @@
 
 .monopolyContainer .board .cell[mnpl-line="3"] .cell-label>div {
     transform: rotate(-90deg);
+}
+
+
+
+.diceCubeContainer {
+    position: absolute;
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    flex-wrap: wrap;
+
+    gap: 12%;
+    row-gap: 6cqw;
+    width: 70%;
+    margin-left: 15%;
+    margin-right: 15%;
+
+    top: 20%;
+    left: 0;
+    
+    z-index: 4;
+    container-type: inline-size;
+}
+
+
+
+.playerDot {
+    position: absolute;
+
+    aspect-ratio: 1;
+    width: 3cqw;
+    border-radius: 100%;
+    z-index: 2;
+
+    transition: top 1000ms, left 1000ms;
+    background-color: red;
+
+    border: 0.1cqw solid black;
 }

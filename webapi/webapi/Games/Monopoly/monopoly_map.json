@@ -1,0 +1,433 @@
+{
+    "cardsInLine": 9,
+    "cornerCards": [
+        {
+            "id": "start"
+        },
+        {
+            "id": "prison"
+        },
+        {
+            "id": "portal"
+        },
+        {
+            "id": "prisonEnter"
+        }
+    ],
+    "cardGroups": [
+        {
+            "id": "g_1",
+            "type": "upgrade",
+            "cards": [
+                {
+                    "rent": [
+                        20,
+                        100,
+                        300,
+                        900,
+                        1600,
+                        2500
+                    ],
+                    "buyCost": 600,
+                    "sellCost": 300,
+                    "rebuyCost": 360,
+                    "upgradeCost": 500
+                },
+                {
+                    "rent": [
+                        40,
+                        200,
+                        600,
+                        1800,
+                        3200,
+                        4500
+                    ],
+                    "buyCost": 600,
+                    "sellCost": 300,
+                    "rebuyCost": 360,
+                    "upgradeCost": 500
+                }
+            ]
+        },
+        {
+            "id": "g_2",
+            "type": "count",
+            "cards": [
+                {
+                    "buyCost": 2000,
+                    "sellCost": 1000,
+                    "rebuyCost": 1200
+                },
+                {
+                    "buyCost": 2000,
+                    "sellCost": 1000,
+                    "rebuyCost": 1200
+                },
+                {
+                    "buyCost": 2000,
+                    "sellCost": 1000,
+                    "rebuyCost": 1200
+                },
+                {
+                    "buyCost": 2000,
+                    "sellCost": 1000,
+                    "rebuyCost": 1200
+                }
+            ],
+            "multipliers": [
+                250,
+                500,
+                1000,
+                2000
+            ]
+        },
+        {
+            "id": "g_3",
+            "type": "upgrade",
+            "cards": [
+                {
+                    "rent": [
+                        60,
+                        300,
+                        900,
+                        2700,
+                        4000,
+                        5500
+                    ],
+                    "buyCost": 1000,
+                    "sellCost": 500,
+                    "rebuyCost": 600,
+                    "upgradeCost": 500
+                },
+                {
+                    "rent": [
+                        60,
+                        300,
+                        900,
+                        2700,
+                        4000,
+                        5500
+                    ],
+                    "buyCost": 1000,
+                    "sellCost": 500,
+                    "rebuyCost": 600,
+                    "upgradeCost": 500
+                },
+                {
+                    "rent": [
+                        80,
+                        400,
+                        1000,
+                        3000,
+                        4500,
+                        6000
+                    ],
+                    "buyCost": 1200,
+                    "sellCost": 600,
+                    "rebuyCost": 720,
+                    "upgradeCost": 500
+                }
+            ]
+        },
+        {
+            "id": "g_4",
+            "type": "upgrade",
+            "cards": [
+                {
+                    "rent": [
+                        100,
+                        500,
+                        1500,
+                        4500,
+                        6250,
+                        7500
+                    ],
+                    "buyCost": 1400,
+                    "sellCost": 700,
+                    "rebuyCost": 840,
+                    "upgradeCost": 750
+                },
+                {
+                    "rent": [
+                        100,
+                        500,
+                        1500,
+                        4500,
+                        6250,
+                        7500
+                    ],
+                    "buyCost": 1400,
+                    "sellCost": 700,
+                    "rebuyCost": 840,
+                    "upgradeCost": 750
+                },
+                {
+                    "rent": [
+                        120,
+                        600,
+                        1800,
+                        5000,
+                        7000,
+                        9000
+                    ],
+                    "buyCost": 1600,
+                    "sellCost": 800,
+                    "rebuyCost": 960,
+                    "upgradeCost": 750
+                }
+            ]
+        },
+        {
+            "id": "g_5",
+            "type": "dice",
+            "cards": [
+                {
+                    "buyCost": 1500,
+                    "sellCost": 750,
+                    "rebuyCost": 900
+                },
+                {
+                    "buyCost": 1500,
+                    "sellCost": 750,
+                    "rebuyCost": 900
+                }
+            ],
+            "multipliers": [
+                100,
+                250
+            ]
+        },
+        {
+            "id": "g_6",
+            "type": "upgrade",
+            "cards": [
+                {
+                    "rent": [
+                        140,
+                        700,
+                        2000,
+                        5500,
+                        7500,
+                        9500
+                    ],
+                    "buyCost": 1600,
+                    "sellCost": 900,
+                    "rebuyCost": 1080,
+                    "upgradeCost": 1000
+                },
+                {
+                    "rent": [
+                        140,
+                        700,
+                        2000,
+                        5500,
+                        7500,
+                        9500
+                    ],
+                    "buyCost": 1600,
+                    "sellCost": 900,
+                    "rebuyCost": 1080,
+                    "upgradeCost": 1000
+                },
+                {
+                    "rent": [
+                        160,
+                        800,
+                        2200,
+                        6000,
+                        8000,
+                        10000
+                    ],
+                    "buyCost": 2000,
+                    "sellCost": 1000,
+                    "rebuyCost": 1200,
+                    "upgradeCost": 1000
+                }
+            ]
+        },
+        {
+            "id": "g_7",
+            "type": "upgrade",
+            "cards": [
+                {
+                    "rent": [
+                        180,
+                        900,
+                        2500,
+                        7000,
+                        8750,
+                        10500
+                    ],
+                    "buyCost": 2200,
+                    "sellCost": 1100,
+                    "rebuyCost": 1320,
+                    "upgradeCost": 1250
+                },
+                {
+                    "rent": [
+                        180,
+                        900,
+                        2500,
+                        7000,
+                        8750,
+                        10500
+                    ],
+                    "buyCost": 2200,
+                    "sellCost": 1100,
+                    "rebuyCost": 1320,
+                    "upgradeCost": 1250
+                },
+                {
+                    "rent": [
+                        200,
+                        1000,
+                        3000,
+                        7500,
+                        9250,
+                        11000
+                    ],
+                    "buyCost": 2400,
+                    "sellCost": 1200,
+                    "rebuyCost": 1440,
+                    "upgradeCost": 1250
+                }
+            ]
+        },
+        {
+            "id": "g_8",
+            "type": "upgrade",
+            "cards": [
+                {
+                    "rent": [
+                        220,
+                        1100,
+                        3300,
+                        8000,
+                        9750,
+                        11500
+                    ],
+                    "buyCost": 2600,
+                    "sellCost": 1300,
+                    "rebuyCost": 1560,
+                    "upgradeCost": 1500
+                },
+                {
+                    "rent": [
+                        220,
+                        1100,
+                        3300,
+                        8000,
+                        9750,
+                        11500
+                    ],
+                    "buyCost": 2600,
+                    "sellCost": 1300,
+                    "rebuyCost": 1560,
+                    "upgradeCost": 1500
+                },
+                {
+                    "rent": [
+                        240,
+                        1200,
+                        3600,
+                        8500,
+                        10250,
+                        12000
+                    ],
+                    "buyCost": 2800,
+                    "sellCost": 1400,
+                    "rebuyCost": 1680,
+                    "upgradeCost": 1500
+                }
+            ]
+        },
+        {
+            "id": "g_9",
+            "type": "upgrade",
+            "cards": [
+                {
+                    "rent": [
+                        260,
+                        1300,
+                        3900,
+                        9000,
+                        11000,
+                        12750
+                    ],
+                    "buyCost": 3000,
+                    "sellCost": 1500,
+                    "rebuyCost": 1800,
+                    "upgradeCost": 1750
+                },
+                {
+                    "rent": [
+                        260,
+                        1300,
+                        3900,
+                        9000,
+                        11000,
+                        12750
+                    ],
+                    "buyCost": 3000,
+                    "sellCost": 1500,
+                    "rebuyCost": 1800,
+                    "upgradeCost": 1750
+                },
+                {
+                    "rent": [
+                        280,
+                        1500,
+                        4500,
+                        10000,
+                        12000,
+                        14000
+                    ],
+                    "buyCost": 3200,
+                    "sellCost": 1600,
+                    "rebuyCost": 1920,
+                    "upgradeCost": 1750
+                }
+            ]
+        },
+        {
+            "id": "g_10",
+            "type": "upgrade",
+            "cards": [
+                {
+                    "rent": [
+                        350,
+                        1750,
+                        5000,
+                        11000,
+                        13000,
+                        15000
+                    ],
+                    "buyCost": 3500,
+                    "sellCost": 1750,
+                    "rebuyCost": 2100,
+                    "upgradeCost": 2000
+                },
+                {
+                    "rent": [
+                        500,
+                        2000,
+                        6000,
+                        14000,
+                        17000,
+                        20000
+                    ],
+                    "buyCost": 4000,
+                    "sellCost": 2000,
+                    "rebuyCost": 2400,
+                    "upgradeCost": 2000
+                }
+            ]
+        }
+    ],
+    "layout": [
+        "g_1", "event_random", "g_1", "event_money", "g_2", "g_3", "event_random", "g_3", "g_3",
+        "g_4", "g_5", "g_4", "g_4", "g_2", "g_6", "event_random", "g_6", "g_6",
+        "g_7", "event_random", "g_7", "g_7", "g_2", "g_8", "g_8", "g_5", "g_8",
+        "g_9", "g_9", "event_random", "g_9", "g_2", "event_star", "g_10", "event_random", "g_10"
+    ]
+}

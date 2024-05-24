@@ -6,6 +6,17 @@
   --foreground: #272727;
   --yellow: #fddb3a;
   --orange: #f06b43;
+  
+  --almost-black: #222;
+
+  --dark-aquamarine: #37bc9d;
+  --dark-aquamarine-hover: #32a58a;
+  --dark-aquamarine-active: #2e9c83;
+
+  --gray-btn: #ddd;
+  --gray-btn-hover: #ccc;
+  --gray-btn-active: #c0c0c0;
+
 
   --white-btn: whitesmoke;
   --white-btn-hover: #ccc;

@@ -18,3 +18,7 @@ export function sleep(duration: number) {
 export interface StringMap<V> {
     [key: string]: V
 }
+
+export function numberWithCommas(x: number) {
+    return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+}

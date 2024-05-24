@@ -1,0 +1,99 @@
+.diceContainer {
+    width: 20cqw;
+    height: 20cqw;
+    perspective: 100cqw;
+    perspective-origin: 50% 100%;
+}
+
+.dice {
+    width: 100%;
+    height: 100%;
+    top: 0;
+    
+    transform-style: preserve-3d;
+    transition: transform 2s;
+}
+
+.dice div {
+    background: hsla(0, 85%, 50%, 1);
+    border: 0.01cqw solid black;
+    display: block;
+    position: absolute;
+    width: 20cqw;
+    height: 10cqw;
+    
+    margin: 0 auto;
+    
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 500%;
+    text-align: center;
+    padding: 5cqw 0;
+}
+
+
+
+.dice .front {
+    transform:
+    translateZ(10cqw);
+}
+
+.dice .back {
+    transform:
+    rotateX(-180deg)
+    translateZ(10cqw);
+}
+
+.dice .right {
+    transform:
+    rotateY(90deg)
+    translateZ(10cqw);
+}
+
+.dice .left {
+    transform:
+    rotateY(-90deg)
+    translateZ(10cqw);
+}
+
+.dice .top {
+    transform:
+    rotateX(90deg)
+    translateZ(10cqw);
+}
+
+.dice .bottom {
+    transform:
+    rotateX(-90deg)
+    translateZ(10cqw);
+}
+
+.dice .dot {
+    display: block;
+    position: absolute;
+    width: 3cqw;
+    height: 3cqw;
+    background: #fff;
+    border-radius: 1.5cqw;  
+}
+
+.dice .front .dot1 { top: 8.5cqw; left: 8.5cqw; }
+.dice .back .dot1 { top: 4.5cqw; left: 4.5cqw; }
+.dice .back .dot2 { top: 12.5cqw; left: 12.5cqw; }
+.dice .right .dot1 { top: 4.5cqw; left: 4.5cqw; }
+.dice .right .dot2 { top: 8.5cqw; left: 8.5cqw; }
+.dice .right .dot3 { top: 12.5cqw; left: 12.5cqw; }
+.dice .left .dot1 { top: 4.5cqw; left: 4.5cqw; }
+.dice .left .dot2 { top: 4.5cqw; left: 12.5cqw; }
+.dice .left .dot3 { top: 12.5cqw; left: 4.5cqw; }
+.dice .left .dot4 { top: 12.5cqw; left: 12.5cqw; }
+.dice .top .dot1 { top: 4.5cqw; left: 4.5cqw; }
+.dice .top .dot2 { top: 4.5cqw; left: 12.5cqw; }
+.dice .top .dot3 { top: 8.5cqw; left: 8.5cqw; }
+.dice .top .dot4 { top: 12.5cqw; left: 4.5cqw; }
+.dice .top .dot5 { top: 12.5cqw; left: 12.5cqw; }
+.dice .bottom .dot1 { top: 4.5cqw; left: 4.5cqw; }
+.dice .bottom .dot2 { top: 4.5cqw; left: 8.5cqw; }
+.dice .bottom .dot3 { top: 4.5cqw; left: 12.5cqw; }
+.dice .bottom .dot4 { top: 12.5cqw; left: 4.5cqw; }
+.dice .bottom .dot5 { top: 12.5cqw; left: 8.5cqw; }
+.dice .bottom .dot6 { top: 12.5cqw; left: 12.5cqw; }
