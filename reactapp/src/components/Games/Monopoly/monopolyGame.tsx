@@ -13,13 +13,15 @@ import { StringMap, numberWithCommas, sleep } from 'src/utilities/utils';
 import { PlayerInfo } from '../Models';
 import { ReactComponent as DiceIcon } from 'src/svg/dice.svg'
 import { ReactComponent as StarIcon } from 'src/svg/star.svg'
-import './monopolyGame.css'
 import { DiceCube } from './DiceCube/diceCube';
+import reactStringReplace from 'react-string-replace'
+import './monopolyGame.css'
 
 interface GameState {
     myID: string
     players: StringMap<PlayerState>
     cellStates: StringMap<CellState>
+    chatMessages: string[]
 }
 
 interface PlayerState {
@@ -51,6 +53,7 @@ enum ActionType {
     Yes,
     No,
     Pay,
+    PayToPlayer,
     DiceToMove,
     DiceToExitPrison,
     BuyCell,
@@ -123,6 +126,8 @@ export default function MonopolyGame() {
         }
         requestLastOffer()
 
+        if (gameState) loadPlayerInfos(gameState)
+
         if (!gameState?.players) return
 
         const playerIDs = Object.keys(gameState.players)
@@ -133,6 +138,23 @@ export default function MonopolyGame() {
             movePlayerDot_direct(playerID, info.position)
         }
     }, [gameState])
+
+    async function loadPlayerInfos(gameState: GameState) {
+        let addedNew = false
+
+        for (const playerID of Object.keys(gameState.players)) {
+            if (!playerInfos.has(playerID)) {
+                const info = await getUserInfoByID(playerID)
+                playerInfos.set(playerID, info)
+
+                addedNew = true
+            }
+        }
+
+        if (addedNew) {
+            setPlayerInfos(new Map(playerInfos))
+        }
+    }
 
 
 
@@ -172,14 +194,6 @@ export default function MonopolyGame() {
                 }
                 return state
             })
-
-            if (!playerInfos.get(userID)) {
-                const playerInfo = await getUserInfoByID(userID)
-                setPlayerInfos(players => {
-                    players.set(userID, playerInfo)
-                    return players
-                })
-            }
         });
 
         // remove all callbacks from following methods
@@ -241,7 +255,7 @@ export default function MonopolyGame() {
                 'Заплатите аренду.',
                 `Вы попали на чужое поле. Нужно заплатить владельцу ${numberWithCommas(amount)}k`,
                 `Заплатить ${numberWithCommas(amount)}k`,
-                enoughMoneyToPay ? () => makeMove(connection, ActionType.Pay) : false
+                enoughMoneyToPay ? () => makeMove(connection, ActionType.PayToPlayer) : false
             )
         })
 
@@ -262,8 +276,6 @@ export default function MonopolyGame() {
         // connection.on('OfferBuyCell', offerBuyCell)
 
         connectionOnExclusive(connection, 'OfferBuyCell', ({ cellID }) => {
-            console.log('OfferBuyCell')
-            console.log(gameState)
             if (!gameState) return
 
             const cellCost = gameState.cellStates[cellID].cost
@@ -283,9 +295,9 @@ export default function MonopolyGame() {
 
         function isEnoughMoneyToPay(payAmount: number): boolean {
             if (!gameState) return false
-    
+
             // todo
-    
+
             return payAmount <= gameState.players[gameState.myID].money
         }
     }
@@ -329,8 +341,6 @@ export default function MonopolyGame() {
                 if (response.value) {
                     setGameState(response.value)
                     setReloading(false)
-
-                    // requestLastOffer()
                 }
                 else setGameState(undefined)
             })
@@ -343,7 +353,7 @@ export default function MonopolyGame() {
             case 'ExitPrison':
                 return {
                     title: 'Заплатите за освобождение.',
-                    description: 'У вас кончились попытки на выбрасывание дубля. Теперь придётся заплатить, чтобый выйти из тюрьмы'
+                    description: 'У вас кончились попытки на выбрасывание дубля. Теперь придётся заплатить, чтобый выйти из тюрьмы.'
                 }
 
             case '':
@@ -852,7 +862,7 @@ export default function MonopolyGame() {
         <div key={'player5'} className='playerCard'>fifth</div>
     ]
 
-    const playerDotElements = !gameState ? [] : Object.keys(gameState?.players).map((playerID, i) => {
+    const playerDotElements = !gameState ? [] : Object.keys(gameState.players).map((playerID, i) => {
         const info = gameState.players[playerID]
         return (
             <div
@@ -863,6 +873,31 @@ export default function MonopolyGame() {
             ></div>
         )
     })
+
+    const chatMessages = !gameState ? [] : gameState.chatMessages.map(line => {
+
+        // replace {playerID:xxx} with JSX
+        let elements = reactStringReplace(line, /{playerID:([^}]+)}/g, (playerID, i) => {
+            const playerName = playerInfos.get(playerID)?.name
+            const playerColor = gameState.players[playerID].color
+            return <span style={{ color: playerColor }}>{playerName ?? '???'}</span>
+        })
+
+        // replace {cellID:xxx} with JSX
+        elements = reactStringReplace(elements, /{cellID:([^}]+)}/g, (cellID, i) => {
+            const last_index = cellID.lastIndexOf('_')
+            const cellGroupID = cellID.substring(0, last_index)
+            const cellNum = Number(cellID.substring(last_index + 1))
+
+            const cellname = cellNum > -1
+                ? cardsInfo.cardGroups.find(x => x.id === cellGroupID)?.cards[cellNum].name
+                : cellID
+
+            return cellname
+        })
+
+        return <p>{elements}</p>
+    }).reverse()
 
 
 
@@ -923,8 +958,10 @@ export default function MonopolyGame() {
                             </>
                         )}
 
-                        {/* <div className='monopolyChat' style={{ gridArea: "x", backgroundColor: "black" }}>
-                    </div> */}
+                        <div className='monopolyChat' style={{ gridArea: 'x' }}>
+                            {/* <div className='chatEnter'>===============</div> */}
+                            {chatMessages}
+                        </div>
                     </div>
                 </div>
             </div>

@@ -14,6 +14,7 @@ internal readonly struct MonopolyPlayerAction
 		Yes,
 		No,
 		Pay,
+		PayToPlayer,
 		DiceToMove,
 		DiceToExitPrison,
 		BuyCell,
@@ -88,6 +89,7 @@ internal readonly struct MonopolyGameStateDto
 	public required string MyID { get; init; }
 	public required Dictionary<string, MonopolyPlayerStateDto> Players { get; init; }
 	public required Dictionary<string, MonopolyCellStateDto> CellStates { get; init; }
+	public required IReadOnlyList<string> ChatMessages { get; init; }
 }
 
 internal readonly struct MonopolyPlayerStateDto

@@ -33,14 +33,14 @@ public class MonopolyGame : PlayableGame
 	private readonly string[] playerColors;
 	private readonly (bool state, int freeExitTries)[] playersInPrison;
 	private readonly MonopolyCellState?[] cellStates;
-	private readonly List<string> messageLog = new(256);
 	private readonly MonopolyOfferManager offerManager;
-	private readonly MonopolyLogger logger;
+	private readonly MonopolyLogger chatLogger;
 
 	private readonly List<MonopolyPlayerAction.Type> expectedActionTypes = new(4);
 	private int actingPlayerIndex;
 	private int lapMoney = GAME_START_LAP_MONEY;
 	private int startBonus = GAME_START_START_BONUS;
+	private int payToPlayerMultiplier = 1;
 	private int lastDiceSum;
 	private bool lastDiceIsDouble;
 	private byte doublesInRow;
@@ -109,7 +109,7 @@ public class MonopolyGame : PlayableGame
 
 		offerManager = new(SendHubMessage);
 		offerManager.SetLastOfferIfNull(() => offerManager.OfferDiceRoll(actingPlayerIndex));
-		logger = CreateGameLogger();
+		chatLogger = new MonopolyLogger(128);
 
 		cellStates = new MonopolyCellState?[layoutWithCornerCells.Count]; // entries for event cards are unused
 		for (int i = 0; i < layoutWithCornerCells.Count; i++)
@@ -143,14 +143,6 @@ public class MonopolyGame : PlayableGame
 		}
 
 		PlayerConnected += playerIndex => offerManager.RepeatLastOffer(playerIndex);
-	}
-
-	private MonopolyLogger CreateGameLogger()
-	{
-		return new MonopolyLogger(message =>
-		{
-			// todo setup logger
-		});
 	}
 
 
@@ -211,7 +203,7 @@ public class MonopolyGame : PlayableGame
 		}
 
 
-
+		// todo remove cw
 		Console.WriteLine("=== New action ===");
 		Console.WriteLine(action.ActionType.ToString());
 		Console.WriteLine(action.Number);
@@ -234,8 +226,9 @@ public class MonopolyGame : PlayableGame
 		bool actionResult = action.ActionType switch
 		{
 			//MonopolyPlayerAction.Type.Yes => Yes(),
-			//MonopolyPlayerAction.Type.No => No(),
-			//MonopolyPlayerAction.Type.Pay => Pay(),
+			MonopolyPlayerAction.Type.No => No(expectedActionTypes_BACKUP),
+			MonopolyPlayerAction.Type.Pay => Pay(),
+			MonopolyPlayerAction.Type.PayToPlayer => PayToPlayer(),
 			MonopolyPlayerAction.Type.DiceToMove => DiceToMove(),
 			MonopolyPlayerAction.Type.DiceToExitPrison => DiceToExitPrison(),
 			MonopolyPlayerAction.Type.BuyCell => BuyCell(),
@@ -278,15 +271,78 @@ public class MonopolyGame : PlayableGame
 
 	//}
 
-	//private bool No()
-	//{
+	private bool No(IReadOnlyList<MonopolyPlayerAction.Type> expectedActionTypes)
+	{
+		int playerIndex = actingPlayerIndex;
+		// todo: if no active contracts
 
-	//}
+		// don't buy cell
+		if (expectedActionTypes.Contains(MonopolyPlayerAction.Type.BuyCell))
+		{
+			chatLogger.PlayerRefusesToBuyCell(PlayerIDs[playerIndex], layoutWithCornerCells[playerPositions[playerIndex]]);
+			MakeNextPlayerActing();
+			return true;
+		}
 
-	//private bool Pay()
-	//{
+		// todo No ???
 
-	//}
+		return false;
+	}
+
+	private bool Pay()
+	{
+		int playerIndex = actingPlayerIndex;
+
+		// prison
+		if (playersInPrison[playerIndex].state)
+		{
+			if (playersMoney[playerIndex] < PRISON_EXIT_PRICE)
+				return false;
+
+			playersMoney[playerIndex] -= PRISON_EXIT_PRICE;
+			playersInPrison[playerIndex] = (false, 0);
+
+			chatLogger.PlayerPaysToExitPrison(PlayerIDs[playerIndex], PRISON_EXIT_PRICE);
+
+			// move player to safe prison zone to make move
+			MovePlayerToCell(playerIndex, PRISON_CELL_INDEX);
+			expectedActionTypes.Add(MonopolyPlayerAction.Type.DiceToMove);
+			offerManager.OfferDiceRoll(playerIndex);
+
+			return true;
+		}
+
+		// event pay
+		int cellIndex = playerPositions[playerIndex];
+
+		// todo: event pay (store last event pay amount ?)
+
+		return true;
+	}
+
+	private bool PayToPlayer()
+	{
+		int playerIndex = actingPlayerIndex;
+
+		int cellIndex = playerPositions[playerIndex];
+		int amountToPay = GetPayToPlayerAmountFor(cellIndex);
+		if (amountToPay == 0)
+			return false;
+
+		if (playersMoney[playerIndex] < amountToPay)
+			return false;
+
+		int cellOwnerIndex = cellStates[cellIndex]!.Value.OwnerIndex;
+		if (cellOwnerIndex == -1)
+			return false;
+
+		playersMoney[playerIndex] -= amountToPay;
+		playersMoney[cellOwnerIndex] += amountToPay * payToPlayerMultiplier;
+
+		chatLogger.PlayerPaysRent(PlayerIDs[playerIndex], amountToPay);
+
+		return true;
+	}
 
 	private bool DiceToMove()
 	{
@@ -298,7 +354,8 @@ public class MonopolyGame : PlayableGame
 		if (doublesInRow > 2)
 		{
 			lastDiceIsDouble = false;
-			logger.PlayerDidTooManyDoublesAndEnteredPrison(PlayerIDs[actingPlayerIndex]);
+			doublesInRow = 0;
+			chatLogger.PlayerDidTooManyDoublesAndEnteredPrison(PlayerIDs[actingPlayerIndex]);
 			MovePlayerToPrison(actingPlayerIndex);
 			return true;
 		}
@@ -322,14 +379,14 @@ public class MonopolyGame : PlayableGame
 		{
 			playersInPrison[actingPlayerIndex] = new(false, 0);
 			MovePlayerForward(actingPlayerIndex, lastDiceSum);
-			logger.PlayerExitedPrison(PlayerIDs[actingPlayerIndex]);
+			chatLogger.PlayerExitedPrisonForFree(PlayerIDs[actingPlayerIndex]);
 		}
 		else
 		{
 			playersInPrison[actingPlayerIndex] = new(true, freeExitTries + 1);
 			int triesLeft = MAX_PRISON_FREE_TRIES - (freeExitTries + 1);
 			MakeNextPlayerActing();
-			logger.PlayerCouldNotExitPrison(PlayerIDs[actingPlayerIndex], triesLeft);
+			chatLogger.PlayerCouldNotExitPrison(PlayerIDs[actingPlayerIndex], triesLeft);
 		}
 		return true;
 	}
@@ -358,6 +415,8 @@ public class MonopolyGame : PlayableGame
 				?? 0
 			)
 		};
+
+		chatLogger.PlayerBuysCell(PlayerIDs[actingPlayerIndex], layoutWithCornerCells[cellIndex], buyCost);
 
 		MakeNextPlayerActing();
 		return true;
@@ -397,8 +456,6 @@ public class MonopolyGame : PlayableGame
 
 
 
-
-
 	private (int, int) GetRandomDiceRoll()
 	{
 		var dice = (
@@ -408,13 +465,12 @@ public class MonopolyGame : PlayableGame
 
 		lastDiceSum = dice.Item1 + dice.Item2;
 		lastDiceIsDouble = dice.Item1 == dice.Item2;
+
 		ShowDiceRoll(dice);
+		chatLogger.PlayerDiceRolled(PlayerIDs[actingPlayerIndex], dice);
 
 		return dice;
 	}
-
-
-
 
 
 
@@ -453,6 +509,48 @@ public class MonopolyGame : PlayableGame
 	/// <returns>
 	/// Effect is completely applied. Turn ended.
 	/// </returns>
+	private bool ApplyNormalCellEffect(int playerIndex, int cellIndex)
+	{
+		if (!cellStates[cellIndex].HasValue)
+			return true;
+
+		var cell = cellStates[cellIndex]!.Value;
+		int cellOwnerIndex = cell.OwnerIndex;
+
+		if (cellOwnerIndex == -1)
+		{
+			expectedActionTypes.Add(MonopolyPlayerAction.Type.BuyCell);
+			expectedActionTypes.Add(MonopolyPlayerAction.Type.No);
+			offerManager.OfferBuyCell(playerIndex, layoutWithCornerCells[cellIndex]);
+
+			chatLogger.PlayerThinksAboutBuyingCell(PlayerIDs[playerIndex], layoutWithCornerCells[cellIndex]);
+			return false;
+		}
+
+		if (cell.IsSold)
+		{
+			chatLogger.PlayerStepsOnSoldCellAndShouldNotPay(PlayerIDs[playerIndex], layoutWithCornerCells[cellIndex]);
+			return true;
+		}
+
+		if (cell.OwnerIndex == playerIndex)
+		{
+			chatLogger.PlayerStepsOnHisCell(PlayerIDs[playerIndex]);
+			return true;
+		}
+
+		int moneyToPay = GetPayToPlayerAmountFor(cellIndex);
+
+		expectedActionTypes.Add(MonopolyPlayerAction.Type.PayToPlayer);
+		offerManager.OfferPayToPlayer(playerIndex, cellOwnerIndex, moneyToPay);
+
+		chatLogger.PlayerShouldPayRent(PlayerIDs[playerIndex], PlayerIDs[cellOwnerIndex], layoutWithCornerCells[cellIndex], moneyToPay);
+		return false;
+	}
+
+	/// <returns>
+	/// Effect is completely applied. Turn ended.
+	/// </returns>
 	private bool ApplyEventCellEffect(int playerIndex, string eventName)
 	{
 		// todo event cells
@@ -477,33 +575,43 @@ public class MonopolyGame : PlayableGame
 	/// <returns>
 	/// Effect is completely applied. Turn ended.
 	/// </returns>
-	private bool ApplyNormalCellEffect(int playerIndex, int cellIndex)
+	private bool ApplyCornerCellEffect(int playerIndex, string cornerName)
+	{
+		switch (cornerName)
+		{
+			case "start":
+				if (startBonus > 0)
+				{
+					playersMoney[playerIndex] += startBonus;
+					chatLogger.PlayerGotStartBonus(PlayerIDs[playerIndex], startBonus);
+				}
+
+				return true;
+
+			case "prison":
+				return true;
+
+			case "portal":
+				MovePlayerForward(playerIndex, random.Next(1, 7));
+				return false;
+
+			case "prisonEnter":
+				chatLogger.PlayerWentToPrison(PlayerIDs[playerIndex]);
+				MovePlayerToPrison(playerIndex);
+				return true;
+
+			default: break;
+		}
+
+		return true;
+	}
+
+	private int GetPayToPlayerAmountFor(int cellIndex)
 	{
 		if (!cellStates[cellIndex].HasValue)
-			return true;
+			return 0;
 
 		var cell = cellStates[cellIndex]!.Value;
-		int cellOwnerIndex = cell.OwnerIndex;
-
-		if (cellOwnerIndex == -1)
-		{
-			expectedActionTypes.Add(MonopolyPlayerAction.Type.BuyCell);
-			expectedActionTypes.Add(MonopolyPlayerAction.Type.No);
-			offerManager.OfferBuyCell(playerIndex, layoutWithCornerCells[cellIndex]);
-			return false;
-		}
-
-		if (cell.IsSold)
-		{
-			// todo log попал на заложенное поле
-			return true;
-		}
-
-		if (cell.OwnerIndex == playerIndex)
-		{
-			// todo log попал на свое поле
-			return true;
-		}
 
 		int moneyToPay = 0;
 		switch (cell.Type)
@@ -525,48 +633,7 @@ public class MonopolyGame : PlayableGame
 			default: break;
 		}
 
-		expectedActionTypes.Add(MonopolyPlayerAction.Type.Pay);
-		offerManager.OfferPayToPlayer(playerIndex, cellOwnerIndex, moneyToPay);
-		return false;
-	}
-
-	/// <returns>
-	/// Effect is completely applied. Turn ended.
-	/// </returns>
-	private bool ApplyCornerCellEffect(int playerIndex, string cornerName)
-	{
-		switch (cornerName)
-		{
-			case "start":
-				if (startBonus > 0)
-				{
-					playersMoney[playerIndex] += startBonus;
-					logger.PlayerGotStartBonus(PlayerIDs[playerIndex], startBonus);
-				}
-
-				return true;
-
-			case "prison":
-				if (!playersInPrison[playerIndex].state)
-				{
-					logger.PlayerGotPrisonExcursion(PlayerIDs[playerIndex]);
-				}
-
-				return true;
-
-			case "portal":
-				MovePlayerForward(playerIndex, random.Next(1, 7));
-				return false;
-
-			case "prisonEnter":
-				logger.PlayerWentToPrison(PlayerIDs[playerIndex]);
-				MovePlayerToPrison(playerIndex);
-				return true;
-
-			default: break;
-		}
-
-		return true;
+		return moneyToPay;
 	}
 
 
@@ -583,6 +650,9 @@ public class MonopolyGame : PlayableGame
 		if (oldPos < START_CELL_INDEX && pos >= START_CELL_INDEX)
 			playersMoney[playerIndex] += lapMoney;
 
+		if (layoutWithCornerCells[pos] == "prison")
+			chatLogger.PlayerGotPrisonExcursion(PlayerIDs[playerIndex]);
+
 		MovePlayerToCell(playerIndex, pos);
 	}
 
@@ -595,21 +665,6 @@ public class MonopolyGame : PlayableGame
 	private void MovePlayerToCell(int playerIndex, int cellIndex)
 	{
 		playerPositions[playerIndex] = cellIndex;
-
-		//var cellID = layoutWithCornerCells[cellIndex];
-		//if (cellID == "prison")
-		//{
-		//	cellID += playersInPrison[playerIndex].state
-		//		? "_2"
-		//		: "_1";
-		//}
-
-		//SendHubMessage(MonopolyHubPaths.MovePlayerToCell, null, new
-		//{
-		//	playerID = PlayerIDs[playerIndex],
-		//	cellID = cellID,
-		//});
-
 		ApplyCellEffect(playerIndex, cellIndex);
 	}
 
@@ -725,6 +780,7 @@ public class MonopolyGame : PlayableGame
 			MyID = playerID,
 			Players = playerStates,
 			CellStates = cellStates,
+			ChatMessages = chatLogger.Messages,
 		};
 	}
 

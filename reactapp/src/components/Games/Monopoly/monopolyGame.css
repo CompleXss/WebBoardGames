@@ -67,7 +67,7 @@
     box-sizing: border-box;
     font-size: 14px; /* fallback */
     padding: 3%;
-    
+
     aspect-ratio: 1;
     height: 100%;
     width: 100%;
@@ -194,7 +194,7 @@
 
 
 
-.diceCubeContainer {
+.monopolyContainer .diceCubeContainer {
     position: absolute;
     display: flex;
     flex-direction: row;
@@ -216,7 +216,7 @@
 
 
 
-.playerDot {
+.monopolyContainer .playerDot {
     position: absolute;
 
     aspect-ratio: 1;
@@ -228,4 +228,39 @@
     background-color: red;
 
     border: 0.1cqw solid black;
+}
+
+
+
+.monopolyContainer .monopolyChat {
+    display: flex;
+    flex-direction: column-reverse;
+    position: absolute;
+    box-sizing: border-box;
+    overflow-x: hidden;
+    overflow-y: auto;
+    
+    aspect-ratio: 1;
+    height: 100%;
+    width: 100%;
+
+    margin: 0;
+    padding: 1.5cqw;
+}
+
+.monopolyContainer .monopolyChat p {
+    font-size: 2cqw;
+
+    margin: 0;
+    margin-top: 1cqw;
+    margin-bottom: 1cqw;
+}
+
+.monopolyContainer .monopolyChat::-webkit-scrollbar {
+    width: 1cqw;
+}
+
+.monopolyContainer .monopolyChat::-webkit-scrollbar-thumb {
+    border-radius: 1cqw;
+    background-color: var(--background);
 }
