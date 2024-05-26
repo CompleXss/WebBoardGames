@@ -14,17 +14,17 @@ public class MonopolyGame : PlayableGame
 	private const int START_MONEY = 16_000;
 	private const int PRISON_EXIT_PRICE = 500;
 	private const int MAX_PRISON_FREE_TRIES = 3;
-	private const int GAME_START_LAP_MONEY = 2000;
+	private const int GAME_START_LAP_BONUS = 2000;
 	private const int GAME_START_START_BONUS = 1000;
+	private const int MOVES_TO_LOOSE_CELL = 16;
 
 	private static readonly MonopolyMap map;
+	private static readonly IReadOnlyList<string> availablePlayerColors = ["#d98381", "#add884", "#dabc6a", "#44a7df", "#a281b6"];
 	private static readonly IReadOnlyList<string> layoutWithCornerCells;
 	private static readonly object emptyObject = new();
-	private static readonly IReadOnlyList<string> availablePlayerColors = ["#d98381", "#add884", "#dabc6a", "#44a7df", "#a281b6"];
 	private static readonly int TOTAL_CELLS_COUNT;
 	private static readonly int START_CELL_INDEX;
 	private static readonly int PRISON_CELL_INDEX;
-	private static readonly int PRISON_ENTER_CELL_INDEX;
 	private readonly Random random = new();
 
 	private readonly int[] playersMoney;
@@ -36,20 +36,20 @@ public class MonopolyGame : PlayableGame
 	private readonly MonopolyOfferManager offerManager;
 	private readonly MonopolyLogger chatLogger;
 
-	private readonly List<MonopolyPlayerAction.Type> expectedActionTypes = new(4);
+	private readonly List<MonopolyPlayerAction.Type> expectedActionTypes = new(2);
 	private int actingPlayerIndex;
-	private int lapMoney = GAME_START_LAP_MONEY;
+	private int lapBonus = GAME_START_LAP_BONUS;
 	private int startBonus = GAME_START_START_BONUS;
 	private int payToPlayerMultiplier = 1;
 	private int lastDiceSum;
+	private int upgradedCellIndexThisTurn;
+	private int doublesInRow;
 	private bool lastDiceIsDouble;
-	private byte doublesInRow;
 
 	static MonopolyGame()
 	{
-		var readMap = Utils.ReadAsJson<MonopolyMap>("Games/Monopoly/monopoly_map.json");
-		if (readMap is null)
-			throw new Exception("Could not read and parse monopoly_map.json file.");
+		var readMap = Utils.ReadAsJson<MonopolyMap>("Games/Monopoly/monopoly_map.json")
+			?? throw new Exception("Could not read and parse monopoly_map.json file.");
 
 		var set = new Dictionary<string, int>();
 		for (int i = 0; i < readMap.Layout.Count; i++)
@@ -85,11 +85,6 @@ public class MonopolyGame : PlayableGame
 
 		PRISON_CELL_INDEX = layout.IndexOf(x => x == "prison");
 		if (PRISON_CELL_INDEX == -1) throw new Exception("Monopoly: Prison cell not found");
-
-		PRISON_ENTER_CELL_INDEX = layout.IndexOf(x => x == "prisonEnter");
-		if (PRISON_ENTER_CELL_INDEX == -1) throw new Exception("Monopoly: PrisonEnter cell not found");
-
-		// todo portal cell index ???
 	}
 
 	public MonopolyGame(GameCore gameCore, IHubContext hub, IReadOnlyList<string> playerIDs)
@@ -109,7 +104,7 @@ public class MonopolyGame : PlayableGame
 
 		offerManager = new(SendHubMessage);
 		offerManager.SetLastOfferIfNull(() => offerManager.OfferDiceRoll(actingPlayerIndex));
-		chatLogger = new MonopolyLogger(128);
+		chatLogger = new MonopolyLogger(256);
 
 		cellStates = new MonopolyCellState?[layoutWithCornerCells.Count]; // entries for event cards are unused
 		for (int i = 0; i < layoutWithCornerCells.Count; i++)
@@ -160,21 +155,35 @@ public class MonopolyGame : PlayableGame
 			return false;
 
 		playersDead[playerIndex] = true;
+
+		// clear all user's cells
+		for (int i = 0; i < cellStates.Length; i++)
+		{
+			if (!cellStates[i].HasValue || cellStates[i]!.Value.OwnerIndex != playerIndex)
+				continue;
+
+			cellStates[i] = cellStates[i]!.Value with
+			{
+				OwnerIndex = -1,
+				Cost = cellStates[i]!.Value.Info.BuyCost,
+				UpgradeLevel = 0,
+				MovesLeftToLooseThisCell = 0,
+				IsSold = false,
+			};
+		}
+
 		MakeNextPlayerActing();
 
 		if (playersDead.Count(x => !x) == 1)
 			WinnerID = PlayerIDs[playersDead.IndexOf(x => !x)];
+		else
+			SendHubMessage(MonopolyHubPaths.GameStateChanged, null);
 
 		return true;
 	}
 
-	protected override bool Request_Internal(string playerID, object? data)
+	protected override bool Request_Internal(string playerID, string request, object? data)
 	{
-		data = data?.ToString();
-
-		if (data is not string request)
-			return false;
-
 		int playerIndex = PlayerIDs.IndexOf(playerID);
 		if (playerIndex == -1)
 			return false;
@@ -182,6 +191,19 @@ public class MonopolyGame : PlayableGame
 		if (request == MonopolyHubPaths.RepeatLastOffer)
 		{
 			offerManager.RepeatLastOffer(playerIndex);
+			return true;
+		}
+
+		if (request == MonopolyHubPaths.SendChatMessage)
+		{
+			if (data?.ToString() is not string message)
+				return false;
+
+			if (message.Length > 512)
+				return false;
+
+			message = chatLogger.SendChatMessage(playerID, message);
+			SendHubMessage(MonopolyHubPaths.ChatMessage, null, message);
 			return true;
 		}
 
@@ -206,7 +228,6 @@ public class MonopolyGame : PlayableGame
 		// todo remove cw
 		Console.WriteLine("=== New action ===");
 		Console.WriteLine(action.ActionType.ToString());
-		Console.WriteLine(action.Number);
 		Console.WriteLine(action.CellID);
 
 
@@ -220,9 +241,6 @@ public class MonopolyGame : PlayableGame
 		var expectedActionTypes_BACKUP = expectedActionTypes.ToArray();
 		expectedActionTypes.Clear();
 
-		error = string.Empty;
-		//return false;
-
 		bool actionResult = action.ActionType switch
 		{
 			//MonopolyPlayerAction.Type.Yes => Yes(),
@@ -232,16 +250,20 @@ public class MonopolyGame : PlayableGame
 			MonopolyPlayerAction.Type.DiceToMove => DiceToMove(),
 			MonopolyPlayerAction.Type.DiceToExitPrison => DiceToExitPrison(),
 			MonopolyPlayerAction.Type.BuyCell => BuyCell(),
-			//MonopolyPlayerAction.Type.UpgradeCell => UpgradeCell(action),
-			//MonopolyPlayerAction.Type.DowngradeCell => DowngradeCell(action),
+			MonopolyPlayerAction.Type.UpgradeCell => UpgradeCell(action.CellID, expectedActionTypes_BACKUP),
+			MonopolyPlayerAction.Type.DowngradeCell => DowngradeCell(action.CellID, expectedActionTypes_BACKUP),
 			//MonopolyPlayerAction.Type.CreateContract => CreateContract(action, out error),
 			_ => ReturnInvalidActionType(out error)
 		};
 
 		if (actionResult)
+		{
+			error = string.Empty;
 			UpdateGameState();
+		}
 		else
 		{
+			error = "Так походить нельзя.";
 			expectedActionTypes.Clear();
 			expectedActionTypes.AddRange(expectedActionTypes_BACKUP);
 		}
@@ -409,10 +431,13 @@ public class MonopolyGame : PlayableGame
 		cellStates[cellIndex] = cellState.Value with
 		{
 			OwnerIndex = actingPlayerIndex,
+			UpgradeLevel = 0,
+			IsSold = false,
+			MovesLeftToLooseThisCell = 0,
 			Cost = (
 				cellState.Value.Info.Rent?.First()
 				?? cellState.Value.Multipliers?[GetPlayerCellsCountOfType(actingPlayerIndex, cellState.Value.Type)]
-				?? 0
+				?? 0 // should be unreachable
 			)
 		};
 
@@ -431,15 +456,181 @@ public class MonopolyGame : PlayableGame
 		);
 	}
 
-	//private bool UpgradeCell(in MonopolyPlayerAction action)
-	//{
+	private bool UpgradeCell(string? cellID, IReadOnlyList<MonopolyPlayerAction.Type> expectedActionTypes)
+	{
+		if (cellID is null)
+			return false;
 
-	//}
+		int cellIndex = layoutWithCornerCells.IndexOf(cellID);
+		if (cellIndex == -1)
+			return false;
 
-	//private bool DowngradeCell(in MonopolyPlayerAction action)
-	//{
+		if (!cellStates[cellIndex].HasValue)
+			return false;
 
-	//}
+		int playerIndex = actingPlayerIndex;
+		var cell = cellStates[cellIndex]!.Value;
+
+		if (cell.OwnerIndex != playerIndex)
+			return false;
+
+		int moneyToPay;
+
+		// rebuy
+		if (cell.IsSold)
+		{
+			moneyToPay = cell.Info.RebuyCost;
+			if (playersMoney[playerIndex] < moneyToPay)
+				return false;
+
+			playersMoney[playerIndex] -= moneyToPay;
+			cellStates[cellIndex] = cell with
+			{
+				IsSold = false,
+				MovesLeftToLooseThisCell = 0,
+				UpgradeLevel = 0,
+				Cost = (
+					cell.Info.Rent?.First()
+					?? cell.Multipliers?[GetPlayerCellsCountOfType(actingPlayerIndex, cell.Type) - 1]
+					?? 0 // should be unreachable
+				)
+			};
+
+			chatLogger.PlayerRebuysCell(PlayerIDs[playerIndex], cellID);
+
+			this.expectedActionTypes.AddRange(expectedActionTypes);
+			return true;
+		}
+
+		// upgrade
+		if (cell.Type != "upgrade")
+			return false;
+
+		if (upgradedCellIndexThisTurn != -1 || !cell.Info.UpgradeCost.HasValue || cell.UpgradeLevel >= 5)
+			return false;
+
+		if (!IsPlayerOwnsAllCellsOfThisGroup(playerIndex, cellIndex))
+			return false;
+
+		var groupID = GetCellGroup(layoutWithCornerCells[cellIndex])?.ID;
+		if (groupID is null)
+			return false;
+
+		if (cellStates.Any(
+			x => x.HasValue &&
+			x.Value.OwnerIndex == playerIndex &&
+			GetCellGroup(layoutWithCornerCells[cellStates.IndexOf(x)])?.ID == groupID &&
+			(
+				x.Value.IsSold ||
+				x.Value.UpgradeLevel < cell.UpgradeLevel
+			))
+		)
+		{
+			// can't upgrade if there are cells of the same group with lower upgradeLevel (or sold)
+			return false;
+		}
+
+		moneyToPay = cell.Info.UpgradeCost.Value;
+		if (playersMoney[playerIndex] < moneyToPay)
+			return false;
+
+		playersMoney[playerIndex] -= moneyToPay;
+		cellStates[cellIndex] = cell with
+		{
+			UpgradeLevel = cell.UpgradeLevel + 1,
+			Cost = (
+				cell.Info.Rent?[cell.UpgradeLevel + 1]
+				?? 0 // should be unreachable
+			)
+		};
+
+		upgradedCellIndexThisTurn = cellIndex;
+		chatLogger.PlayerUpgradesCell(PlayerIDs[playerIndex], cellID);
+
+		this.expectedActionTypes.AddRange(expectedActionTypes);
+		return true;
+	}
+
+	private bool DowngradeCell(string? cellID, IReadOnlyList<MonopolyPlayerAction.Type> expectedActionTypes)
+	{
+		if (cellID is null)
+			return false;
+
+		int cellIndex = layoutWithCornerCells.IndexOf(cellID);
+		if (cellIndex == -1)
+			return false;
+
+		if (!cellStates[cellIndex].HasValue)
+			return false;
+
+		int playerIndex = actingPlayerIndex;
+		var cell = cellStates[cellIndex]!.Value;
+
+		if (cell.OwnerIndex != playerIndex)
+			return false;
+
+		if (cell.IsSold)
+			return false;
+
+		var groupID = GetCellGroup(layoutWithCornerCells[cellIndex])?.ID;
+		if (groupID is null)
+			return false;
+
+		// sell
+		if (cell.UpgradeLevel == 0 && !cellStates.Any(
+			x => x.HasValue &&
+			x.Value.OwnerIndex == playerIndex &&
+			GetCellGroup(layoutWithCornerCells[cellStates.IndexOf(x)])?.ID == groupID &&
+			x.Value.UpgradeLevel > 0))
+		{
+			playersMoney[playerIndex] += cell.Info.SellCost;
+			cellStates[cellIndex] = cell with
+			{
+				IsSold = true,
+				MovesLeftToLooseThisCell = MOVES_TO_LOOSE_CELL,
+				Cost = 0
+			};
+
+			chatLogger.PlayerSellsCell(PlayerIDs[playerIndex], cellID);
+
+			this.expectedActionTypes.AddRange(expectedActionTypes);
+			return true;
+		}
+
+		// downgrade
+		if (cell.Type != "upgrade" || cell.UpgradeLevel < 1)
+			return false;
+
+		if (cellStates.Any(
+			x => x.HasValue &&
+			x.Value.OwnerIndex == playerIndex &&
+			GetCellGroup(layoutWithCornerCells[cellStates.IndexOf(x)])?.ID == groupID &&
+			x.Value.UpgradeLevel > cell.UpgradeLevel)
+		)
+		{
+			// can't downgrade if there are cells of the same group with higher upgradeLevel
+			return false;
+		}
+
+		playersMoney[playerIndex] += cell.Info.SellCost;
+		cellStates[cellIndex] = cell with
+		{
+			UpgradeLevel = cell.UpgradeLevel - 1,
+			Cost = (
+				cell.Info.Rent?[cell.UpgradeLevel - 1]
+				?? 0 // should be unreachable
+			)
+		};
+
+		// allow upgrade-downgrade of the same cell multiple times
+		if (upgradedCellIndexThisTurn == cellIndex)
+			upgradedCellIndexThisTurn = -1;
+
+		chatLogger.PlayerDowngradesCell(PlayerIDs[playerIndex], cellID);
+
+		this.expectedActionTypes.AddRange(expectedActionTypes);
+		return true;
+	}
 
 	//private bool CreateContract(in MonopolyPlayerAction action, out string error)
 	//{
@@ -471,6 +662,37 @@ public class MonopolyGame : PlayableGame
 
 		return dice;
 	}
+
+	private bool IsPlayerOwnsAllCellsOfThisGroup(int playerIndex, int cellIndex)
+	{
+		var cellID = layoutWithCornerCells[cellIndex];
+		if (!cellID.StartsWith("g_"))
+			return false;
+
+		var targetGroup = GetCellGroup(cellID);
+		if (targetGroup is null) return false;
+
+		int cellsCountInGroup = targetGroup.Cards.Count;
+
+		var ownedCells = cellStates.Where(x => x.HasValue && x.Value.OwnerIndex == playerIndex).ToArray();
+		if (ownedCells.Length < cellsCountInGroup)
+			return false;
+
+		int cellsCountOwned = ownedCells.Count(cell =>
+		{
+			int cellIndex = cellStates.IndexOf(cell);
+			var cellID = layoutWithCornerCells[cellIndex];
+			var group = GetCellGroup(cellID);
+			if (group is null)
+				return false;
+
+			return group.ID == targetGroup.ID;
+		});
+
+		return cellsCountOwned == cellsCountInGroup;
+	}
+
+
 
 
 
@@ -613,6 +835,9 @@ public class MonopolyGame : PlayableGame
 
 		var cell = cellStates[cellIndex]!.Value;
 
+		if (cell.IsSold)
+			return 0;
+
 		int moneyToPay = 0;
 		switch (cell.Type)
 		{
@@ -622,12 +847,12 @@ public class MonopolyGame : PlayableGame
 
 			case "count":
 				if (cell.Multipliers is not null)
-					moneyToPay = cell.Multipliers[cellStates.Count(x => x.HasValue && x.Value.OwnerIndex == cell.OwnerIndex)];
+					moneyToPay = cell.Multipliers[cellStates.Count(x => x.HasValue && x.Value.OwnerIndex == cell.OwnerIndex) - 1];
 				break;
 
 			case "dice":
 				if (cell.Multipliers is not null)
-					moneyToPay = cell.Multipliers[cellStates.Count(x => x.HasValue && x.Value.OwnerIndex == cell.OwnerIndex)] * lastDiceSum;
+					moneyToPay = cell.Multipliers[cellStates.Count(x => x.HasValue && x.Value.OwnerIndex == cell.OwnerIndex) - 1] * lastDiceSum;
 				break;
 
 			default: break;
@@ -640,15 +865,16 @@ public class MonopolyGame : PlayableGame
 
 	private void MovePlayerForward(int playerIndex, int cellsCount)
 	{
-		int oldPos = playerPositions[playerIndex];
-		int pos = oldPos + cellsCount;
-
+		int pos = playerPositions[playerIndex] + cellsCount;
 		if (pos >= TOTAL_CELLS_COUNT)
 			pos -= TOTAL_CELLS_COUNT;
 
 		// if new lap
-		if (oldPos < START_CELL_INDEX && pos >= START_CELL_INDEX)
-			playersMoney[playerIndex] += lapMoney;
+		if (lapBonus > 0 && (pos - cellsCount) < START_CELL_INDEX && pos >= START_CELL_INDEX)
+		{
+			playersMoney[playerIndex] += lapBonus;
+			chatLogger.PlayerGotLapBonus(PlayerIDs[playerIndex], lapBonus);
+		}
 
 		if (layoutWithCornerCells[pos] == "prison")
 			chatLogger.PlayerGotPrisonExcursion(PlayerIDs[playerIndex]);
@@ -672,6 +898,9 @@ public class MonopolyGame : PlayableGame
 	{
 		if (playersDead.All(x => x))
 			return;
+
+		upgradedCellIndexThisTurn = -1;
+		IncrementMovesLeftToLooseCellForAllSold();
 
 		if (lastDiceIsDouble && !playersDead[actingPlayerIndex])
 		{
@@ -716,9 +945,6 @@ public class MonopolyGame : PlayableGame
 		// if on normal cell
 		expectedActionTypes.Add(MonopolyPlayerAction.Type.DiceToMove);
 		offerManager.OfferDiceRoll(playerIndex);
-
-
-		// todo?
 	}
 
 	private void ShowDiceRoll((int, int) dice)
@@ -730,16 +956,59 @@ public class MonopolyGame : PlayableGame
 		});
 	}
 
+
+
+	private void IncrementMovesLeftToLooseCellForAllSold()
+	{
+		for (int i = 0; i < cellStates.Length; i++)
+		{
+			if (!cellStates[i].HasValue) continue;
+			var cell = cellStates[i]!.Value;
+
+			if (!cell.IsSold)
+				continue;
+
+			int movesLeftToLooseThisCell = cell.MovesLeftToLooseThisCell - 1;
+			bool isSold = movesLeftToLooseThisCell > 0;
+
+			cellStates[i] = cell with
+			{
+				IsSold = isSold,
+				MovesLeftToLooseThisCell = movesLeftToLooseThisCell,
+				OwnerIndex = isSold ? cell.OwnerIndex : -1,
+				Cost = isSold ? cell.Cost : cell.Info.BuyCost,
+			};
+		}
+	}
+
+	private void UpdateCountAndDiceCellsCost()
+	{
+		for (int i = 0; i < cellStates.Length; i++)
+		{
+			if (!cellStates[i].HasValue) continue;
+			var cell = cellStates[i]!.Value;
+
+			if (cell.OwnerIndex == -1 || cell.Type != "count" && cell.Type != "dice")
+				continue;
+
+			cellStates[i] = cell with
+			{
+				Cost = cell.IsSold ? 0
+					: cell.Multipliers?[GetPlayerCellsCountOfType(cell.OwnerIndex, cell.Type) - 1]
+					?? 0 // should be unreachable
+			};
+		}
+	}
+
 	private void UpdateGameState()
 	{
+		UpdateCountAndDiceCellsCost();
+
 		// todo
 		// update lapMoney, startBonus depending on GameStarted
 	}
 
-	protected override void SendChatMessage_Internal(string message)
-	{
-		// todo
-	}
+
 
 	protected override object? GetRelativeState_Internal(string playerID)
 	{
@@ -778,6 +1047,7 @@ public class MonopolyGame : PlayableGame
 		return new MonopolyGameStateDto
 		{
 			MyID = playerID,
+			IsAbleToUpgrade = upgradedCellIndexThisTurn == -1,
 			Players = playerStates,
 			CellStates = cellStates,
 			ChatMessages = chatLogger.Messages,

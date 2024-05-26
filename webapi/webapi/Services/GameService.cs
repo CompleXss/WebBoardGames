@@ -108,13 +108,13 @@ public class GameService<TGame> : IGameService where TGame : PlayableGame
 		return game.Surrender(playerID);
 	}
 
-	public bool Request(string playerID, object? data)
+	public bool Request(string playerID, string request, object? data)
 	{
 		var game = GetUserGame(playerID);
 		if (game is null)
 			return false;
 
-		bool success = game.Request(playerID, data);
+		bool success = game.Request(playerID, request, data);
 		return success;
 	}
 
@@ -136,15 +136,6 @@ public class GameService<TGame> : IGameService where TGame : PlayableGame
 		}
 
 		return game.TryUpdateState(playerID, data, out error);
-	}
-
-	public void SendChatMessage(string gameKey, string message)
-	{
-		var game = GetGameByKey(gameKey);
-		if (game is null)
-			return;
-
-		game.SendChatMessage(message);
 	}
 
 	public void CloseGame(string gameKey)

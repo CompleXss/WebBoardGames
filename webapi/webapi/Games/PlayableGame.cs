@@ -114,16 +114,6 @@ public abstract class PlayableGame : IDisposable
 
 
 
-	public void SendChatMessage(string message)
-	{
-		lock (this)
-		{
-			SendChatMessage_Internal(message);
-		}
-	}
-
-	protected virtual void SendChatMessage_Internal(string message) { }
-
 	public bool IsPlayerTurn(string playerID)
 	{
 		lock (this)
@@ -142,14 +132,14 @@ public abstract class PlayableGame : IDisposable
 	}
 	protected abstract bool Surrender_Internal(string playerID);
 
-	public bool Request(string playerID, object? data)
+	public bool Request(string playerID, string request, object? data)
 	{
 		lock (this)
 		{
-			return Request_Internal(playerID, data);
+			return Request_Internal(playerID, request, data);
 		}
 	}
-	protected abstract bool Request_Internal(string playerID, object? data);
+	protected virtual bool Request_Internal(string playerID, string request, object? data) => false;
 
 
 

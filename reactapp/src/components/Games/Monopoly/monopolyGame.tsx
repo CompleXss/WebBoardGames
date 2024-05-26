@@ -19,6 +19,7 @@ import './monopolyGame.css'
 
 interface GameState {
     myID: string
+    isAbleToUpgrade: boolean
     players: StringMap<PlayerState>
     cellStates: StringMap<CellState>
     chatMessages: string[]
@@ -80,10 +81,12 @@ export default function MonopolyGame() {
     const navigate = useNavigate()
     const [playerInfos, setPlayerInfos] = useState<Map<string, PlayerInfo>>(new Map())
     const [gameState, setGameState] = useState<GameState | undefined>()
+    const [cardButtons, setCardButtons] = useState<JSX.Element[]>([])
     const [cardGroupDescription, setCardGroupDescription] = useState<string>('')
     const [groupInfoParams, setGroupInfoParams] = useState<JSX.Element[]>([])
     const [cardInfoParams, setCardInfoParams] = useState<JSX.Element[]>([])
     const [gridTemplateAreas, setGridTemplateAreas] = useState<string>()
+    const chatInput = useRef<HTMLInputElement>(null)
     const clickDialog = useRef<HTMLDialogElement>(null)
     const cardInfoDialog = useRef<HTMLDialogElement>(null)
     const clickDialogYesButton = useRef<HTMLButtonElement>(null)
@@ -219,9 +222,15 @@ export default function MonopolyGame() {
 
 
         // actions
-        connectionOnExclusive(connection, 'ShowDiceRoll', async data => {
+        connectionOnExclusive(connection, 'ShowDiceRoll', data => {
             rollDice(diceCube1, data.dice1)
             rollDice(diceCube2, data.dice2)
+        })
+
+        connectionOnExclusive(connection, 'ChatMessage', message => {
+            if (!message) return
+            gameState?.chatMessages.push(message)
+            setGameState({ ...gameState } as GameState)
         })
 
 
@@ -309,11 +318,10 @@ export default function MonopolyGame() {
 
 
 
-    function makeMove(connection: HubConnection, actionType?: ActionType, cellID?: number, number?: number) {
+    function makeMove(connection: HubConnection, actionType?: ActionType, cellID?: string) {
         connection.invoke('MakeMove', {
             actionType,
             cellID,
-            number,
         })
             .then(x => {
                 if (x.statusCode && x.statusCode !== 200) {
@@ -333,11 +341,6 @@ export default function MonopolyGame() {
 
         connection.invoke('GetGameState')
             .then(response => {
-
-                // todo remove logs
-                console.log('==================')
-                console.log(response.value)
-
                 if (response.value) {
                     setGameState(response.value)
                     setReloading(false)
@@ -371,10 +374,32 @@ export default function MonopolyGame() {
     }
 
     function requestLastOffer() {
-        if (!connection) return
+        requestGame('RepeatLastOffer')
+    }
 
-        connection.invoke('Request', 'RepeatLastOffer')
-            .catch(e => { })
+    function requestGame(request: string, data?: any) {
+        connection?.invoke('Request', request, data)
+            .catch(_ => { })
+    }
+
+    function sendMessageInChat_onKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
+        if (e.key !== 'Enter') return
+        sendMessageInChat()
+    }
+
+    function sendMessageInChat() {
+        if (!chatInput.current) return
+
+        const value = chatInput.current.value?.trim()
+        if (!value || value === '') return
+
+        if (value.length > 512) {
+            alert('Сообщение слишком длинное!')
+            return
+        }
+
+        requestGame('SendChatMessage', value)
+        chatInput.current.value = ''
     }
 
 
@@ -455,6 +480,15 @@ export default function MonopolyGame() {
             const mnpl_rotate = needsRotate ? 1 : null
             const backgroundColor = cardInfo?.ownerID ? gameState.players[cardInfo.ownerID].color : undefined
 
+            const cellLevel = (!cardInfo ? ''
+                : cardInfo.isSold ? cardInfo.movesLeftToLooseThisCell : [
+                    // <StarIcon key={0} className='starIcon'></StarIcon>
+
+                    // todo star level
+
+                ]
+            )
+
             arr[i] = (
                 <div
                     id={card_id}
@@ -463,7 +497,7 @@ export default function MonopolyGame() {
                     mnpl-line={line}
                     mnpl-special={mnpl_special}
                     mnpl-rotate={mnpl_rotate}
-                    style={{ gridArea: `l${i}`, backgroundColor: backgroundColor }}
+                    style={{ gridArea: `l${i}` }}
                     onClick={isEvent || !cardInfo ? undefined : () => {
                         if (cardInfoDialog.current) {
                             const header = cardInfoDialog.current.getElementsByClassName('cardInfoHeader')[0] as HTMLElement
@@ -479,6 +513,73 @@ export default function MonopolyGame() {
 
                             const body = cardInfoDialog.current.getElementsByClassName('cardInfoBody')[0] as HTMLElement
                             if (body) {
+
+                                // buttons (upgrade-downgrade)
+                                const cardButtons: JSX.Element[] = []
+
+                                if (cardInfo.ownerID && cardInfo.ownerID === gameState.myID) {
+                                    let upBtn = false
+                                    let downBtn = false
+                                    let upgradeBtnName //= 'Купить'
+                                    let downgradeBtnName //= 'Продать'
+
+                                    if (cardInfo.isSold) {
+                                        upgradeBtnName = 'Выкупить'
+                                        upBtn = true
+                                    }
+                                    else if (cardInfo.type !== 'upgrade') {
+                                        downgradeBtnName = 'Заложить'
+                                        downBtn = true
+                                    }
+                                    else { // if not sold & 'upgrade'
+                                        let totalOfTheSameGroupCount = 0
+                                        const ownedOfTheSameGroupCells = Object.keys(gameState.cellStates).filter(cellID => {
+                                            const groupID = cellID.substring(0, cellID.lastIndexOf('_'))
+                                            const cell = gameState.cellStates[cellID]
+
+                                            if (groupID !== group_id) return false
+                                            totalOfTheSameGroupCount++
+
+                                            return cell.ownerID && cell.ownerID === cardInfo.ownerID
+                                        }).map(id => gameState.cellStates[id])
+
+                                        if (ownedOfTheSameGroupCells.length !== totalOfTheSameGroupCount) {
+                                            downgradeBtnName = 'Заложить'
+                                            downBtn = true
+                                        }
+                                        else { // if owned === total
+                                            if (ownedOfTheSameGroupCells.every(x => x.upgradeLevel <= cardInfo.upgradeLevel)) {
+                                                downgradeBtnName = 'Заложить'
+                                                downBtn = true
+                                            }
+
+                                            if (ownedOfTheSameGroupCells.every(x => x.upgradeLevel >= cardInfo.upgradeLevel && !x.isSold) &&
+                                                gameState.isAbleToUpgrade
+                                            ) {
+                                                upgradeBtnName = 'Построить'
+                                                upBtn = true
+                                            }
+                                        }
+                                    }
+
+                                    if (upBtn) cardButtons.push((
+                                        <button key={0} className='upBtn' onClick={() => {
+                                            if (connection) {
+                                                makeMove(connection, ActionType.UpgradeCell, card_id)
+                                            }
+                                            cardInfoDialog.current?.close()
+                                        }}>{upgradeBtnName}</button>
+                                    ))
+                                    if (downBtn) cardButtons.push((
+                                        <button key={1} className='downBtn' onClick={() => {
+                                            if (connection) {
+                                                makeMove(connection, ActionType.DowngradeCell, card_id)
+                                            }
+                                            cardInfoDialog.current?.close()
+                                        }}>{downgradeBtnName}</button>
+                                    ))
+                                }
+
 
                                 // description
                                 setCardGroupDescription(
@@ -502,7 +603,11 @@ export default function MonopolyGame() {
                                         ))
 
                                         for (let i = 1; i < rent.length; i++) {
-                                            const stars = Array(i).fill(<StarIcon className='starIcon' />)
+                                            const stars: JSX.Element[] = Array(i)
+                                            for (let j = 0; j < i; j++) {
+                                                stars.push(<StarIcon key={j} className='starIcon' />)
+                                            }
+
                                             groupParams.push(createParamsLineElement(
                                                 <div>{stars}</div>,
                                                 numberWithCommas(rent[i]),
@@ -565,22 +670,30 @@ export default function MonopolyGame() {
                                 ))
 
                                 // set params
+                                setCardButtons(cardButtons)
                                 setGroupInfoParams(groupParams)
                                 setCardInfoParams(cardParams)
                             }
                         }
                         cardInfoDialog.current?.show()
+                        cardInfoDialog.current?.focus()
                     }}
                 >
                     {!isEvent && (
                         <div className='cell-label' style={{ backgroundColor: color }}>
-                            <div>{numberWithCommas(cardInfo.cost)}</div>
+                            <div mnpl-x={cardInfo.type === 'dice' ? 1 : undefined}>
+                                {numberWithCommas(cardInfo.cost)}
+                            </div>
                         </div>
                     )}
-                    <div className='cell-body'>
+                    <div className='cell-body' style={{ backgroundColor: backgroundColor, filter: cardInfo?.isSold ? 'brightness(80%)' : undefined }}>
                         <div className='cell-icon' style={{ backgroundImage: icon }}></div>
                     </div>
-                    <div className='cell-level'></div>
+                    {!isEvent && (
+                        <div className='cell-level' mnpl-sold={cardInfo.isSold ? 1 : undefined}>
+                            {cellLevel}
+                        </div>
+                    )}
                 </div>
             )
 
@@ -853,14 +966,47 @@ export default function MonopolyGame() {
 
 
 
+    const playersElements = !gameState ? [] : Object.keys(gameState.players).map((playerID, i) => {
+        const player = gameState.players[playerID]
+        const name = playerInfos.get(playerID)?.name ?? '???'
 
-    const playersElements = [
-        <div key={'player1'} className='playerCard'>first</div>,
-        <div key={'player2'} className='playerCard'>second</div>,
-        <div key={'player3'} className='playerCard'>third</div>,
-        <div key={'player4'} className='playerCard'>fourth</div>,
-        <div key={'player5'} className='playerCard'>fifth</div>
-    ]
+        return (
+            <div className='playerCard' mnpl-dead={player.isDead ? 1 : undefined} key={i}>
+                <p>{name}</p>
+                <p>
+                    {player.isDead ? '💀' : numberWithCommas(player.money)}
+                </p>
+                <div className='line' style={{ backgroundColor: player.color }}></div>
+            </div>
+        )
+    })
+
+
+
+    // todo delete temp players
+    playersElements.push((
+        <div className='playerCard' key={Math.random()}>
+            <p>asiuydgbliuakshjmd;lkiahs;lkdhasjklhd</p>
+            <p>99,999</p>
+            <div className='line' style={{ backgroundColor: 'red' }}></div>
+        </div>
+    ))
+    playersElements.push((
+        <div className='playerCard' mnpl-dead={1} key={Math.random()}>
+            <p>im dead bruh</p>
+            <p>💀</p>
+            <div className='line' style={{ backgroundColor: 'green' }}></div>
+        </div>
+    ))
+    playersElements.push((
+        <div className='playerCard' key={Math.random()}>
+            <p>asiuydgbliuakshjmd;lkiahs;lkdhasjklhd</p>
+            <p>0</p>
+            <div className='line' style={{ backgroundColor: 'red' }}></div>
+        </div>
+    ))
+
+
 
     const playerDotElements = !gameState ? [] : Object.keys(gameState.players).map((playerID, i) => {
         const info = gameState.players[playerID]
@@ -874,13 +1020,24 @@ export default function MonopolyGame() {
         )
     })
 
-    const chatMessages = !gameState ? [] : gameState.chatMessages.map(line => {
+    const chatMessages = !gameState ? [] : gameState.chatMessages.map((line, index) => {
 
         // replace {playerID:xxx} with JSX
         let elements = reactStringReplace(line, /{playerID:([^}]+)}/g, (playerID, i) => {
             const playerName = playerInfos.get(playerID)?.name
             const playerColor = gameState.players[playerID].color
-            return <span style={{ color: playerColor }}>{playerName ?? '???'}</span>
+            return <span key={i} style={{ color: playerColor }}>
+                {playerName ?? '???'}
+            </span>
+        })
+
+        // replace {mesPlayerID:xxx} with JSX
+        elements = reactStringReplace(elements, /{mesPlayerID:([^}]+)}/g, (playerID, i) => {
+            const playerName = playerInfos.get(playerID)?.name
+            const playerColor = gameState.players[playerID].color
+            return <span key={i} className='chatPlayerName' style={{ backgroundColor: playerColor }}>
+                {playerName ?? '???'}
+            </span>
         })
 
         // replace {cellID:xxx} with JSX
@@ -896,7 +1053,7 @@ export default function MonopolyGame() {
             return cellname
         })
 
-        return <p>{elements}</p>
+        return <p key={index}>{elements}</p>
     }).reverse()
 
 
@@ -931,18 +1088,18 @@ export default function MonopolyGame() {
                         </div>
                     </dialog>
 
-                    <dialog ref={cardInfoDialog} id='cardInfoDialog' onBlur={e => e.target.close()}>
+                    <dialog ref={cardInfoDialog} id='cardInfoDialog' onBlur={closeCardInfoDialog}>
                         <div className='cardInfoHeader'>
                             <h1>Card name</h1>
                             <h2>Group name</h2>
                         </div>
                         <div className='cardInfoBody'>
+                            <div className='cardButtons'>{cardButtons}</div>
                             <div className='groupDescription'>{cardGroupDescription}</div>
                             <div className='groupParams'>{groupInfoParams}</div>
                             <div className='cardParams'>{cardInfoParams}</div>
                         </div>
                     </dialog>
-
 
 
                     <div ref={playerDots}>
@@ -951,7 +1108,7 @@ export default function MonopolyGame() {
 
 
                     <div className='board' style={{ gridTemplateAreas: gridTemplateAreas }}>
-                        {monopolyMap && (
+                        {monopolyMap && gameState && (
                             <>
                                 {getCornerCardsElements()}
                                 {getLineCardsElements()}
@@ -959,8 +1116,15 @@ export default function MonopolyGame() {
                         )}
 
                         <div className='monopolyChat' style={{ gridArea: 'x' }}>
-                            {/* <div className='chatEnter'>===============</div> */}
-                            {chatMessages}
+                            <div className='chatInput' >
+                                <input ref={chatInput} placeholder='Введите сообщение' type='text' maxLength={512} onKeyDown={sendMessageInChat_onKeyDown} />
+                                <button onClick={sendMessageInChat}>
+                                    <div className='icon'></div>
+                                </button>
+                            </div>
+                            <div className='chatMessages'>
+                                {chatMessages}
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -1105,5 +1269,13 @@ async function getUserInfoByID(userID: string): Promise<PlayerInfo> {
             publicID: userID,
             name: 'unknown',
         }
+    }
+}
+
+function closeCardInfoDialog(e: React.FocusEvent<HTMLDialogElement, Element>) {
+    if (e.target.id === 'cardInfoDialog' &&
+        e.relatedTarget?.parentElement?.className !== 'cardButtons'
+    ) {
+        e.target.close()
     }
 }

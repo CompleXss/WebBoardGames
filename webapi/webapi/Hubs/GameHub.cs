@@ -112,7 +112,7 @@ public class GameHub<TGame> : Hub<IGameHub> where TGame : PlayableGame
 			: Results.BadRequest("You can not surrender.");
 	}
 
-	public async Task<IResult> Request(object? data)
+	public async Task<IResult> Request(string request, object? data)
 	{
 		var user = await GetUserInfoAsync();
 		if (user is null) return Results.Unauthorized();
@@ -124,28 +124,12 @@ public class GameHub<TGame> : Hub<IGameHub> where TGame : PlayableGame
 			return Results.BadRequest($"You don't have any active {gameService.GameName} game.");
 		}
 
-		return gameService.Request(user.PublicID, data)
+		return gameService.Request(user.PublicID, request, data)
 			? Results.Ok()
 			: Results.BadRequest("You can not make this request.");
 	}
 
 
-
-	public async Task<IResult> SendChatMessage(string message)
-	{
-		var user = await GetUserInfoAsync();
-		if (user is null) return Results.Unauthorized();
-
-		var game = gameService.GetUserGameInfo(user.PublicID);
-		if (game is null)
-		{
-			await Clients.Caller.NotAllowed();
-			return Results.BadRequest($"You don't have any active {gameService.GameName} game.");
-		}
-
-		gameService.SendChatMessage(game.Key, message);
-		return Results.Ok();
-	}
 
 	public async Task<IResult> GetGameState()
 	{

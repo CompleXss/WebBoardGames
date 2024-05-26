@@ -5,12 +5,22 @@ namespace webapi.Games.Monopoly;
 internal class MonopolyLogger(int capacity = 128)
 {
 	private const string PLAYER_ID = "playerID";
+	private const string MES_PLAYER_ID = "mesPlayerID";
 	private const string CELL_ID = "cellID";
 
 	public IReadOnlyList<string> Messages => messages;
 	private readonly List<string> messages = new(capacity);
 
 	private void Log(string message) => messages.Add(message);
+
+
+
+	public string SendChatMessage(string playerID, string message)
+	{
+		string result = GetPlayerSentMessageTemplate(playerID) + " — " + message;
+		Log(result);
+		return result;
+	}
 
 
 
@@ -53,7 +63,7 @@ internal class MonopolyLogger(int capacity = 128)
 	#endregion
 
 
-	#region Buy cell
+	#region Buy/sell cell
 	public void PlayerThinksAboutBuyingCell(string playerID, string cellID)
 	{
 		Log(GetPlayerTemplate(playerID) + $" попадает на {GetCellIDTemplate(cellID)} и задумывается о покупке");
@@ -67,6 +77,26 @@ internal class MonopolyLogger(int capacity = 128)
 	public void PlayerRefusesToBuyCell(string playerID, string cellID)
 	{
 		Log(GetPlayerTemplate(playerID) + " отказывается от покупки " + GetCellIDTemplate(cellID));
+	}
+
+	public void PlayerRebuysCell(string playerID, string cellID)
+	{
+		Log(GetPlayerTemplate(playerID) + " выкупает " + GetCellIDTemplate(cellID));
+	}
+
+	public void PlayerSellsCell(string playerID, string cellID)
+	{
+		Log(GetPlayerTemplate(playerID) + " закладывает " + GetCellIDTemplate(cellID));
+	}
+
+	public void PlayerUpgradesCell(string playerID, string cellID)
+	{
+		Log(GetPlayerTemplate(playerID) + $" строит филиал компании {GetCellIDTemplate(cellID)}. Аренда возрастает");
+	}
+
+	public void PlayerDowngradesCell(string playerID, string cellID)
+	{
+		Log(GetPlayerTemplate(playerID) + $" продает филиал компании {GetCellIDTemplate(cellID)}. Аренда уменьшается");
 	}
 	#endregion
 
@@ -116,6 +146,11 @@ internal class MonopolyLogger(int capacity = 128)
 	private static string GetPlayerTemplate(string playerID)
 	{
 		return $"{{{PLAYER_ID}:{playerID}}}";
+	}
+
+	private static string GetPlayerSentMessageTemplate(string playerID)
+	{
+		return $"{{{MES_PLAYER_ID}:{playerID}}}";
 	}
 
 	private static string GetCellIDTemplate(string cellID)

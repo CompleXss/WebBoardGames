@@ -92,11 +92,6 @@ public sealed class CheckersGame : PlayableGame
 		return true;
 	}
 
-	protected override bool Request_Internal(string playerID, object? data)
-	{
-		return false;
-	}
-
 
 
 	public (Draught[] myDraughts, Draught[] enemyDraughts) GetDraughtsRelativeTo(CheckersCellStates playerColor)

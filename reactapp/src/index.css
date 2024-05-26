@@ -2,9 +2,11 @@
 
 :root {
   --background: #171717;
+  --background-darker: #121212;
   --foreground: #272727;
   --yellow: #fddb3a;
   --orange: #f06b43;
+  --red-block: #ff4949;
   
   --almost-black: #222;
 

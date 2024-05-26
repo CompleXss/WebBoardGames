@@ -3,8 +3,7 @@
 internal readonly struct MonopolyPlayerAction
 {
 	public Type ActionType { get; init; }
-	public int? CellID { get; init; }
-	public int? Number { get; init; }
+	public string? CellID { get; init; }
 	public MonopolyContractInfo? ContractInfo { get; init; }
 
 
@@ -87,6 +86,7 @@ internal readonly struct MonopolyCellState
 internal readonly struct MonopolyGameStateDto
 {
 	public required string MyID { get; init; }
+	public required bool IsAbleToUpgrade { get; init; }
 	public required Dictionary<string, MonopolyPlayerStateDto> Players { get; init; }
 	public required Dictionary<string, MonopolyCellStateDto> CellStates { get; init; }
 	public required IReadOnlyList<string> ChatMessages { get; init; }

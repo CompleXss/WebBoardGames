@@ -1,7 +1,7 @@
 .monopolyContainer #cardInfoDialog[open] {
     display: block;
-    height: auto;
-    width: 30%;
+    height: fit-content;
+    width: 30cqw;
     container-type: inline-size;
     
     overflow: hidden;
@@ -95,4 +95,50 @@
     width: auto;
     vertical-align: bottom;
     color: gray;
+}
+
+
+
+/* buttons */
+.monopolyContainer #cardInfoDialog[open] .cardButtons {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    gap: 4cqw;
+    margin: 0;
+    padding: 0;
+    margin-bottom: -4cqw;
+}
+
+.monopolyContainer #cardInfoDialog[open] .cardButtons button {
+    width: 100%;
+    height: 14cqw;
+    border: none;
+    overflow: hidden;
+    cursor: pointer;
+    font-size: 6cqw;
+
+    color: white;
+    border-radius: 2cqw;
+    margin-bottom: 4cqw;
+}
+
+
+/* buy button */
+.monopolyContainer #cardInfoDialog[open] .cardButtons .upBtn {
+    background-color: #97cc65;
+}
+
+.monopolyContainer #cardInfoDialog[open] .cardButtons .upBtn:hover {
+    background-color: #89b164;
+}
+
+
+/* sell button */
+.monopolyContainer #cardInfoDialog[open] .cardButtons .downBtn {
+    background-color: #ff5b5b;
+}
+
+.monopolyContainer #cardInfoDialog[open] .cardButtons .downBtn:hover {
+    background-color: #db5050;
 }

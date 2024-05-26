@@ -7,8 +7,9 @@
     justify-content: center;
     align-items: center;
 
-    grid-template-rows: max(70px, 10%) 1fr;
+    grid-template-rows: auto 1fr;
     grid-template-columns: 100%;
+    align-items: start;
 
     gap: 0;
     flex-grow: 1;
@@ -21,22 +22,57 @@
     display: flex;
     flex-direction: row;
     justify-content: center;
-    align-items: center;
+    flex-wrap: wrap;
+    align-items: start;
     height: 100%;
     width: 100%;
 
     overflow: hidden;
-    background-color: greenyellow;
+    margin-top: 4px;
+    margin-bottom: 8px;
 }
 
 .monopolyContainer .playersContainer .playerCard {
     height: fit-content;
     width: 120px;
-    
+
     margin: 8px;
     padding: 8px 12px;
     border-radius: 8px;
+    background-color: var(--background);
+    box-shadow: 0 0 2px gray;
+}
+
+.monopolyContainer .playersContainer .playerCard p {
+    margin: 6px 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    text-wrap: nowrap;
+}
+
+.monopolyContainer .playersContainer .playerCard[mnpl-dead] {
+    color: darkgray;
     background-color: var(--foreground);
+    box-shadow: 0 0 2px lightgray;
+}
+
+.monopolyContainer .playersContainer .playerCard p:nth-of-type(2) {
+    user-select: none;
+}
+
+.monopolyContainer .playersContainer .playerCard:not([mnpl-dead]) p:nth-of-type(2)::before {
+    content: '$ ';
+}
+
+.monopolyContainer .playersContainer .playerCard:not([mnpl-dead]) p:nth-of-type(2):after {
+    content: ' k';
+    color: gray;
+}
+
+.monopolyContainer .playersContainer .playerCard .line {
+    width: 100%;
+    height: 3px;
+    border-radius: 4px;
 }
 
 
@@ -46,7 +82,7 @@
     display: flex;
     flex-direction: row;
     justify-content: center;
-    
+
     height: 100%;
     max-height: 100vw;
     width: 100%;
@@ -65,7 +101,8 @@
     position: relative;
     display: grid;
     box-sizing: border-box;
-    font-size: 14px; /* fallback */
+    font-size: 14px;
+    /* fallback */
     padding: 3%;
 
     aspect-ratio: 1;
@@ -122,7 +159,7 @@
     width: 160%;
 }
 
-.monopolyContainer .board .cell[mnpl-corner] .cell-icon  {
+.monopolyContainer .board .cell[mnpl-corner] .cell-icon {
     margin: auto;
     height: 100%;
     width: 70%;
@@ -152,6 +189,10 @@
 
 .monopolyContainer .board .cell .cell-label>div::after {
     content: 'k';
+}
+
+.monopolyContainer .board .cell .cell-label>div[mnpl-x]::after {
+    content: 'x';
 }
 
 
@@ -194,6 +235,73 @@
 
 
 
+/* cell level */
+.monopolyContainer .board .cell .cell-level {
+    position: absolute;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    /* overflow: hidden; */
+    overflow: visible;
+    font-size: 1.8cqw;
+
+    z-index: 1;
+}
+
+.monopolyContainer .board .cell .cell-level[mnpl-sold] {
+    color: white;
+    background-color: var(--red-block);
+    border-radius: 10cqw;
+}
+
+.monopolyContainer .board .cell .cell-level[mnpl-sold]::before {
+    display: inline-block;
+    content: ' ';
+    background-image: url(/public/icons/lock-white.svg);
+    background-size: contain;
+    background-repeat: no-repeat;
+    width: 1.5cqw;
+    height: 1.5cqw;
+    left: 0;
+    margin-right: 0.5cqw;
+}
+
+.monopolyContainer .board .cell[mnpl-line="0"] .cell-level[mnpl-sold] {
+    width: 80%;
+    margin: 0 10%;
+
+    height: 20%;
+    bottom: -10%;
+}
+
+.monopolyContainer .board .cell[mnpl-line="1"] .cell-level[mnpl-sold] {
+    width: 40%;
+    margin: -35% 0;
+    
+    height: 40%;
+    left: -20%;
+}
+
+.monopolyContainer .board .cell[mnpl-line="2"] .cell-level[mnpl-sold] {
+    width: 80%;
+    margin: 0 10%;
+
+    height: 20%;
+    top: -10%;
+}
+
+.monopolyContainer .board .cell[mnpl-line="3"] .cell-level[mnpl-sold] {
+    height: 40%;
+    margin: -35% 0;
+    
+    width: 40%;
+    right: -20%;
+}
+
+
+
+
+
 .monopolyContainer .diceCubeContainer {
     position: absolute;
     display: flex;
@@ -209,7 +317,7 @@
 
     top: 20%;
     left: 0;
-    
+
     z-index: 4;
     container-type: inline-size;
 }
@@ -224,7 +332,7 @@
     border-radius: 100%;
     z-index: 2;
 
-    transition: top 1000ms, left 1000ms;
+    transition: top 1s, left 1s;
     background-color: red;
 
     border: 0.1cqw solid black;
@@ -232,35 +340,104 @@
 
 
 
+/* game chat */
 .monopolyContainer .monopolyChat {
     display: flex;
     flex-direction: column-reverse;
     position: absolute;
     box-sizing: border-box;
-    overflow-x: hidden;
-    overflow-y: auto;
-    
+    font-size: 2cqw;
+
     aspect-ratio: 1;
     height: 100%;
     width: 100%;
 
     margin: 0;
     padding: 1.5cqw;
+    padding-top: 0;
+    padding-bottom: 0;
+}
+
+.monopolyContainer .monopolyChat .chatMessages {
+    display: flex;
+    flex-direction: column-reverse;
+    overflow-x: hidden;
+    overflow-y: auto;
 }
 
 .monopolyContainer .monopolyChat p {
-    font-size: 2cqw;
+    word-wrap: break-word;
 
     margin: 0;
     margin-top: 1cqw;
     margin-bottom: 1cqw;
 }
 
-.monopolyContainer .monopolyChat::-webkit-scrollbar {
+.monopolyContainer .monopolyChat .chatMessages::-webkit-scrollbar {
     width: 1cqw;
 }
 
-.monopolyContainer .monopolyChat::-webkit-scrollbar-thumb {
+.monopolyContainer .monopolyChat .chatMessages::-webkit-scrollbar-thumb {
     border-radius: 1cqw;
     background-color: var(--background);
+}
+
+.monopolyContainer .monopolyChat .chatPlayerName {
+    color: black;
+    font-weight: bold;
+    padding: 0.25cqw 0.5cqw;
+    border-radius: 0.5cqw;
+}
+
+
+/* chat input */
+.monopolyContainer .chatInput {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+
+    margin-top: 0.75cqw;
+    margin-bottom: 0.75cqw;
+}
+
+.monopolyContainer .chatInput input {
+    width: 100%;
+    margin: 0;
+
+    padding: 1.5cqw 2.5cqw;
+    outline: none;
+    border: none;
+    border-radius: 0;
+}
+
+.monopolyContainer .chatInput button {
+    border-radius: 0;
+    border: none;
+    cursor: pointer;
+
+    aspect-ratio: 1;
+    height: 100%;
+    background-color: transparent;
+    border-radius: 1cqw;
+    padding: 0;
+}
+
+.monopolyContainer .chatInput button:hover {
+    background-color: var(--background);
+}
+
+.monopolyContainer .chatInput button:active {
+    background-color: var(--background-darker);
+}
+
+
+
+.monopolyContainer .chatInput button .icon {
+    background-image: url(/public/icons/send.svg);
+    background-repeat: no-repeat;
+    background-size: contain;
+    background-position: center;
+
+    width: 100%;
+    height: 70%;
 }
