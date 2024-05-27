@@ -149,9 +149,9 @@ public class GameService<TGame> : IGameService where TGame : PlayableGame
 	private void CloseGame(PlayableGame game)
 	{
 		activeGames.RemoveBySwap(game);
-		RemoveAllUsersFromGameGroup(game);
 
 		typedHub.Clients.Group(game.Key).GameClosed(game.WinnerID);
+		RemoveAllUsersFromGameGroup(game);
 
 		logger.LogInformation("{gameName} game with key {gameKey} was CLOSED.", GameName, game.Key);
 		game.Dispose();
