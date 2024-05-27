@@ -17,15 +17,15 @@ public class MonopolyMap
 		public required string ID { get; init; }
 		public required string Type { get; init; }
 		public required List<Card> Cards { get; init; }
-		public required List<int>? Multipliers { get; init; }
+		public List<int>? Multipliers { get; init; }
 	}
 
 	public class Card
 	{
-		public required List<int>? Rent { get; init; }
+		public List<int>? Rent { get; init; }
 		public required int BuyCost { get; init; }
 		public required int SellCost { get; init; }
 		public required int RebuyCost { get; init; }
-		public required int? UpgradeCost { get; init; }
+		public int? UpgradeCost { get; init; }
 	}
 }
