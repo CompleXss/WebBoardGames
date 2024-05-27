@@ -1,5 +1,4 @@
-﻿using Newtonsoft.Json;
-using System.Text.RegularExpressions;
+﻿using System.Text.RegularExpressions;
 
 namespace webapi.Extensions;
 
@@ -8,7 +7,7 @@ public partial class Utils
 	public static T? ReadAsJson<T>(string filePath)
 	{
 		string json = File.ReadAllText(filePath);
-		return JsonConvert.DeserializeObject<T>(json);
+		return Json.Deserialize<T>(json);
 	}
 
 	public static string FormatNumberWithCommas(string number)
