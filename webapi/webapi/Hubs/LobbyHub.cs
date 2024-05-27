@@ -67,7 +67,6 @@ public class LobbyHub<TGame> : Hub<ILobbyHub> where TGame : PlayableGame
 		return Results.Ok(new { lobby });
 	}
 
-	// todo: new method. TEST
 	public async Task<IResult> CloseLobby()
 	{
 		var user = await GetUserInfoAsync();
