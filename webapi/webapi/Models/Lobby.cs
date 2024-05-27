@@ -29,7 +29,7 @@ public sealed class Lobby : IDisposable
 			lock (this) canConnect = value;
 		}
 	}
-	private bool canConnect;
+	private bool canConnect = true; // todo
 
 	public bool IsEmpty => PlayerIDs.Count == 0;
 	public bool IsFull => PlayerIDs.Count >= lobbyCore.MaxPlayers;
