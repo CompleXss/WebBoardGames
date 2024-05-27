@@ -68,7 +68,7 @@ public class LobbyHub<TGame> : Hub<ILobbyHub> where TGame : PlayableGame
 
 		var lobby = await lobbyService.TryCreateLobbyAsync(user.PublicID, Context.ConnectionId);
 		if (lobby is null)
-			return Results.BadRequest("Could not create lobby");
+			return Results.BadRequest("Не получилось создать лобби");
 
 		return Results.Ok(new { lobby });
 	}
@@ -80,8 +80,8 @@ public class LobbyHub<TGame> : Hub<ILobbyHub> where TGame : PlayableGame
 		if (user is null) return Results.Unauthorized();
 
 		var lobby = lobbyService.GetUserLobbyInfo(user.PublicID);
-		if (lobby is null) return Results.BadRequest("You're not in a lobby.");
-		if (lobby.HostID != user.PublicID) return Results.BadRequest("You're not a host of this lobby.");
+		if (lobby is null) return Results.BadRequest("Ошибка. Лобби не найдено");
+		if (lobby.HostID != user.PublicID) return Results.BadRequest("Вы не хост этого лобби");
 
 		await lobbyService.LeaveLobby(user.PublicID, Context.ConnectionId);
 		await lobbyService.CloseLobby(lobby.Key, true);
@@ -119,12 +119,12 @@ public class LobbyHub<TGame> : Hub<ILobbyHub> where TGame : PlayableGame
 		if (user is null) return Results.Unauthorized();
 
 		var lobby = lobbyService.GetUserLobbyInfo(user.PublicID);
-		if (lobby is null) return Results.BadRequest("You're not in a lobby.");
-		if (lobby.HostID != user.PublicID) return Results.BadRequest("You're not a host of this lobby.");
-		if (!lobby.IsEnoughPlayersToStart) return Results.BadRequest("Not enough players to start the game.");
+		if (lobby is null) return Results.BadRequest("Ошибка. Лобби не найдено");
+		if (lobby.HostID != user.PublicID) return Results.BadRequest("Вы не хост этого лобби");
+		if (!lobby.IsEnoughPlayersToStart) return Results.BadRequest("Недостаточно игроков для начала");
 
 		bool gameStarted = gameService.TryStartNewGame(lobby.PlayerIDs, lobby.Settings);
-		if (!gameStarted) return Results.BadRequest("Could not start the game.");
+		if (!gameStarted) return Results.BadRequest("Не получилось запустить игру");
 
 		await Clients.Group(lobby.Key).GameStarted();
 		await lobbyService.CloseLobby(lobby.Key, false);
