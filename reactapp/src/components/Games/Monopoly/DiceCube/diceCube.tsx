@@ -7,8 +7,8 @@ interface Props {
 
 export const DiceCube = forwardRef<HTMLDivElement, Props>((props, ref) => {
     return (
-        <div hidden={props.hidden} className='diceContainer'>
-            <div ref={ref} className="dice">
+        <div className='diceContainer'>
+            <div ref={ref} hidden={props.hidden} className="dice">
                 <div className="front">
                     <span className="dot dot1"></span>
                 </div>
