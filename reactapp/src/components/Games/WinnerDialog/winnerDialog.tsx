@@ -10,6 +10,7 @@ const CLOSE_AFTER_SECONDS = 5
 export function useWinnerDialog() {
     const navigate = useNavigate()
     const winnerBanner = useRef<HTMLDialogElement>(null)
+    const returnButton = useRef<HTMLButtonElement>(null)
     const [loadingWinnerName, setLoadingWinnerName] = useState(true)
     const [winnerName, setWinnerName] = useState('?')
     const [closingIn, setClosingIn] = useState(CLOSE_AFTER_SECONDS)
@@ -20,8 +21,13 @@ export function useWinnerDialog() {
             return
         }
 
+        if (!returnButton.current) {
+            console.error('Не могу найти returnButton (winnerDialog)')
+            return
+        }
+
         if (!winnerBanner.current) {
-            console.error('Не могу найти winnerBanner')
+            console.error('Не могу найти winnerBanner (winnerDialog)')
             return
         }
 
@@ -38,6 +44,10 @@ export function useWinnerDialog() {
             }
         }, 1000)
 
+        returnButton.current.onclick = () => {
+            clearInterval(timer)
+            navigate('/')
+        }
         getWinnerName(winnerID)
     }
 
@@ -61,7 +71,7 @@ export function useWinnerDialog() {
                 <LoadingContent loading={loadingWinnerName} content={
                     <p className='winnerName'>{winnerName}</p>
                 } />
-                <button onClick={() => navigate('/')}>На главную</button>
+                <button ref={returnButton}>На главную</button>
                 <p>Игра закроется через {closingIn}...</p>
             </dialog>
         )
