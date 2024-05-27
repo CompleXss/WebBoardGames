@@ -35,9 +35,9 @@ export function useWinnerDialog() {
 
         let counter = CLOSE_AFTER_SECONDS
         const timer = setInterval(() => {
+            counter--
             setClosingIn(counter)
 
-            counter--
             if (counter === 0) {
                 clearInterval(timer)
                 navigate('/')
