@@ -5,7 +5,7 @@
 -- Dumped from database version 16.2
 -- Dumped by pg_dump version 16.2
 
--- Started on 2024-05-03 16:47:45
+-- Started on 2024-05-27 03:13:19
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -19,12 +19,45 @@ SET client_min_messages = warning;
 SET row_security = off;
 
 --
--- TOC entry 235 (class 1255 OID 16903)
--- Name: update_user_game_statistics(); Type: FUNCTION; Schema: public; Owner: -
+-- TOC entry 236 (class 1255 OID 17235)
+-- Name: decrement_user_game_statistics(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.update_user_game_statistics() RETURNS trigger
-    LANGUAGE plpgsql LEAKPROOF
+CREATE FUNCTION public.decrement_user_game_statistics() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$BEGIN
+
+if OLD is not NULL then
+
+	update user_game_statistics ugs
+	set play_count = play_count - 1, win_count = win_count - (case when gp.is_winner is true then 1 else 0 end)
+	from game_players gp
+	where ugs.game_id = OLD.game_id and ugs.user_id = gp.user_id and gp.game_history_id = OLD.id;
+
+	raise notice 'Updated user_game_statistics (update: decrement)';
+end if;
+
+return OLD; -- continue operation
+
+END$$;
+
+
+--
+-- TOC entry 4836 (class 0 OID 0)
+-- Dependencies: 236
+-- Name: FUNCTION decrement_user_game_statistics(); Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON FUNCTION public.decrement_user_game_statistics() IS 'row-level game_history BEFORE trigger';
+
+
+--
+-- TOC entry 235 (class 1255 OID 17237)
+-- Name: increment_user_game_statistics(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.increment_user_game_statistics() RETURNS trigger
+    LANGUAGE plpgsql
     AS $$DECLARE
 	_user_id			bigint;
 	_game_id			integer;
@@ -42,13 +75,13 @@ if NEW is not NULL then
 		set play_count = play_count + 1, win_count = win_count + _win_count_to_add
 		where user_id = _user_id and game_id = _game_id;
 		
-		raise notice 'NEW: update';
+		raise notice 'Updated user_game_statistics (update: increment)';
 	else
 		insert
 		into user_game_statistics (user_id, game_id, play_count, win_count)
 		values (_user_id, _game_id, 1, _win_count_to_add);
 		
-		raise notice 'NEW: insert';
+		raise notice 'Updated user_game_statistics (insert)';
 	end if;
 	
 	--raise notice 'user_id: %', _user_id;
@@ -58,36 +91,9 @@ if NEW is not NULL then
 	
 end if;
 
-if OLD is not NULL then
-	_user_id = OLD.user_id;
-	_game_id = (select game_id from game_history gh where gh.id = OLD.game_history_id);
-	_win_count_to_add = case when OLD.is_winner then -1 else 0 end;
-	
-	-- if entry exists -> update. if not -> do nothing
-	update user_game_statistics
-	set play_count = play_count - 1, win_count = win_count + _win_count_to_add
-	where user_id = _user_id and game_id = _game_id;
-	
-	raise notice 'OLD: update';
-	
-	--raise notice 'user_id: %', _user_id;
-	--raise notice 'game_id: %', _game_id;
-	--raise notice 'play_count_to_add: %', -1;
-	--raise notice 'win_count_to_add: %', _win_count_to_add;
-end if;
-
 return NEW; -- result is ignored since this is an AFTER trigger
 
 END$$;
-
-
---
--- TOC entry 4834 (class 0 OID 0)
--- Dependencies: 235
--- Name: FUNCTION update_user_game_statistics(); Type: COMMENT; Schema: public; Owner: -
---
-
-COMMENT ON FUNCTION public.update_user_game_statistics() IS 'row-level AFTER trigger';
 
 
 SET default_tablespace = '';
@@ -220,7 +226,7 @@ ALTER TABLE public.users ALTER COLUMN id ADD GENERATED ALWAYS AS IDENTITY (
 
 
 --
--- TOC entry 4676 (class 2606 OID 16589)
+-- TOC entry 4677 (class 2606 OID 16589)
 -- Name: game_history game_history_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -229,7 +235,7 @@ ALTER TABLE ONLY public.game_history
 
 
 --
--- TOC entry 4678 (class 2606 OID 16599)
+-- TOC entry 4679 (class 2606 OID 16599)
 -- Name: game_players game_players_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -238,7 +244,7 @@ ALTER TABLE ONLY public.game_players
 
 
 --
--- TOC entry 4670 (class 2606 OID 16564)
+-- TOC entry 4671 (class 2606 OID 16564)
 -- Name: games games_name_key; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -247,7 +253,7 @@ ALTER TABLE ONLY public.games
 
 
 --
--- TOC entry 4672 (class 2606 OID 16562)
+-- TOC entry 4673 (class 2606 OID 16562)
 -- Name: games games_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -256,7 +262,7 @@ ALTER TABLE ONLY public.games
 
 
 --
--- TOC entry 4674 (class 2606 OID 16573)
+-- TOC entry 4675 (class 2606 OID 16573)
 -- Name: user_game_statistics user_game_statistics_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -265,7 +271,7 @@ ALTER TABLE ONLY public.user_game_statistics
 
 
 --
--- TOC entry 4668 (class 2606 OID 16414)
+-- TOC entry 4669 (class 2606 OID 16414)
 -- Name: user_refresh_token user_refresh_token_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -274,7 +280,7 @@ ALTER TABLE ONLY public.user_refresh_token
 
 
 --
--- TOC entry 4662 (class 2606 OID 16615)
+-- TOC entry 4663 (class 2606 OID 16615)
 -- Name: users users_login_key; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -283,7 +289,7 @@ ALTER TABLE ONLY public.users
 
 
 --
--- TOC entry 4664 (class 2606 OID 16405)
+-- TOC entry 4665 (class 2606 OID 16405)
 -- Name: users users_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -292,7 +298,7 @@ ALTER TABLE ONLY public.users
 
 
 --
--- TOC entry 4666 (class 2606 OID 16613)
+-- TOC entry 4667 (class 2606 OID 16613)
 -- Name: users users_public_id_key; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -301,15 +307,23 @@ ALTER TABLE ONLY public.users
 
 
 --
--- TOC entry 4685 (class 2620 OID 16908)
+-- TOC entry 4687 (class 2620 OID 17238)
 -- Name: game_players update_user_game_statistics_after_game_players_change; Type: TRIGGER; Schema: public; Owner: -
 --
 
-CREATE TRIGGER update_user_game_statistics_after_game_players_change AFTER INSERT OR DELETE OR UPDATE ON public.game_players FOR EACH ROW EXECUTE FUNCTION public.update_user_game_statistics();
+CREATE TRIGGER update_user_game_statistics_after_game_players_change AFTER INSERT OR DELETE OR UPDATE ON public.game_players FOR EACH ROW EXECUTE FUNCTION public.increment_user_game_statistics();
 
 
 --
--- TOC entry 4682 (class 2606 OID 16590)
+-- TOC entry 4686 (class 2620 OID 17240)
+-- Name: game_history update_user_game_statistics_before_game_players_change; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER update_user_game_statistics_before_game_players_change BEFORE DELETE ON public.game_history FOR EACH ROW EXECUTE FUNCTION public.decrement_user_game_statistics();
+
+
+--
+-- TOC entry 4683 (class 2606 OID 16590)
 -- Name: game_history game_history_game_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -318,7 +332,7 @@ ALTER TABLE ONLY public.game_history
 
 
 --
--- TOC entry 4683 (class 2606 OID 16600)
+-- TOC entry 4684 (class 2606 OID 16600)
 -- Name: game_players game_players_game_history_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -327,7 +341,7 @@ ALTER TABLE ONLY public.game_players
 
 
 --
--- TOC entry 4684 (class 2606 OID 16605)
+-- TOC entry 4685 (class 2606 OID 16605)
 -- Name: game_players game_players_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -336,7 +350,7 @@ ALTER TABLE ONLY public.game_players
 
 
 --
--- TOC entry 4680 (class 2606 OID 16579)
+-- TOC entry 4681 (class 2606 OID 16579)
 -- Name: user_game_statistics user_game_statistics_game_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -345,7 +359,7 @@ ALTER TABLE ONLY public.user_game_statistics
 
 
 --
--- TOC entry 4681 (class 2606 OID 16574)
+-- TOC entry 4682 (class 2606 OID 16574)
 -- Name: user_game_statistics user_game_statistics_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -354,7 +368,7 @@ ALTER TABLE ONLY public.user_game_statistics
 
 
 --
--- TOC entry 4679 (class 2606 OID 16415)
+-- TOC entry 4680 (class 2606 OID 16415)
 -- Name: user_refresh_token user_refresh_token_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -362,7 +376,7 @@ ALTER TABLE ONLY public.user_refresh_token
     ADD CONSTRAINT user_refresh_token_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id) ON DELETE CASCADE;
 
 
--- Completed on 2024-05-03 16:47:45
+-- Completed on 2024-05-27 03:13:19
 
 --
 -- PostgreSQL database dump complete
