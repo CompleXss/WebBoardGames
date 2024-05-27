@@ -129,9 +129,9 @@ public sealed class CheckersGame : PlayableGame
 
 	protected override bool TryUpdateState_Internal(string playerID, object data, out string error)
 	{
-		if (data is not CheckersMove[] moves)
+		if (!TryDeserializeData(data, out CheckersMove[]? moves))
 		{
-			error = "Неправильные входные данные.";
+			error = "Неправильные данные хода.";
 			return false;
 		}
 

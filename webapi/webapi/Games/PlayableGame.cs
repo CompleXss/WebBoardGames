@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.SignalR;
+using System.Diagnostics.CodeAnalysis;
 using webapi.Extensions;
 using webapi.Models;
 
@@ -63,7 +64,7 @@ public abstract class PlayableGame : IDisposable
 			return;
 		}
 
-		this.Key = key.ToString();
+		this.Key = key.ToString("D4");
 		this.GameStarted = DateTime.Now;
 
 		this.playerIDs = playerIDs.ToArray();
@@ -161,6 +162,20 @@ public abstract class PlayableGame : IDisposable
 	}
 	protected abstract bool TryUpdateState_Internal(string playerID, object data, out string error);
 
+	protected bool TryDeserializeData<T>(object data, [NotNullWhen(true)] out T? result)
+	{
+		try
+		{
+			string str = data?.ToString()!;
+			result = Json.Deserialize<T>(str);
+			return result is not null;
+		}
+		catch (Exception)
+		{
+			result = default;
+			return false;
+		}
+	}
 
 
 	public bool ConnectPlayer(string playerID, string connectionID)
@@ -251,6 +266,7 @@ public abstract class PlayableGame : IDisposable
 	public PlayableGameInfo GetInfo() => new()
 	{
 		Key = this.Key,
+		GameName = gameCore.GameName,
 		PlayerIDs = this.PlayerIDs.ToArray(),
 		PlayersConnected = this.ConnectionIDs.Select(x => x is not null).ToArray(),
 		WinnerID = this.WinnerID,

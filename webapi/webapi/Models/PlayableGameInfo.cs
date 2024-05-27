@@ -3,6 +3,7 @@
 public record PlayableGameInfo
 {
 	public required string Key { get; init; }
+	public required GameNames GameName { get; init; }
 	public required IReadOnlyList<string> PlayerIDs { get; init; }
 	public required IReadOnlyList<bool> PlayersConnected { get; init; }
 	public required string? WinnerID { get; init; }
