@@ -1,10 +1,10 @@
 export enum Games {
     checkers = 'checkers',
+    monopoly = 'monopoly',
 }
 
 export type User = {
     publicID: string
-    login: string
     name: string
 }
 

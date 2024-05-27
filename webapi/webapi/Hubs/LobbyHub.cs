@@ -33,16 +33,6 @@ public class LobbyHub<TGame> : Hub<ILobbyHub> where TGame : PlayableGame
 			return;
 		}
 
-		// TODO: Возможность зайти в то же лобби с другого устройства?
-
-		//var lobby = lobbyService.GetUserLobby(user.ID);
-
-		//if (lobby is not null)
-		//{
-		//	await Clients.Caller.SendAsync(LOBBY_INFO, new { lobby, isHost = lobby.HostID == user.ID });
-		//	return;
-		//}
-
 		//logger.UserConnectedToGameLobbyHub(user.Name, user.PublicID, GAME_NAME);
 	}
 
@@ -65,6 +55,10 @@ public class LobbyHub<TGame> : Hub<ILobbyHub> where TGame : PlayableGame
 	{
 		var user = await GetUserInfoAsync();
 		if (user is null) return Results.Unauthorized();
+
+		var existingLobby = lobbyService.GetUserLobbyInfo(user.PublicID);
+		if (existingLobby is not null)
+			return Results.BadRequest("Вы уже находитесь в этом лобби");
 
 		var lobby = await lobbyService.TryCreateLobbyAsync(user.PublicID, Context.ConnectionId);
 		if (lobby is null)

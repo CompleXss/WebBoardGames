@@ -9,7 +9,7 @@ import monopolyMap from './monopoly_map.json'
 import cardsInfo from './monopoly_cards.json'
 import { GameNames } from 'src/utilities/GameNames';
 import { StringMap, numberWithCommas, sleep } from 'src/utilities/utils';
-import { PlayerInfo } from '../Models';
+import { User as PlayerInfo } from 'src/utilities/Api_DataTypes';
 import { ReactComponent as DiceIcon } from 'src/svg/dice.svg'
 import { ReactComponent as StarIcon } from 'src/svg/star.svg'
 import { DiceCube } from './DiceCube/diceCube';

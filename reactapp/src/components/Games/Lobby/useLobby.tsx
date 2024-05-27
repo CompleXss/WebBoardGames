@@ -3,11 +3,11 @@ import { useEffect, useRef, useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { HubConnection } from "@microsoft/signalr"
 import { useWebsocketConnection } from "src/utilities/useWebsocketHook"
-import { PlayerInfo } from "src/components/Games/Models"
+import { User as PlayerInfo } from "src/utilities/Api_DataTypes"
+import { getImageUrl } from "src/utilities/frontend.utils"
 import ENDPOINTS from "src/utilities/Api_Endpoints"
 import Loading from "src/components/Loading/loading"
 import './lobby.css'
-import { getImageUrl } from "src/utilities/frontend.utils"
 
 // TODO: при обновлении страницы лобби закрывается
 // TODO: lobby key click to copy
@@ -15,9 +15,8 @@ import { getImageUrl } from "src/utilities/frontend.utils"
 const CREATE_LOBBY = 'CreateLobby'
 const ENTER_LOBBY = 'EnterLobby'
 const LEAVE_LOBBY = 'LeaveLobby'
+const CLOSE_LOBBY = 'CloseLobby'
 const KEY_LENGTH = 4
-
-// todo: onhostchanged
 
 interface LobbyInfo {
     hostID: string
@@ -28,10 +27,9 @@ interface LobbyInfo {
 export function useLobby(gameName: string, title: string, publicBackgroundPath: string) {
     const navigate = useNavigate()
 
-    const [lobbyKey, setLobbyKey] = useState<string>()
+    const [lobbyInfo, setLobbyInfo] = useState<LobbyInfo | undefined>()
     const [isHost, setIsHost] = useState(false)
     const [lobbyPlayerInfos, setLobbyPlayerInfos] = useState<PlayerInfo[]>([])
-    const [lobbyPlayers, setLobbyPlayers] = useState<JSX.Element[]>([])
 
     const joinLobbyDialog = useRef<HTMLDialogElement>(null)
     const lobbyKeyInput = useRef<HTMLInputElement>(null)
@@ -57,15 +55,23 @@ export function useLobby(gameName: string, title: string, publicBackgroundPath: 
 
         connection.on('UserDisconnected', userID => {
             setLobbyPlayerInfos(infos => {
-                console.log(infos)
                 return infos.filter(x => x.publicID !== userID)
             })
         })
 
         connection.on('LobbyClosed', () => {
             clearLobbyInfo()
+            alert('Комната была закрыта!')
+        })
 
-            alert('Комната была закрыта!') // TODO: change alert to smth nice
+        connection.on('HostChanged', async hostID => {
+            if (!hostID) return
+
+            setLobbyInfo(info => {
+                if (!info) return info
+                info.hostID = hostID
+                return { ...info }
+            })
         })
 
         connection.on('GameStarted', () => {
@@ -77,6 +83,16 @@ export function useLobby(gameName: string, title: string, publicBackgroundPath: 
         connection.onclose(() => clearLobbyInfo())
     }
 
+    useEffect(() => {
+        if (!lobbyInfo) return
+
+        getMyUserInfo()
+            .then(myInfo => {
+                setIsHost(myInfo.publicID === lobbyInfo.hostID)
+            })
+            .catch(_ => { })
+    }, [lobbyInfo])
+
 
 
     // lobby info functions
@@ -84,27 +100,22 @@ export function useLobby(gameName: string, title: string, publicBackgroundPath: 
         if (!lobby) {
             return false
         }
-        setLobbyKey(lobby.key)
+        setLobbyInfo(lobby)
 
         const playerInfos = await Promise.all(lobby.playerIDs.map(async id => {
             return await getUserInfoByID(id)
         }))
 
         setLobbyPlayerInfos(playerInfos)
+
         return true
     }
 
     function clearLobbyInfo() {
-        setLobbyKey(undefined)
+        setLobbyInfo(undefined)
         setIsHost(false)
         setLobbyPlayerInfos([])
     }
-
-    useEffect(() => {
-        setLobbyPlayers(lobbyPlayerInfos.map((player, index) => {
-            return <p key={index}>{player.name}</p>
-        }))
-    }, [lobbyPlayerInfos])
 
 
 
@@ -124,7 +135,6 @@ export function useLobby(gameName: string, title: string, publicBackgroundPath: 
                     clearLobbyInfo()
                     console.error('Could not get lobbyinfo!')
                 }
-                setIsHost(true)
             })
             .catch(e => console.log(e))
     }
@@ -195,6 +205,14 @@ export function useLobby(gameName: string, title: string, publicBackgroundPath: 
             .catch(e => console.log(e))
     }
 
+    function closeLobby() {
+        if (!connection) return
+
+        connection.invoke(CLOSE_LOBBY)
+            .then(clearLobbyInfo)
+            .catch(e => console.log(e))
+    }
+
     function startGame() {
         showStartGameWarningText(false)
 
@@ -212,13 +230,21 @@ export function useLobby(gameName: string, title: string, publicBackgroundPath: 
         if (e.key === 'Enter') joinLobby()
     }
 
+    const lobbyPlayers = lobbyPlayerInfos.map((player, index) => {
+        let name = player.name
+        if (lobbyInfo?.hostID && lobbyInfo.hostID === player.publicID) {
+            name += ' 👑'
+        }
+        return <p key={index}>{name}</p>
+    })
+
 
 
     if (loading) return { element: <Loading /> }
     if (error) return { element: <h1>{error}</h1> }
 
     // Created lobby room
-    if (lobbyKey && lobbyPlayers.length > 0) return {
+    if (lobbyInfo?.key && lobbyPlayers.length > 0) return {
         element: (
             <div className="lobbyWrapper open">
                 <h1>{title}</h1>
@@ -226,7 +252,7 @@ export function useLobby(gameName: string, title: string, publicBackgroundPath: 
 
                 <div className="lobbyKeyWrapper">
                     <h2>Код комнаты</h2>
-                    <h1 className="lobbyKey">{lobbyKey}</h1>
+                    <h1 className="lobbyKey">{lobbyInfo.key}</h1>
                 </div>
 
                 <div className="playerListButtonsWrapper">
@@ -239,7 +265,9 @@ export function useLobby(gameName: string, title: string, publicBackgroundPath: 
                     <div className="btnWrapper">
                         <p ref={startGameWarningMessage}>Тут будут ошибки</p>
                         {isHost && <button className="startGameBtn" onClick={startGame}>Начать игру</button>}
-                        <button className="exitBtn" onClick={leaveLobby}>{isHost ? 'Закрыть комнату' : 'Покинуть комнату'}<span className="icon"></span></button>
+                        <button className="exitBtn" onClick={isHost ? closeLobby : leaveLobby}>
+                            {isHost ? 'Закрыть комнату' : 'Покинуть комнату'}<span className="icon"></span>
+                        </button>
                     </div>
                 </div>
             </div>
@@ -273,10 +301,24 @@ async function getUserInfoByID(userID: string): Promise<PlayerInfo> {
         return response.data as PlayerInfo
 
     } catch (error) {
-        console.log('Can not get user info!')
+        console.log('Could not get user info!')
 
         return {
             publicID: userID,
+            name: 'unknown',
+        }
+    }
+}
+
+async function getMyUserInfo(): Promise<PlayerInfo> {
+    try {
+        const response = await axios.get(ENDPOINTS.Users.GET_USER_INFO_URL)
+        return response.data as PlayerInfo
+    } catch (error) {
+        console.log('Could not get user info!')
+
+        return {
+            publicID: '',
             name: 'unknown',
         }
     }

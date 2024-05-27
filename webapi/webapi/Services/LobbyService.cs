@@ -64,14 +64,14 @@ public class LobbyService<TGame> : ILobbyService where TGame : PlayableGame
 	public async Task<(LobbyInfo? lobby, IResult errorResult)> TryEnterLobbyAsync(string userID, string connectionID, string lobbyKey)
 	{
 		if (GetUserLobby(userID) is not null)
-			return (null, Results.BadRequest("You are already in a lobby."));
+			return (null, Results.BadRequest("Вы уже находитесь в лобби"));
 
 		var lobby = GetLobbyByKey(lobbyKey);
 		if (lobby is null)
-			return (null, Results.NotFound($"Lobby with the given key ({lobbyKey}) does not exist."));
+			return (null, Results.NotFound($"Лобби с данным кодом ({lobbyKey}) не существует"));
 
 		if (!lobby.TryAddPlayer(userID, connectionID))
-			return (null, Results.BadRequest("Lobby is already full."));
+			return (null, Results.BadRequest("В лобби не осталось мест"));
 
 		await hub.Clients.Group(lobbyKey).UserConnected(userID);
 		await hub.Groups.AddToGroupAsync(connectionID, lobbyKey);
