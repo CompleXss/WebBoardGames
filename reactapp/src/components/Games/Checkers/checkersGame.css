@@ -130,56 +130,6 @@
 
 
 
-/* WINNER BANNER */
-.checkersContainer dialog {
-    text-align: center;
-
-    width: 100%;
-
-    border: none;
-
-    border-radius: 16px;
-    background-color: var(--background);
-    color: whitesmoke;
-}
-
-.checkersContainer dialog h1 {
-    font-size: 3em;
-    font-weight: bold;
-}
-
-.checkersContainer dialog::backdrop {
-    background-color: rgba(0, 0, 0, 0.4);
-}
-
-.checkersContainer .winnerName {
-    font-size: 2em;
-    word-break: break-all;
-}
-
-.checkersContainer dialog button {
-    border: none;
-    cursor: pointer;
-    font-size: 1.2em;
-
-    margin-bottom: 12px;
-    padding: 12px 24px;
-
-    border-radius: 8px;
-    color: black;
-    background-color: var(--white-btn);
-}
-
-.checkersContainer dialog button:hover {
-    background-color: var(--white-btn-hover);
-}
-
-.checkersContainer dialog button:active {
-    background-color: var(--white-btn-active);
-}
-
-
-
 
 
 

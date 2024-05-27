@@ -1,9 +1,13 @@
 import { forwardRef } from 'react'
 import './diceCube.css'
 
-export const DiceCube = forwardRef<HTMLDivElement>((props, ref) => {
+interface Props {
+    hidden?: boolean
+}
+
+export const DiceCube = forwardRef<HTMLDivElement, Props>((props, ref) => {
     return (
-        <div className='diceContainer'>
+        <div hidden={props.hidden} className='diceContainer'>
             <div ref={ref} className="dice">
                 <div className="front">
                     <span className="dot dot1"></span>

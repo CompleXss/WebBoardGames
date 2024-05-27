@@ -16,6 +16,7 @@ import { ReactComponent as StarIcon } from 'src/svg/star.svg'
 import { DiceCube } from './DiceCube/diceCube';
 import { cumulativeOffset } from 'src/utilities/frontend.utils';
 import reactStringReplace from 'react-string-replace'
+import { useWinnerDialog } from '../WinnerDialog/winnerDialog';
 import './monopolyGame.css'
 
 interface GameState {
@@ -99,12 +100,10 @@ export default function MonopolyGame() {
     const diceCube2 = useRef<HTMLDivElement>(null)
     const playerDots = useRef<HTMLDivElement>(null)
     const [playerDotPositions, setPlayerDotPositions] = useState<Map<string, { x: number, y: number }>>()
+    const { showWinner, element: winnerDialog, } = useWinnerDialog()
 
     useEffect(() => {
         document.title = 'Монополия'
-
-        if (diceCube1.current) diceCube1.current.hidden = true
-        if (diceCube2.current) diceCube2.current.hidden = true
     }, [])
 
     useEffect(() => {
@@ -131,9 +130,9 @@ export default function MonopolyGame() {
         }
         requestLastOffer()
 
-        if (gameState) loadPlayerInfos(gameState)
-
         if (!gameState?.players) return
+
+        loadPlayerInfos(gameState)
 
         const playerIDs = Object.keys(gameState.players)
         for (const playerID of playerIDs) {
@@ -219,20 +218,12 @@ export default function MonopolyGame() {
 
         connectionOnExclusive(connection, 'GameClosed', winnerID => {
             if (!winnerID) {
-                setGameState(undefined)
                 navigate('/')
                 return
             }
 
             // todo gameClosed
-            console.log('WINNER')
-            console.log('WINNER')
-            console.log('WINNER')
-            console.log(winnerID)
-
-
-            // BEFORE navigate('/')
-            // setGameState(undefined)
+            showWinner(winnerID)
         })
 
 
@@ -355,7 +346,7 @@ export default function MonopolyGame() {
                     console.log(x.value)
                 }
             })
-            .catch(_ => {})
+            .catch(_ => { })
     }
 
 
@@ -1191,12 +1182,12 @@ export default function MonopolyGame() {
 
 
 
-    // if (loading || reloading) return <Loading />
-    // if (error) return error
+    if (loading || reloading) return <Loading />
+    if (error) return error
 
     return (
         <div className='monopolyContainer'>
-            {/* <dialog></dialog> */}
+            {winnerDialog}
 
             <div className='playersContainer'>
                 {playersElements}
@@ -1206,8 +1197,8 @@ export default function MonopolyGame() {
                 <div className='boardWrapper'>
 
                     <div className='diceCubeContainer'>
-                        <DiceCube ref={diceCube1}></DiceCube>
-                        <DiceCube ref={diceCube2}></DiceCube>
+                        <DiceCube hidden ref={diceCube1}></DiceCube>
+                        <DiceCube hidden ref={diceCube2}></DiceCube>
                     </div>
 
                     <dialog ref={clickDialog} id='clickDialog'>

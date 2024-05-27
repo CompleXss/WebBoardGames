@@ -7,6 +7,7 @@ import { GameNames } from 'src/utilities/GameNames';
 import LoadingContent from '../../LoadingContent/loadingContent';
 import ENDPOINTS from '../../../utilities/Api_Endpoints';
 import Loading from "../../Loading/loading";
+import { useWinnerDialog } from '../WinnerDialog/winnerDialog';
 import './checkersGame.css'
 
 interface DraughtInfo {
@@ -33,11 +34,7 @@ export default function CheckersGame() {
     const [fromCell, setFromCell] = useState<{ x: number, y: number }>()
     const enemyIsOffline = useRef<HTMLHeadingElement>(null)
     const whosTurn = useRef<HTMLHeadingElement>(null)
-
-    const [loadingWinnerName, setLoadingWinnerName] = useState(true)
-    const winnerBanner = useRef<HTMLDialogElement>(null)
-    const winnerName = useRef<HTMLParagraphElement>(null)
-    const gameIsClosingIn = useRef<HTMLParagraphElement>(null)
+    const { showWinner, element: winnerDialog, } = useWinnerDialog()
 
     useEffect(() => {
         document.title = 'Шашки'
@@ -83,35 +80,7 @@ export default function CheckersGame() {
 
         // Определение победителя
         connection.on('GameClosed', winnerID => {
-            if (!winnerID) {
-                navigate('/')
-                return
-            }
-
-            if (!winnerBanner.current) {
-                console.error('Не могу найти winnerBanner')
-                return
-            }
-            if (!gameIsClosingIn.current) {
-                console.error('Не могу найти gameIsClosingIn')
-                return
-            }
-
-            winnerBanner.current.showModal()
-
-            let counter = 5
-            const timer = setInterval(() => {
-                if (!gameIsClosingIn.current) return
-                gameIsClosingIn.current.textContent = `Игра закроется через ${counter}...`
-
-                counter--
-                if (counter === 0) {
-                    clearInterval(timer)
-                    navigate('/')
-                }
-            }, 1000)
-
-            getWinnerName(winnerID)
+            showWinner(winnerID)
         })
     }
 
@@ -151,18 +120,6 @@ export default function CheckersGame() {
 
     }, [gameData])
 
-
-
-    function getWinnerName(winnerID: string) {
-        setLoadingWinnerName(true)
-        axios.get(ENDPOINTS.Users.GET_USER_INFO_BY_ID_URL + winnerID)
-            .then(response => {
-                if (winnerName.current)
-                    winnerName.current.textContent = response.data.name
-                setLoadingWinnerName(false)
-            })
-            .catch(e => console.log(e))
-    }
 
 
     function spawnCells() {
@@ -273,14 +230,7 @@ export default function CheckersGame() {
     if (error) return error
 
     return <div className="checkersContainer">
-        <dialog ref={winnerBanner} onClose={() => navigate('/')}>
-            <h1>Победитель</h1>
-            <LoadingContent loading={loadingWinnerName} content={
-                <p className='winnerName' ref={winnerName}>?</p>
-            } />
-            <button onClick={() => navigate('/')}>На главную</button>
-            <p ref={gameIsClosingIn}>Игра закроется через 5...</p>
-        </dialog>
+        {winnerDialog}
 
         <div className='enemyZone'>
             <h1 ref={enemyIsOffline}>Противник онлайн</h1>
