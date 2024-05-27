@@ -173,7 +173,6 @@ export default function MonopolyGame() {
 
     function addEventHandlers(connection: HubConnection) {
         connectionOnExclusive(connection, 'NotAllowed', () => {
-            setGameState(undefined)
             navigate('/')
         })
 
@@ -185,7 +184,7 @@ export default function MonopolyGame() {
                     const player = state.players[userID]
                     if (player) {
                         player.isOnline = false
-                        setGameState({ ...gameState } as GameState)
+                        return { ...state } as GameState
                     }
                 }
                 return state
@@ -198,7 +197,7 @@ export default function MonopolyGame() {
                     const player = state.players[userID]
                     if (player) {
                         player.isOnline = true
-                        setGameState({ ...gameState } as GameState)
+                        return { ...state } as GameState
                     }
                 }
                 return state
@@ -237,7 +236,9 @@ export default function MonopolyGame() {
         connectionOnExclusive(connection, 'ChatMessage', message => {
             if (!message) return
             gameState?.chatMessages.push(message)
-            setGameState({ ...gameState } as GameState)
+            setGameState(state => {
+                return { ...state } as GameState
+            })
         })
 
 
