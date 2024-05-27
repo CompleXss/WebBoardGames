@@ -74,19 +74,19 @@
 }
 
 .checkersContainer .board .unit.white {
-    background: url(/images/draughtWhite.svg);
+    background: url(/public/images/draughtWhite.svg);
 }
 
 .checkersContainer .board .unit.white.queen {
-    background: url(/images/draughtWhiteQueen.svg);
+    background: url(/public/images/draughtWhiteQueen.svg);
 }
 
 .checkersContainer .board .unit.black {
-    background: url(/images/draughtBlack.svg);
+    background: url(/public/images/draughtBlack.svg);
 }
 
 .checkersContainer .board .unit.black.queen {
-    background: url(/images/draughtBlackQueen.svg);
+    background: url(/public/images/draughtBlackQueen.svg);
 }
 
 
@@ -137,7 +137,7 @@
     content: '';
     position: absolute;
 
-    background: url(/images/draughtBlack.svg);
+    background: url(/public/images/draughtBlack.svg);
     background-repeat: no-repeat;
     background-size: contain;
 
@@ -148,7 +148,7 @@
 }
 
 .checkersContainer .board .cell.blackUnit.queen::before {
-    background: url(/images/draughtBlackQueen.svg);
+    background: url(/public/images/draughtBlackQueen.svg);
 }
 
 
@@ -157,7 +157,7 @@
     content: '';
     position: absolute;
 
-    background: url(/images/draughtWhite.svg);
+    background: url(/public/images/draughtWhite.svg);
     background-repeat: no-repeat;
     background-size: contain;
 
@@ -168,5 +168,5 @@
 }
 
 .checkersContainer .board .cell.whiteUnit.queen::before {
-    background: url(/images/draughtWhiteQueen.svg);
+    background: url(/public/images/draughtWhiteQueen.svg);
 } */

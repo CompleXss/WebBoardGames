@@ -37,15 +37,15 @@ h1 {
 }
 
 .checkers::before {
-    background: url(/images/checkers.jpg)
+    background: url(/public/images/checkers.jpg)
 }
 
 .chess::before {
-    background: url(/images/chess.jpg)
+    background: url(/public/images/chess.jpg)
 }
 
 .monopoly::before {
-    background: url(/images/monopoly.jpg);
+    background: url(/public/images/monopoly.jpg);
 }
 
 .game::before {

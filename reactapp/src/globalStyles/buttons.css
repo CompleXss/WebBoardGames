@@ -13,6 +13,6 @@ button {
     width: 22px;
     height: 22px;
 
-    background: url(/images/logout.svg) no-repeat;
+    background: url(/public/images/logout.svg) no-repeat;
     background-size: contain;
 }

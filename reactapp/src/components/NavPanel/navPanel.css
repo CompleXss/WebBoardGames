@@ -69,7 +69,7 @@ nav a:not(:last-of-type):hover::after {
     height: 50px;
     cursor: pointer;
 
-    background: url(/images/burger-menu.svg) no-repeat;
+    background: url(/public/images/burger-menu.svg) no-repeat;
     background-position: center;
     background-size: contain;
     border: none;
