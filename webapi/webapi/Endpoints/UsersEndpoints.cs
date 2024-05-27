@@ -8,10 +8,6 @@ public static class UsersEndpoints
 {
 	public static void MapUsersEndpoints(this WebApplication app)
 	{
-		app.MapGet("/users", GetAllAsync)
-			.AllowAnonymous()
-			.Produces<List<User>>();
-
 		app.MapGet("/user", GetAsync)
 			.Produces<User>();
 
@@ -23,11 +19,6 @@ public static class UsersEndpoints
 	}
 
 
-
-	internal static async Task<IResult> GetAllAsync(UsersRepository usersRepository)
-	{
-		return Results.Ok(await usersRepository.GetAllAsync());
-	}
 
 	internal static async Task<IResult> GetAsync(HttpContext context, UsersRepository usersRepository)
 	{
