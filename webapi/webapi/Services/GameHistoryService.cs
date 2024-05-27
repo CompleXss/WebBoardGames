@@ -39,7 +39,7 @@ public class GameHistoryService
 
 		var playHistoryDto = new GameHistoryDto()
 		{
-			Game = GameNames.checkers,
+			Game = game.GameName,
 			Winners = [winner],
 			Loosers = loosers!,
 			DateTimeStart = game.GameStarted,
@@ -53,7 +53,6 @@ public class GameHistoryService
 	{
 		using var transaction = await db.Database.BeginTransactionAsync();
 		string gameName = history.Game.ToString();
-		var tasks = new List<Task<bool>>(2 * (history.Winners.Length + history.Loosers.Length));
 
 		try
 		{
@@ -71,29 +70,28 @@ public class GameHistoryService
 
 
 			// add players to history
-			tasks.AddRange(history.Winners.Select(winner => gameHistoryRepo.AddHistoryPlayerAsync(new GamePlayer
+			foreach (var winner in history.Winners)
 			{
-				UserID = winner.ID,
-				GameHistory = historyEntry,
-				IsWinner = true,
-			})));
+				await gameHistoryRepo.AddHistoryPlayerAsync(new GamePlayer
+				{
+					UserID = winner.ID,
+					GameHistory = historyEntry,
+					IsWinner = true,
+				});
+			}
 
-			tasks.AddRange(history.Loosers.Select(looser => gameHistoryRepo.AddHistoryPlayerAsync(new GamePlayer
+			foreach (var looser in history.Loosers)
 			{
-				UserID = looser.ID,
-				GameHistory = historyEntry,
-				IsWinner = false,
-			})));
+				await gameHistoryRepo.AddHistoryPlayerAsync(new GamePlayer
+				{
+					UserID = looser.ID,
+					GameHistory = historyEntry,
+					IsWinner = false,
+				});
+			}
 
-
-
-			var results = await Task.WhenAll(tasks);
-			bool succeeded = results.All(x => x);
-
-			if (succeeded)
-				await transaction.CommitAsync();
-
-			return succeeded;
+			await transaction.CommitAsync();
+			return true;
 		}
 		catch (Exception)
 		{
