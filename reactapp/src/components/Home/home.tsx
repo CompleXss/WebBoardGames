@@ -22,7 +22,7 @@ export default function Home() {
                 <p>Шахматы</p>
             </NavLink>
 
-            <NavLink className="game monopoly" to={'/'}>
+            <NavLink className="game monopoly" to={'/lobby/monopoly'}>
                 <p>Монополия</p>
             </NavLink>
         </div>

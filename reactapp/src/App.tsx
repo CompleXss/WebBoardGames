@@ -8,11 +8,13 @@ import Profile from './components/Profile/profile';
 import History from './components/History/history';
 import Leaderboard from './components/LeaderBoard/leaderboard';
 import About from './components/About/about';
-import CheckersLobby from './components/Games/Checkers/Lobby/checkersLobby';
-import CheckersGame from './components/Games/Checkers/checkersGame';
 import RequireActiveGame from './components/RequireComponents/RequireActiveGame';
 import { setNavigateFunc } from './utilities/auth';
 import { GameNames } from './utilities/GameNames';
+import CheckersLobby from './components/Games/Lobby/checkersLobby';
+import MonopolyLobby from './components/Games/Lobby/monopolyLobby';
+import CheckersGame from './components/Games/Checkers/checkersGame';
+import MonopolyGame from './components/Games/Monopoly/monopolyGame';
 import './App.css'
 
 export default function App() {
@@ -31,7 +33,9 @@ export default function App() {
         <Route path='/about' element={<About />} />
 
         <Route path='/lobby/checkers' element={<RequireAuth onOk={<RequireActiveGame gameName={GameNames.checkers} inverse onOk={<CheckersLobby />} redirect='/play/checkers' />} />} />
+        <Route path='/lobby/monopoly' element={<RequireAuth onOk={<RequireActiveGame gameName={GameNames.monopoly} inverse onOk={<MonopolyLobby />} redirect='/play/monopoly' />} />} />
         <Route path='/play/checkers' element={<RequireAuth onOk={<RequireActiveGame gameName={GameNames.checkers} onOk={<CheckersGame />} redirect='/lobby/checkers' />} />} />
+        <Route path='/play/monopoly' element={<RequireAuth onOk={<RequireActiveGame gameName={GameNames.monopoly} onOk={<MonopolyGame />} redirect='/lobby/monopoly' />} />} />
 
         <Route path='*' element={<Navigate to={'/'} replace={true} />} />
       </Routes>
