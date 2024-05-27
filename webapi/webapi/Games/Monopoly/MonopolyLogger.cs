@@ -13,8 +13,6 @@ internal class MonopolyLogger(int capacity = 128)
 
 	private void Log(string message) => messages.Add(message);
 
-
-
 	public string SendChatMessage(string playerID, string message)
 	{
 		string result = GetPlayerSentMessageTemplate(playerID) + " — " + message;
@@ -24,9 +22,22 @@ internal class MonopolyLogger(int capacity = 128)
 
 
 
+	public void PlayerSurrenders(string playerID)
+	{
+		Log(GetPlayerTemplate(playerID) + " сдается");
+	}
+
+
+
+	#region Dice
 	public void PlayerDiceRolled(string playerID, (int, int) dice)
 	{
 		Log(GetPlayerTemplate(playerID) + $" выбрасывает {dice.Item1}:{dice.Item2}");
+	}
+
+	public void PlayerDiceRolledDouble(string playerID, (int, int) dice)
+	{
+		Log(GetPlayerTemplate(playerID) + $" выбрасывает {dice.Item1}:{dice.Item2} и ходит еще раз, так как выпал дубль");
 	}
 
 	public void PlayerGotLapBonus(string playerID, int amount)
@@ -38,12 +49,14 @@ internal class MonopolyLogger(int capacity = 128)
 	{
 		Log(GetPlayerTemplate(playerID) + " попадает точно на Старт и получает бонус " + FormatMoney(amount));
 	}
+	#endregion
+
 
 
 	#region Pay to player
 	public void PlayerShouldPayRent(string playerID, string payToPlayerID, string cellID, int amount)
 	{
-		Log(GetPlayerTemplate(playerID) + $" попадает на {GetCellIDTemplate(cellID)} и должен заплатить {GetPlayerTemplate(payToPlayerID)} {FormatMoney(amount)}");
+		Log(GetPlayerTemplate(playerID) + $" попадает на {GetCellIDTemplate(cellID)} и должен заплатить игроку {GetPlayerTemplate(payToPlayerID)} {FormatMoney(amount)}");
 	}
 
 	public void PlayerPaysRent(string playerID, int amount)
@@ -98,14 +111,34 @@ internal class MonopolyLogger(int capacity = 128)
 	{
 		Log(GetPlayerTemplate(playerID) + $" продает филиал компании {GetCellIDTemplate(cellID)}. Аренда уменьшается");
 	}
+
+	public void PlayerLostSoldCell(string playerID, string cellID)
+	{
+		Log(GetPlayerTemplate(playerID) + $" не успевает выкупить {GetCellIDTemplate(cellID)} и теряет это поле");
+	}
 	#endregion
+
 
 
 	#region Events
 
+	public void EventMoney_PlayerShouldPayToBank(string playerID, int amount)
+	{
+		Log(GetPlayerTemplate(playerID) + " попадает на поле \"Банк\" и должен заплатить Банку " + FormatMoney(amount));
+	}
 
+	public void EventMoney_PlayerGetsDividendsFromBanK(string playerID, int amount)
+	{
+		Log(GetPlayerTemplate(playerID) + $" получает дивиденды от Банка в размере {FormatMoney(amount)}");
+	}
+
+	public void Event_PlayerEntersRandomEvent(string playerID, string message)
+	{
+		Log(GetPlayerTemplate(playerID) + $" попадает на поле \"Шанс\". {GetPlayerTemplate(playerID)} {message}");
+	}
 
 	#endregion
+
 
 
 	#region Prison
@@ -158,7 +191,7 @@ internal class MonopolyLogger(int capacity = 128)
 		return $"{{{CELL_ID}:{cellID}}}";
 	}
 
-	private static string FormatMoney(int amount)
+	public static string FormatMoney(int amount)
 	{
 		return $"{Utils.FormatNumberWithCommas(amount.ToString())}k";
 	}

@@ -11,6 +11,8 @@ internal class MonopolyOfferManager
 
 	// pay reasons
 	public const string ExitPrison = "ExitPrison";
+	public const string EventRandom = "EventRandom";
+	public const string EventMoney = "EventMoney";
 
 
 

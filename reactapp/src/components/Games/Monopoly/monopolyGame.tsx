@@ -14,11 +14,13 @@ import { PlayerInfo } from '../Models';
 import { ReactComponent as DiceIcon } from 'src/svg/dice.svg'
 import { ReactComponent as StarIcon } from 'src/svg/star.svg'
 import { DiceCube } from './DiceCube/diceCube';
+import { cumulativeOffset } from 'src/utilities/frontend.utils';
 import reactStringReplace from 'react-string-replace'
 import './monopolyGame.css'
 
 interface GameState {
     myID: string
+    isMyTurn: boolean
     isAbleToUpgrade: boolean
     players: StringMap<PlayerState>
     cellStates: StringMap<CellState>
@@ -172,6 +174,7 @@ export default function MonopolyGame() {
 
     function addEventHandlers(connection: HubConnection) {
         connectionOnExclusive(connection, 'NotAllowed', () => {
+            setGameState(undefined)
             navigate('/')
         })
 
@@ -181,8 +184,10 @@ export default function MonopolyGame() {
             setGameState(state => {
                 if (state) {
                     const player = state.players[userID]
-                    if (player)
+                    if (player) {
                         player.isOnline = false
+                        setGameState({ ...gameState } as GameState)
+                    }
                 }
                 return state
             })
@@ -192,8 +197,10 @@ export default function MonopolyGame() {
             setGameState(state => {
                 if (state) {
                     const player = state.players[userID]
-                    if (player)
+                    if (player) {
                         player.isOnline = true
+                        setGameState({ ...gameState } as GameState)
+                    }
                 }
                 return state
             })
@@ -212,11 +219,20 @@ export default function MonopolyGame() {
 
         connectionOnExclusive(connection, 'GameClosed', winnerID => {
             if (!winnerID) {
+                setGameState(undefined)
                 navigate('/')
                 return
             }
 
             // todo gameClosed
+            console.log('WINNER')
+            console.log('WINNER')
+            console.log('WINNER')
+            console.log(winnerID)
+
+
+            // BEFORE navigate('/')
+            // setGameState(undefined)
         })
 
 
@@ -329,7 +345,17 @@ export default function MonopolyGame() {
                     requestLastOffer()
                 }
             })
-            .catch(x => console.log(x))
+            .catch(e => console.log(e))
+    }
+
+    function surrender() {
+        connection?.invoke('Surrender')
+            .then(x => {
+                if (x.statusCOde && x.statusCode !== 200) {
+                    console.log(x.value)
+                }
+            })
+            .catch(_ => {})
     }
 
 
@@ -359,10 +385,16 @@ export default function MonopolyGame() {
                     description: 'У вас кончились попытки на выбрасывание дубля. Теперь придётся заплатить, чтобый выйти из тюрьмы.'
                 }
 
-            case '':
+            case 'EventRandom':
                 return {
-                    title: '',
-                    description: ''
+                    title: 'Внезапные траты.',
+                    description: 'На некоторых полях вы платите, потому что так решила судьба. Такое может случиться с каждым...'
+                }
+
+            case 'EventMoney':
+                return {
+                    title: 'Заплатите Банку.',
+                    description: 'На некоторых полях вы платите Банку. Или он вам. Это как повезет.'
                 }
 
             default:
@@ -429,7 +461,7 @@ export default function MonopolyGame() {
     }
 
     function getLineCardsElements() {
-        if (!gameState) return
+        if (!gameState?.cellStates) return
 
         if (monopolyMap.layout.length !== (4 * monopolyMap.cardsInLine)) {
             console.error('Invalid monopoly map json. Amount of line cards don\' match.')
@@ -446,7 +478,10 @@ export default function MonopolyGame() {
             const card_id = `${group_id}_${cardNum}`
 
             const isEvent = group_id.startsWith('event_')
-            const needsRotate = group_id.includes('random')
+            const mnpl_rotate = group_id.includes('random')
+                ? 180
+                : group_id.includes('money') ? -90 : undefined
+
             let icon = ''
             let color = ''
             let cardName = ''
@@ -476,17 +511,18 @@ export default function MonopolyGame() {
             icon = getImageUrl(cardsInfo.iconFolder + icon)
 
             const line = Math.floor(i / cardsInLine)
-            const mnpl_special = isEvent ? 1 : null
-            const mnpl_rotate = needsRotate ? 1 : null
+            const mnpl_special = isEvent ? 1 : undefined
             const backgroundColor = cardInfo?.ownerID ? gameState.players[cardInfo.ownerID].color : undefined
 
-            const cellLevel = (!cardInfo ? ''
-                : cardInfo.isSold ? cardInfo.movesLeftToLooseThisCell : [
-                    // <StarIcon key={0} className='starIcon'></StarIcon>
-
-                    // todo star level
-
-                ]
+            const cellLevel = (!cardInfo ? '' : cardInfo.isSold
+                // display it with lock icon
+                ? cardInfo.movesLeftToLooseThisCell
+                // show level stars
+                : cardInfo.upgradeLevel > 4
+                    ? <StarIcon key={0} className='starIcon big'></StarIcon>
+                    : Array(cardInfo.upgradeLevel).fill(0).map((_, i) => (
+                        <StarIcon key={i} className='starIcon'></StarIcon>
+                    ))
             )
 
             arr[i] = (
@@ -498,7 +534,7 @@ export default function MonopolyGame() {
                     mnpl-special={mnpl_special}
                     mnpl-rotate={mnpl_rotate}
                     style={{ gridArea: `l${i}` }}
-                    onClick={isEvent || !cardInfo ? undefined : () => {
+                    onClick={isEvent || !cardInfo ? undefined : e => {
                         if (cardInfoDialog.current) {
                             const header = cardInfoDialog.current.getElementsByClassName('cardInfoHeader')[0] as HTMLElement
                             if (header) {
@@ -517,7 +553,7 @@ export default function MonopolyGame() {
                                 // buttons (upgrade-downgrade)
                                 const cardButtons: JSX.Element[] = []
 
-                                if (cardInfo.ownerID && cardInfo.ownerID === gameState.myID) {
+                                if (gameState.isMyTurn && cardInfo.ownerID && cardInfo.ownerID === gameState.myID) {
                                     let upBtn = false
                                     let downBtn = false
                                     let upgradeBtnName //= 'Купить'
@@ -599,19 +635,22 @@ export default function MonopolyGame() {
                                         groupParams.push(createParamsLineElement(
                                             cardsInfo.translation.rent_0,
                                             numberWithCommas(rent[0]),
-                                            'money'
+                                            'money',
+                                            0
                                         ))
 
                                         for (let i = 1; i < rent.length; i++) {
-                                            const stars: JSX.Element[] = Array(i)
-                                            for (let j = 0; j < i; j++) {
-                                                stars.push(<StarIcon key={j} className='starIcon' />)
-                                            }
+                                            const stars = i === 5
+                                                ? <StarIcon key={0} className='starIcon big' />
+                                                : Array(i).fill(0).map((_, i) => (
+                                                    <StarIcon key={i} className='starIcon' />
+                                                ))
 
                                             groupParams.push(createParamsLineElement(
                                                 <div>{stars}</div>,
                                                 numberWithCommas(rent[i]),
-                                                'money'
+                                                'money',
+                                                i
                                             ))
                                         }
 
@@ -624,7 +663,8 @@ export default function MonopolyGame() {
                                             groupParams.push(createParamsLineElement(
                                                 getNumberedFieldName(i + 1),
                                                 cardInfo.multipliers[i].toString(),
-                                                'money'
+                                                'money',
+                                                i
                                             ))
                                         }
 
@@ -637,7 +677,8 @@ export default function MonopolyGame() {
                                             groupParams.push(createParamsLineElement(
                                                 getNumberedFieldName(i + 1),
                                                 <div><DiceIcon className='diceIcon' /> {' x ' + cardInfo.multipliers[i]}</div>,
-                                                'diceMultiplier'
+                                                'diceMultiplier',
+                                                i
                                             ))
                                         }
 
@@ -651,22 +692,26 @@ export default function MonopolyGame() {
                                 cardParams.push(createParamsLineElement(
                                     cardsInfo.translation.buyCost,
                                     numberWithCommas(cardInfo.info.buyCost),
-                                    'money'
+                                    'money',
+                                    0
                                 ))
                                 cardParams.push(createParamsLineElement(
                                     cardsInfo.translation.sellCost,
                                     numberWithCommas(cardInfo.info.sellCost),
-                                    'money'
+                                    'money',
+                                    1
                                 ))
                                 cardParams.push(createParamsLineElement(
                                     cardsInfo.translation.rebuyCost,
                                     numberWithCommas(cardInfo.info.rebuyCost),
-                                    'money'
+                                    'money',
+                                    2
                                 ))
                                 if (cardInfo.info.upgradeCost) cardParams.push(createParamsLineElement(
                                     cardsInfo.translation.upgradeCost,
                                     numberWithCommas(cardInfo.info.upgradeCost),
-                                    'money'
+                                    'money',
+                                    3
                                 ))
 
                                 // set params
@@ -675,8 +720,39 @@ export default function MonopolyGame() {
                                 setCardInfoParams(cardParams)
                             }
                         }
-                        cardInfoDialog.current?.show()
-                        cardInfoDialog.current?.focus()
+
+                        if (cardInfoDialog.current) {
+                            cardInfoDialog.current.show()
+                            cardInfoDialog.current.focus()
+                            cardInfoDialog.current.style.opacity = '0'
+
+                            const offset = cumulativeOffset(e.currentTarget)
+                            const elementHeight = e.currentTarget.offsetHeight
+                            const elementWidth = e.currentTarget.offsetWidth
+                            let top = e.currentTarget.offsetTop
+                            let left = offset.left - window.innerWidth / 2
+
+                            // left is kinda magic but works almost perfectly
+
+                            // cardInfoDialog.current.offsetHeight can be retrieved only after dialog.show()
+                            // but e.* can be retrieved only BEFORE this timeout (that's why it's above)
+                            setTimeout(() => {
+                                if (!cardInfoDialog.current) return
+
+                                // top
+                                if (top < elementHeight) top += elementHeight
+                                const dialogOutOfBoundsY = (offset.top + cardInfoDialog.current.offsetHeight + elementHeight * 1.3) - window.innerHeight
+                                if (dialogOutOfBoundsY > 0) top -= dialogOutOfBoundsY
+
+                                // left
+                                if (left < elementWidth) left += elementWidth
+
+                                cardInfoDialog.current.style.left = left + 'px'
+                                cardInfoDialog.current.style.top = top + 'px'
+
+                                cardInfoDialog.current.style.opacity = '1'
+                            }, 1)
+                        }
                     }}
                 >
                     {!isEvent && (
@@ -966,17 +1042,48 @@ export default function MonopolyGame() {
 
 
 
-    const playersElements = !gameState ? [] : Object.keys(gameState.players).map((playerID, i) => {
+    const playersElements = (!gameState?.players || !gameState.myID) ? [] : Object.keys(gameState.players).map((playerID, i) => {
         const player = gameState.players[playerID]
         const name = playerInfos.get(playerID)?.name ?? '???'
 
         return (
-            <div className='playerCard' mnpl-dead={player.isDead ? 1 : undefined} key={i}>
-                <p>{name}</p>
-                <p>
-                    {player.isDead ? '💀' : numberWithCommas(player.money)}
-                </p>
-                <div className='line' style={{ backgroundColor: player.color }}></div>
+            <div className='playerCardDropDown' onClick={e => {
+                const element = e.currentTarget.querySelector('.playerCardButtons')
+                element?.classList.toggle('show')
+
+                const closest = (e.target as Element)?.closest('.playerCardDropDown')
+
+                function close(e: MouseEvent) {
+                    const target = e.target as Element
+                    if (!target) return
+
+                    if (target.closest('.playerCardDropDown') !== closest) {
+                        element?.classList.toggle('show')
+                    }
+
+                    if (!element?.classList.contains('show')) {
+                        window.removeEventListener('click', close)
+                    }
+                }
+
+                window.addEventListener('click', close)
+            }}>
+                <div className='playerCard' mnpl-dead={player.isDead ? 1 : undefined} key={i}>
+                    <p>{name}</p>
+                    <p>
+                        {player.isDead ? '💀' : numberWithCommas(player.money)}
+                    </p>
+                    <div className='line' style={{ backgroundColor: player.color }}></div>
+                    <div className={'onlineIndicator ' + (player.isOnline ? 'on' : 'off')}></div>
+                </div>
+                <div className='playerCardButtons'>
+                    {!player.isDead && playerID !== gameState.myID && (
+                        <button>Договор 💸</button>
+                    )}
+                    {playerID === gameState.myID && (
+                        <button onClick={surrender}>Сдаться 💀</button>
+                    )}
+                </div>
             </div>
         )
     })
@@ -985,30 +1092,56 @@ export default function MonopolyGame() {
 
     // todo delete temp players
     playersElements.push((
-        <div className='playerCard' key={Math.random()}>
-            <p>asiuydgbliuakshjmd;lkiahs;lkdhasjklhd</p>
-            <p>99,999</p>
-            <div className='line' style={{ backgroundColor: 'red' }}></div>
+        <div className='playerCardDropDown' onClick={e => {
+            const element = e.currentTarget.querySelector('.playerCardButtons')
+            element?.classList.toggle('show')
+
+            const closest = (e.target as Element)?.closest('.playerCardDropDown')
+
+            function close(e: MouseEvent) {
+                const target = e.target as Element
+                if (!target) return
+
+                if (target.closest('.playerCardDropDown') !== closest) {
+                    element?.classList.toggle('show')
+                }
+
+                if (!element?.classList.contains('show')) {
+                    window.removeEventListener('click', close)
+                }
+            }
+
+            window.addEventListener('click', close)
+        }}>
+            <div className='playerCard' key={10}>
+                <p>testasd;lkiahs;lkdhasjklhd</p>
+                <p>99,999</p>
+                <div className='line' style={{ backgroundColor: 'red' }}></div>
+                <div className='onlineIndicator on'></div>
+            </div>
+            <div className='playerCardButtons'>
+                <button>Договор 💸</button>
+            </div>
         </div>
     ))
+
     playersElements.push((
-        <div className='playerCard' mnpl-dead={1} key={Math.random()}>
-            <p>im dead bruh</p>
-            <p>💀</p>
-            <div className='line' style={{ backgroundColor: 'green' }}></div>
+        <div className='playerCardDropDown'>
+            <div className='playerCard' mnpl-dead={1} key={11}>
+                <p>im dead bruh</p>
+                <p>💀</p>
+                <div className='line' style={{ backgroundColor: 'green' }}></div>
+                <div className='onlineIndicator off'></div>
+            </div>
+            <div className='playerCardButtons'>
+                {/* <button>Договор 💸</button> */}
+            </div>
         </div>
     ))
-    playersElements.push((
-        <div className='playerCard' key={Math.random()}>
-            <p>asiuydgbliuakshjmd;lkiahs;lkdhasjklhd</p>
-            <p>0</p>
-            <div className='line' style={{ backgroundColor: 'red' }}></div>
-        </div>
-    ))
 
 
 
-    const playerDotElements = !gameState ? [] : Object.keys(gameState.players).map((playerID, i) => {
+    const playerDotElements = !gameState?.players ? [] : Object.keys(gameState.players).map((playerID, i) => {
         const info = gameState.players[playerID]
         return (
             <div
@@ -1020,7 +1153,7 @@ export default function MonopolyGame() {
         )
     })
 
-    const chatMessages = !gameState ? [] : gameState.chatMessages.map((line, index) => {
+    const chatMessages = !gameState?.players ? [] : gameState.chatMessages.map((line, index) => {
 
         // replace {playerID:xxx} with JSX
         let elements = reactStringReplace(line, /{playerID:([^}]+)}/g, (playerID, i) => {
@@ -1172,9 +1305,9 @@ function getLastLine(cellsInLine: number) {
     return str
 }
 
-function createParamsLineElement(name: string | JSX.Element, value: string | JSX.Element, valueType: 'money' | 'diceMultiplier') {
+function createParamsLineElement(name: string | JSX.Element, value: string | JSX.Element, valueType: 'money' | 'diceMultiplier', key: number | string) {
     return (
-        <div className='groupParamsLine'>
+        <div className='groupParamsLine' key={key}>
             <div>{name}</div>
             <div className={valueType + 'Value'}>{value}</div>
         </div>

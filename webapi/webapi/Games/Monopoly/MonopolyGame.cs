@@ -1,5 +1,4 @@
 ﻿using Microsoft.AspNetCore.SignalR;
-using Newtonsoft.Json;
 using webapi.Extensions;
 using webapi.Models;
 
@@ -17,6 +16,20 @@ public class MonopolyGame : PlayableGame
 	private const int GAME_START_LAP_BONUS = 2000;
 	private const int GAME_START_START_BONUS = 1000;
 	private const int MOVES_TO_LOOSE_CELL = 16;
+	private static readonly IReadOnlyList<(string message, int amount)> randomEvents_Money = [
+		($"находит в зимней куртке {MonopolyLogger.FormatMoney(500)}", 500),
+		($"находит на дороге {MonopolyLogger.FormatMoney(250)} мелочью", 250),
+		($"участвует в лотерее и выигрывает {MonopolyLogger.FormatMoney(1500)}", 1500),
+		($"участвует в лотерее и выигрывает {MonopolyLogger.FormatMoney(1000)}", 1000),
+		($"занимает второе место в конкурсе красоты и получает {MonopolyLogger.FormatMoney(750)}", 750),
+		($"занимает третье место в конкурсе красоты и получает {MonopolyLogger.FormatMoney(500)}", 500),
+
+		($"играет в казино и проигрывает {MonopolyLogger.FormatMoney(1000)}", -1000),
+		($"тратит в парке развлечений {MonopolyLogger.FormatMoney(250)}", -250),
+		($"забывает выключить утюг и платит {MonopolyLogger.FormatMoney(750)} на ремонт", -750),
+		($"попадает на распродажу и тратит там {MonopolyLogger.FormatMoney(750)}", -750),
+		($"понимает, что любимое авто больше не заводится и платит за ремонт {MonopolyLogger.FormatMoney(500)}", -500),
+	];
 
 	private static readonly MonopolyMap map;
 	private static readonly IReadOnlyList<string> availablePlayerColors = ["#d98381", "#add884", "#dabc6a", "#44a7df", "#a281b6"];
@@ -41,6 +54,8 @@ public class MonopolyGame : PlayableGame
 	private int lapBonus = GAME_START_LAP_BONUS;
 	private int startBonus = GAME_START_START_BONUS;
 	private int payToPlayerMultiplier = 1;
+	private float positiveMoneyEventChance = 0.5f;
+	private int lastEventPaySum;
 	private int lastDiceSum;
 	private int upgradedCellIndexThisTurn;
 	private int doublesInRow;
@@ -155,6 +170,7 @@ public class MonopolyGame : PlayableGame
 			return false;
 
 		playersDead[playerIndex] = true;
+		chatLogger.PlayerSurrenders(playerID);
 
 		// clear all user's cells
 		for (int i = 0; i < cellStates.Length; i++)
@@ -212,17 +228,12 @@ public class MonopolyGame : PlayableGame
 
 	protected override bool TryUpdateState_Internal(string playerID, object data, out string error)
 	{
-		MonopolyPlayerAction action;
-
-		try
-		{
-			action = JsonConvert.DeserializeObject<MonopolyPlayerAction>(data?.ToString()!);
-		}
-		catch (Exception)
+		if (!TryDeserializeData(data, out MonopolyPlayerAction action))
 		{
 			error = "Неправильные данные хода.";
 			return false;
 		}
+
 
 
 		// todo remove cw
@@ -281,7 +292,8 @@ public class MonopolyGame : PlayableGame
 				actionType == MonopolyPlayerAction.Type.DowngradeCell
 			) && (
 				expectedActionTypes.Contains(MonopolyPlayerAction.Type.DiceToMove) ||
-				expectedActionTypes.Contains(MonopolyPlayerAction.Type.Pay))
+				expectedActionTypes.Contains(MonopolyPlayerAction.Type.Pay) ||
+				expectedActionTypes.Contains(MonopolyPlayerAction.Type.BuyCell))
 			)
 			return true;
 
@@ -327,7 +339,7 @@ public class MonopolyGame : PlayableGame
 			chatLogger.PlayerPaysToExitPrison(PlayerIDs[playerIndex], PRISON_EXIT_PRICE);
 
 			// move player to safe prison zone to make move
-			MovePlayerToCell(playerIndex, PRISON_CELL_INDEX);
+			playerPositions[playerIndex] = PRISON_CELL_INDEX;
 			expectedActionTypes.Add(MonopolyPlayerAction.Type.DiceToMove);
 			offerManager.OfferDiceRoll(playerIndex);
 
@@ -335,9 +347,14 @@ public class MonopolyGame : PlayableGame
 		}
 
 		// event pay
-		int cellIndex = playerPositions[playerIndex];
+		if (playersMoney[playerIndex] < lastEventPaySum)
+			return false;
 
-		// todo: event pay (store last event pay amount ?)
+		playersMoney[playerIndex] -= lastEventPaySum;
+		lastEventPaySum = 0;
+
+		expectedActionTypes.Add(MonopolyPlayerAction.Type.DiceToMove);
+		offerManager.OfferDiceRoll(playerIndex);
 
 		return true;
 	}
@@ -363,6 +380,7 @@ public class MonopolyGame : PlayableGame
 
 		chatLogger.PlayerPaysRent(PlayerIDs[playerIndex], amountToPay);
 
+		MakeNextPlayerActing();
 		return true;
 	}
 
@@ -399,6 +417,8 @@ public class MonopolyGame : PlayableGame
 
 		if (lastDiceIsDouble)
 		{
+			lastDiceIsDouble = false;
+			doublesInRow = 0;
 			playersInPrison[actingPlayerIndex] = new(false, 0);
 			MovePlayerForward(actingPlayerIndex, lastDiceSum);
 			chatLogger.PlayerExitedPrisonForFree(PlayerIDs[actingPlayerIndex]);
@@ -658,7 +678,11 @@ public class MonopolyGame : PlayableGame
 		lastDiceIsDouble = dice.Item1 == dice.Item2;
 
 		ShowDiceRoll(dice);
-		chatLogger.PlayerDiceRolled(PlayerIDs[actingPlayerIndex], dice);
+
+		if (lastDiceIsDouble)
+			chatLogger.PlayerDiceRolledDouble(PlayerIDs[actingPlayerIndex], dice);
+		else
+			chatLogger.PlayerDiceRolled(PlayerIDs[actingPlayerIndex], dice);
 
 		return dice;
 	}
@@ -716,7 +740,7 @@ public class MonopolyGame : PlayableGame
 		}
 		else if (cellID.StartsWith("event_"))
 		{
-			turnEnded = ApplyEventCellEffect(playerIndex, cellID[(cellID.IndexOf('_') + 1)..]);
+			turnEnded = ApplyEventCellEffect(playerIndex, cellID[(cellID.IndexOf('_') + 1)..cellID.LastIndexOf('_')]);
 		}
 
 		if (turnEnded)
@@ -776,17 +800,104 @@ public class MonopolyGame : PlayableGame
 	private bool ApplyEventCellEffect(int playerIndex, string eventName)
 	{
 		// todo event cells
+		string playerID = PlayerIDs[playerIndex];
+		float rng = random.NextSingle();
 
 		switch (eventName)
 		{
 			case "random":
+				const float step = 1f / 12;
+
+				switch (rng)
+				{
+					case < step: // happy birthday
+						const int happyB_cost = 500;
+						int moneyGathered = 0;
+
+						for (int i = 0; i < playersMoney.Length; i++)
+						{
+							if (i == playerIndex) continue;
+							int paid = Math.Min(playersMoney[i], happyB_cost);
+							playersMoney[i] -= paid;
+							moneyGathered += paid;
+						}
+						playersMoney[playerIndex] += moneyGathered;
+
+						chatLogger.Event_PlayerEntersRandomEvent(playerID, $"празднует день рождения! Все остальные скидываются на подарок по {MonopolyLogger.FormatMoney(happyB_cost)}");
+						break;
+
+					case < step * 2: // star dependent repair
+						const int smallStarCost = 250;
+						const int bigStarCost = 1000;
+
+						int total = cellStates
+							.Where(x => x.HasValue && x.Value.OwnerIndex == playerIndex && !x.Value.IsSold && x.Value.Type == "upgrade")
+							.Select(x => x!.Value.UpgradeLevel)
+							.Select(x => x == 5 ? bigStarCost : x * smallStarCost)
+							.Sum();
+
+						chatLogger.Event_PlayerEntersRandomEvent(playerID, $"проводит капитальный ремонт своих зданий и должен заплатить по {MonopolyLogger.FormatMoney(smallStarCost)} за каждую маленькую звезду и по {MonopolyLogger.FormatMoney(bigStarCost)} за каждую большую. Всего: {MonopolyLogger.FormatMoney(total)}");
+
+						if (total > 0)
+						{
+							lastEventPaySum = total;
+							expectedActionTypes.Add(MonopolyPlayerAction.Type.Pay);
+							offerManager.OfferPay(playerIndex, total, MonopolyOfferManager.EventRandom);
+							return false;
+						}
+						break;
+
+					case < step * 3: // move forward
+						chatLogger.Event_PlayerEntersRandomEvent(playerID, "отправляется в путешествие");
+						MovePlayerForward(playerIndex, random.Next(1, 7));
+						return false;
+
+					case < step * 4: // go to prison
+						chatLogger.Event_PlayerEntersRandomEvent(playerID, "отправляется в тюрьму за отмывание денег");
+						MovePlayerToPrison(playerIndex);
+						return false;
+
+					default: // money +/-
+						int index = random.Next(0, randomEvents_Money.Count);
+						var (message, amount) = randomEvents_Money[index];
+
+						chatLogger.Event_PlayerEntersRandomEvent(playerID, message);
+
+						if (amount > 0)
+						{
+							playersMoney[playerIndex] += amount;
+							return true;
+						}
+						else
+						{
+							lastEventPaySum = amount;
+							expectedActionTypes.Add(MonopolyPlayerAction.Type.Pay);
+							offerManager.OfferPay(playerIndex, -amount, MonopolyOfferManager.EventRandom);
+							return false;
+						}
+				}
 				break;
 
 			case "money":
-				break;
+				if (rng < positiveMoneyEventChance)
+				{
+					int amount = 250 * random.Next(1, 4);
 
-			case "star":
-				break;
+					playersMoney[playerIndex] += amount;
+					chatLogger.EventMoney_PlayerGetsDividendsFromBanK(playerID, amount);
+					return true;
+				}
+				else
+				{
+					int amount = 1000 + 500 * random.Next(1, 3);
+
+					lastEventPaySum = amount;
+					chatLogger.EventMoney_PlayerShouldPayToBank(playerID, amount);
+
+					expectedActionTypes.Add(MonopolyPlayerAction.Type.Pay);
+					offerManager.OfferPay(playerIndex, amount, MonopolyOfferManager.EventMoney);
+					return false;
+				}
 
 			default: break;
 		}
@@ -835,7 +946,7 @@ public class MonopolyGame : PlayableGame
 
 		var cell = cellStates[cellIndex]!.Value;
 
-		if (cell.IsSold)
+		if (cell.IsSold || cell.OwnerIndex == -1)
 			return 0;
 
 		int moneyToPay = 0;
@@ -847,12 +958,12 @@ public class MonopolyGame : PlayableGame
 
 			case "count":
 				if (cell.Multipliers is not null)
-					moneyToPay = cell.Multipliers[cellStates.Count(x => x.HasValue && x.Value.OwnerIndex == cell.OwnerIndex) - 1];
+					moneyToPay = cell.Multipliers[GetPlayerCellsCountOfType(cell.OwnerIndex, cell.Type) - 1];
 				break;
 
 			case "dice":
 				if (cell.Multipliers is not null)
-					moneyToPay = cell.Multipliers[cellStates.Count(x => x.HasValue && x.Value.OwnerIndex == cell.OwnerIndex) - 1] * lastDiceSum;
+					moneyToPay = cell.Multipliers[GetPlayerCellsCountOfType(cell.OwnerIndex, cell.Type) - 1] * lastDiceSum;
 				break;
 
 			default: break;
@@ -899,6 +1010,7 @@ public class MonopolyGame : PlayableGame
 		if (playersDead.All(x => x))
 			return;
 
+		doublesInRow = 0;
 		upgradedCellIndexThisTurn = -1;
 		IncrementMovesLeftToLooseCellForAllSold();
 
@@ -971,6 +1083,9 @@ public class MonopolyGame : PlayableGame
 			int movesLeftToLooseThisCell = cell.MovesLeftToLooseThisCell - 1;
 			bool isSold = movesLeftToLooseThisCell > 0;
 
+			if (!isSold && cell.OwnerIndex != -1)
+				chatLogger.PlayerLostSoldCell(PlayerIDs[cell.OwnerIndex], layoutWithCornerCells[i]);
+
 			cellStates[i] = cell with
 			{
 				IsSold = isSold,
@@ -1005,7 +1120,7 @@ public class MonopolyGame : PlayableGame
 		UpdateCountAndDiceCellsCost();
 
 		// todo
-		// update lapMoney, startBonus depending on GameStarted
+		// update lapMoney, startBonus, payToPlayer multiplier depending on GameStarted
 	}
 
 
@@ -1047,6 +1162,7 @@ public class MonopolyGame : PlayableGame
 		return new MonopolyGameStateDto
 		{
 			MyID = playerID,
+			IsMyTurn = IsPlayerTurn(playerID),
 			IsAbleToUpgrade = upgradedCellIndexThisTurn == -1,
 			Players = playerStates,
 			CellStates = cellStates,

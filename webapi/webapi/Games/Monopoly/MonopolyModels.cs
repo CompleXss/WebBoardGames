@@ -86,6 +86,7 @@ internal readonly struct MonopolyCellState
 internal readonly struct MonopolyGameStateDto
 {
 	public required string MyID { get; init; }
+	public required bool IsMyTurn { get; init; }
 	public required bool IsAbleToUpgrade { get; init; }
 	public required Dictionary<string, MonopolyPlayerStateDto> Players { get; init; }
 	public required Dictionary<string, MonopolyCellStateDto> CellStates { get; init; }

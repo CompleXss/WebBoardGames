@@ -90,6 +90,13 @@
     color: gray;
 }
 
+.monopolyContainer #cardInfoDialog[open] .starIcon.big {
+    color: var(--gold);
+    height: 1.25em;
+    stroke: black;
+    stroke-width: 0.05em;
+}
+
 .monopolyContainer #cardInfoDialog[open] .diceIcon {
     height: 1.5em;
     width: auto;

@@ -1,5 +1,6 @@
 @import url(monopolyCardDialog.css);
 @import url(monopolyClickDialog.css);
+@import url(monopolyPlayerCards.css);
 
 .monopolyContainer {
     display: grid;
@@ -15,64 +16,7 @@
     flex-grow: 1;
     height: 100%;
     width: 100%;
-}
-
-/* players */
-.monopolyContainer .playersContainer {
-    display: flex;
-    flex-direction: row;
-    justify-content: center;
-    flex-wrap: wrap;
-    align-items: start;
-    height: 100%;
-    width: 100%;
-
-    overflow: hidden;
-    margin-top: 4px;
-    margin-bottom: 8px;
-}
-
-.monopolyContainer .playersContainer .playerCard {
-    height: fit-content;
-    width: 120px;
-
-    margin: 8px;
-    padding: 8px 12px;
-    border-radius: 8px;
-    background-color: var(--background);
-    box-shadow: 0 0 2px gray;
-}
-
-.monopolyContainer .playersContainer .playerCard p {
-    margin: 6px 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    text-wrap: nowrap;
-}
-
-.monopolyContainer .playersContainer .playerCard[mnpl-dead] {
-    color: darkgray;
-    background-color: var(--foreground);
-    box-shadow: 0 0 2px lightgray;
-}
-
-.monopolyContainer .playersContainer .playerCard p:nth-of-type(2) {
-    user-select: none;
-}
-
-.monopolyContainer .playersContainer .playerCard:not([mnpl-dead]) p:nth-of-type(2)::before {
-    content: '$ ';
-}
-
-.monopolyContainer .playersContainer .playerCard:not([mnpl-dead]) p:nth-of-type(2):after {
-    content: ' k';
-    color: gray;
-}
-
-.monopolyContainer .playersContainer .playerCard .line {
-    width: 100%;
-    height: 3px;
-    border-radius: 4px;
+    container-type: inline-size;
 }
 
 
@@ -148,7 +92,11 @@
     width: 80%;
 }
 
-.monopolyContainer .board .cell[mnpl-rotate="1"] .cell-icon {
+.monopolyContainer .board .cell[mnpl-rotate="-90"] .cell-icon {
+    transform: rotate(-90deg);
+}
+
+.monopolyContainer .board .cell[mnpl-rotate="180"] .cell-icon {
     transform: rotate(180deg);
 }
 
@@ -248,7 +196,79 @@
     z-index: 1;
 }
 
+
+/* stars size & stroke */
+.monopolyContainer .board .cell .cell-level .starIcon.big {
+    color: var(--gold);
+}
+
+.monopolyContainer .board .cell .cell-level .starIcon {
+    stroke: black;
+}
+
+/* normal stars */
+.monopolyContainer .board .cell[mnpl-line="0"] .cell-level .starIcon,
+.monopolyContainer .board .cell[mnpl-line="2"] .cell-level .starIcon {
+    height: 55%;
+    width: auto;
+}
+
+.monopolyContainer .board .cell[mnpl-line="1"] .cell-level .starIcon,
+.monopolyContainer .board .cell[mnpl-line="3"] .cell-level .starIcon {
+    height: auto;
+    width: 55%;
+}
+
+/* big star */
+.monopolyContainer .board .cell[mnpl-line="0"] .cell-level .starIcon.big,
+.monopolyContainer .board .cell[mnpl-line="2"] .cell-level .starIcon.big {
+    height: 85%;
+    width: auto;
+}
+
+.monopolyContainer .board .cell[mnpl-line="1"] .cell-level .starIcon.big,
+.monopolyContainer .board .cell[mnpl-line="3"] .cell-level .starIcon.big {
+    height: auto;
+    width: 85%;
+}
+
+
+/* stars location */
+.monopolyContainer .board .cell[mnpl-line="0"] .cell-level {
+    flex-direction: row;
+    width: 100%;
+    height: 20%;
+    bottom: -10%;
+}
+
+.monopolyContainer .board .cell[mnpl-line="1"] .cell-level {
+    flex-direction: column;
+    width: 20%;
+    height: 100%;
+    left: -10%;
+    margin: -50% 0;
+}
+
+.monopolyContainer .board .cell[mnpl-line="2"] .cell-level {
+    flex-direction: row;
+    width: 100%;
+    height: 20%;
+    top: -10%;
+}
+
+.monopolyContainer .board .cell[mnpl-line="3"] .cell-level {
+    flex-direction: column;
+    width: 20%;
+    height: 100%;
+    right: -10%;
+    margin: -50% 0;
+}
+
+
+
+/* sold cells */
 .monopolyContainer .board .cell .cell-level[mnpl-sold] {
+    flex-direction: row;
     color: white;
     background-color: var(--red-block);
     border-radius: 10cqw;
@@ -300,8 +320,7 @@
 
 
 
-
-
+/* dice cube */
 .monopolyContainer .diceCubeContainer {
     position: absolute;
     display: flex;
@@ -324,6 +343,7 @@
 
 
 
+/* player dots */
 .monopolyContainer .playerDot {
     position: absolute;
 
@@ -336,6 +356,7 @@
     background-color: red;
 
     border: 0.1cqw solid black;
+    box-shadow: 0 0 1cqw black;
 }
 
 
@@ -396,6 +417,7 @@
     flex-direction: row;
     align-items: center;
 
+    margin-right: 1.5cqw;
     margin-top: 0.75cqw;
     margin-bottom: 0.75cqw;
 }
