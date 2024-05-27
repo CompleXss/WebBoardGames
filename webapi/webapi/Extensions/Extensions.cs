@@ -8,6 +8,9 @@ public static class Extensions
 		return random.Next() > int.MaxValue / 2;
 	}
 
+
+
+	#region IReadOnlyList
 	public static IEnumerable<T> Shuffle<T>(this IReadOnlyList<T> arr)
 	{
 		return arr.Shuffle(Random.Shared);
@@ -42,6 +45,9 @@ public static class Extensions
 
 		return -1;
 	}
+	#endregion
+
+
 
 	#region List
 	// O(1)
