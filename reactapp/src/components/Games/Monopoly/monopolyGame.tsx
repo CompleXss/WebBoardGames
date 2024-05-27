@@ -5,7 +5,6 @@ import { HubConnection } from '@microsoft/signalr';
 import { useWebsocketConnection } from 'src/utilities/useWebsocketHook';
 import ENDPOINTS from 'src/utilities/Api_Endpoints';
 import Loading from "src/components/Loading/loading"
-import LoadingContent from 'src/components/LoadingContent/loadingContent';
 import monopolyMap from './monopoly_map.json'
 import cardsInfo from './monopoly_cards.json'
 import { GameNames } from 'src/utilities/GameNames';
@@ -14,9 +13,9 @@ import { PlayerInfo } from '../Models';
 import { ReactComponent as DiceIcon } from 'src/svg/dice.svg'
 import { ReactComponent as StarIcon } from 'src/svg/star.svg'
 import { DiceCube } from './DiceCube/diceCube';
-import { cumulativeOffset } from 'src/utilities/frontend.utils';
-import reactStringReplace from 'react-string-replace'
+import { cumulativeOffset, getImageUrl } from 'src/utilities/frontend.utils';
 import { useWinnerDialog } from '../WinnerDialog/winnerDialog';
+import reactStringReplace from 'react-string-replace'
 import './monopolyGame.css'
 
 interface GameState {
@@ -1368,10 +1367,6 @@ async function rollDice(dice: React.RefObject<HTMLElement>, value: number) {
 }
 
 
-
-function getImageUrl(publicPath?: string) {
-    return `url(${publicPath})`
-}
 
 function getNumberedFieldName(num: number) {
     const lastDigit = num % 10

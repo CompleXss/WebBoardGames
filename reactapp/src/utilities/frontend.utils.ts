@@ -11,3 +11,7 @@ export function cumulativeOffset(element: any) {
         left: left
     };
 }
+
+export function getImageUrl(publicPath?: string) {
+    return `url(${publicPath})`
+}

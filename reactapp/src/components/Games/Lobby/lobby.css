@@ -1,7 +1,7 @@
-@import url(checkersLobbyJoinDialog.css);
-@import url(checkersLobbyButtons.css);
+@import url(lobbyJoinDialog.css);
+@import url(lobbyButtons.css);
 
-.checkersLobbyWrapper {
+.lobbyWrapper {
     display: flex;
     box-sizing: border-box;
     flex-direction: column;
@@ -18,7 +18,7 @@
     margin-bottom: 5%;
     margin-top: 5%;
 
-    background: url(/images/checkers-bg.jpg) no-repeat;
+    background-repeat: no-repeat;
     background-size: cover;
     background-position: center;
     box-shadow: 0 0 8px var(--background);
@@ -37,7 +37,7 @@
 
 
 /* Main lobby */
-.checkersLobbyWrapper.open {
+.lobbyWrapper.open {
     justify-content: flex-start;
 
     background: none;
@@ -45,7 +45,7 @@
     box-shadow: 0 0 8px var(--background);
 }
 
-.checkersLobbyWrapper hr {
+.lobbyWrapper hr {
     width: 90%;
     margin-bottom: 12px;
 }
@@ -53,7 +53,7 @@
 
 
 /* Lobby key */
-.checkersLobbyWrapper .lobbyKeyWrapper {
+.lobbyWrapper .lobbyKeyWrapper {
     box-sizing: border-box;
     text-align: center;
 
@@ -65,7 +65,7 @@
     background-color: var(--foreground);
 }
 
-.checkersLobbyWrapper .lobbyKeyWrapper h2 {
+.lobbyWrapper .lobbyKeyWrapper h2 {
     display: inline-flex;
     font-size: 2em;
     vertical-align: middle;
@@ -74,9 +74,9 @@
     margin-right: 0.7em;
 }
 
-.checkersLobbyWrapper .lobbyKey {
+.lobbyWrapper .lobbyKey {
     display: inline-flex;
-    font-family: 'Courier New', Courier, monospace;
+    font-family: Courier, monospace;
     font-size: 2.5em;
     vertical-align: middle;
 
@@ -89,7 +89,7 @@
 
 
 /* Player list */
-.checkersLobbyWrapper .playersList {
+.lobbyWrapper .playersList {
     box-sizing: border-box;
     align-self: flex-start;
     border: 2px solid whitesmoke;
@@ -101,7 +101,7 @@
     background-color: var(--foreground);
 }
 
-.checkersLobbyWrapper .playersList legend {
+.lobbyWrapper .playersList legend {
     font-size: 1.6em;
     margin-left: 16px;
     margin-right: 120px;
@@ -110,7 +110,7 @@
     border-radius: 10px;
 }
 
-.checkersLobbyWrapper .playersList hr {
+.lobbyWrapper .playersList hr {
     margin: auto;
     margin-top: 0;
     margin-bottom: 18px;
@@ -118,7 +118,7 @@
     width: 95%;
 }
 
-.checkersLobbyWrapper .playersList p {
+.lobbyWrapper .playersList p {
     font-size: 1.5em;
     text-align: start;
 
@@ -131,7 +131,7 @@
     background-color: var(--background);
 }
 
-.checkersLobbyWrapper .playerListButtonsWrapper {
+.lobbyWrapper .playerListButtonsWrapper {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
@@ -140,12 +140,12 @@
     width: 100%;
 }
 
-.checkersLobbyWrapper .btnWrapper {
+.lobbyWrapper .btnWrapper {
     display: flex;
     flex-direction: column;
 }
 
-.checkersLobbyWrapper .btnWrapper p {
+.lobbyWrapper .btnWrapper p {
     color: red;
     opacity: 0;
     font-size: 1.1em;
@@ -158,16 +158,16 @@
 
 
 @media all and (max-width: 1000px) {
-    .checkersLobbyWrapper .playerListButtonsWrapper {
+    .lobbyWrapper .playerListButtonsWrapper {
         flex-wrap: wrap;
         justify-content: center;
     }
 
-    .checkersLobbyWrapper .playersList {
+    .lobbyWrapper .playersList {
         width: 100%;
     }
 
-    .checkersLobbyWrapper .playersList legend {
+    .lobbyWrapper .playersList legend {
         margin-left: auto;
         margin-right: auto;
     }

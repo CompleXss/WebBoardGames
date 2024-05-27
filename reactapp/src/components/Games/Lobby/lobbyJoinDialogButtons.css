@@ -1,4 +1,4 @@
-.checkersLobbyWrapper dialog button {
+.lobbyWrapper dialog button {
     width: fit-content;
     margin: 10px;
     padding: 12px 32px;
@@ -10,30 +10,30 @@
 
 
 /* Enter lobby button */
-.checkersLobbyWrapper dialog .enterLobbyBtn {
+.lobbyWrapper dialog .enterLobbyBtn {
     background-color: var(--green-btn);
 }
 
-.checkersLobbyWrapper dialog .enterLobbyBtn:hover {
+.lobbyWrapper dialog .enterLobbyBtn:hover {
     background-color: var(--green-btn-hover);
 }
 
-.checkersLobbyWrapper dialog .enterLobbyBtn:active {
+.lobbyWrapper dialog .enterLobbyBtn:active {
     background-color: var(--green-btn-active);
 }
 
 
 
 /* Close button */
-.checkersLobbyWrapper dialog .exitBtn {
+.lobbyWrapper dialog .exitBtn {
     color: whitesmoke;
     background-color: var(--red-btn);
 }
 
-.checkersLobbyWrapper dialog .exitBtn:hover {
+.lobbyWrapper dialog .exitBtn:hover {
     background-color: var(--red-btn-hover);
 }
 
-.checkersLobbyWrapper dialog .exitBtn:active {
+.lobbyWrapper dialog .exitBtn:active {
     background-color: var(--red-btn-active);
 }

@@ -2,10 +2,12 @@ import axios from "axios"
 import { useEffect, useRef, useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { HubConnection } from "@microsoft/signalr"
-import { useWebsocketConnection } from "../../../../utilities/useWebsocketHook"
-import ENDPOINTS from "../../../../utilities/Api_Endpoints"
-import Loading from "../../../Loading/loading"
-import './checkersLobby.css'
+import { useWebsocketConnection } from "src/utilities/useWebsocketHook"
+import { PlayerInfo } from "src/components/Games/Models"
+import ENDPOINTS from "src/utilities/Api_Endpoints"
+import Loading from "src/components/Loading/loading"
+import './lobby.css'
+import { getImageUrl } from "src/utilities/frontend.utils"
 
 // TODO: при обновлении страницы лобби закрывается
 // TODO: lobby key click to copy
@@ -13,21 +15,17 @@ import './checkersLobby.css'
 const CREATE_LOBBY = 'CreateLobby'
 const ENTER_LOBBY = 'EnterLobby'
 const LEAVE_LOBBY = 'LeaveLobby'
-
-interface LobbyInfo {
-    hostID: string,
-    key: string,
-    playerIDs: string[],
-}
-
-interface PlayerInfo {
-    publicID: string,
-    name: string,
-}
+const KEY_LENGTH = 4
 
 // todo: onhostchanged
 
-export default function CheckersLobby() {
+interface LobbyInfo {
+    hostID: string
+    key: string
+    playerIDs: string[]
+}
+
+export function useLobby(gameName: string, title: string, publicBackgroundPath: string) {
     const navigate = useNavigate()
 
     const [lobbyKey, setLobbyKey] = useState<string>()
@@ -40,12 +38,8 @@ export default function CheckersLobby() {
     const lobbyKeyWarningMessage = useRef<HTMLParagraphElement>(null)
     const startGameWarningMessage = useRef<HTMLParagraphElement>(null)
 
-    useEffect(() => {
-        document.title = 'Шашки (лобби)'
-    }, [])
-
     // create connection
-    const { connection, loading, setLoading, error } = useWebsocketConnection(ENDPOINTS.Hubs.CHECKERS_LOBBY, {
+    const { connection, loading, setLoading, error } = useWebsocketConnection(ENDPOINTS.Hubs.LOBBY + gameName, {
         whenCreatingConnection: clearLobbyInfo,
         whenConnectionCreated: addEventHandlers,
         debugInConsole: true,
@@ -75,7 +69,7 @@ export default function CheckersLobby() {
         })
 
         connection.on('GameStarted', () => {
-            navigate('/play/checkers')
+            navigate('/play/' + gameName)
         })
 
         connection.onreconnecting(() => setLoading(true))
@@ -128,7 +122,7 @@ export default function CheckersLobby() {
 
                 if (!trySetLobbyInfo(lobby)) {
                     clearLobbyInfo()
-                    console.error('Can not get lobbyinfo!')
+                    console.error('Could not get lobbyinfo!')
                 }
                 setIsHost(true)
             })
@@ -172,8 +166,8 @@ export default function CheckersLobby() {
         if (!connection || !lobbyKeyInput.current) return
 
         const lobbyKey = lobbyKeyInput.current.value
-        if (!lobbyKey || lobbyKey.length !== 4) {
-            showLobbyKeyWarningText('Введите код из 4 цифр')
+        if (!lobbyKey || lobbyKey.length !== KEY_LENGTH) {
+            showLobbyKeyWarningText(`Введите код из ${KEY_LENGTH} цифр`)
             return
         }
         showLobbyKeyWarningText(false)
@@ -211,7 +205,7 @@ export default function CheckersLobby() {
                     showStartGameWarningText(response.value)
                 }
             })
-            .catch(e => console.log(e))
+            .catch(_ => { })
     }
 
     function lobbyKeyInputOnKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
@@ -220,51 +214,55 @@ export default function CheckersLobby() {
 
 
 
-    if (loading) return <Loading />
-    if (error) return <h1>{error}</h1>
-
-
+    if (loading) return { element: <Loading /> }
+    if (error) return { element: <h1>{error}</h1> }
 
     // Created lobby room
-    if (lobbyKey && lobbyPlayers.length > 0) return <div className="checkersLobbyWrapper open">
-        <h1>Лобби (Шашки)</h1>
-        <hr />
-
-        <div className="lobbyKeyWrapper">
-            <h2>Код комнаты</h2>
-            <h1 className="lobbyKey">{lobbyKey}</h1>
-        </div>
-
-        <div className="playerListButtonsWrapper">
-            <fieldset className="playersList">
-                <legend>Список игроков</legend>
+    if (lobbyKey && lobbyPlayers.length > 0) return {
+        element: (
+            <div className="lobbyWrapper open">
+                <h1>{title}</h1>
                 <hr />
-                {lobbyPlayers}
-            </fieldset>
 
-            <div className="btnWrapper">
-                <p ref={startGameWarningMessage}>Тут будут ошибки</p>
-                {isHost && <button className="startGameBtn" onClick={startGame}>Начать игру</button>}
-                <button className="exitBtn" onClick={leaveLobby}>{isHost ? 'Закрыть комнату' : 'Покинуть комнату'}<span className="icon"></span></button>
+                <div className="lobbyKeyWrapper">
+                    <h2>Код комнаты</h2>
+                    <h1 className="lobbyKey">{lobbyKey}</h1>
+                </div>
+
+                <div className="playerListButtonsWrapper">
+                    <fieldset className="playersList">
+                        <legend>Список игроков</legend>
+                        <hr />
+                        {lobbyPlayers}
+                    </fieldset>
+
+                    <div className="btnWrapper">
+                        <p ref={startGameWarningMessage}>Тут будут ошибки</p>
+                        {isHost && <button className="startGameBtn" onClick={startGame}>Начать игру</button>}
+                        <button className="exitBtn" onClick={leaveLobby}>{isHost ? 'Закрыть комнату' : 'Покинуть комнату'}<span className="icon"></span></button>
+                    </div>
+                </div>
             </div>
-        </div>
-    </div>
-
-
+        )
+    }
 
     // Create or Enter buttons
-    return <div className='checkersLobbyWrapper'>
-        <button onClick={createLobby}>Создать игру</button>
-        <button onClick={showJoinDialog}>Подключиться к другому игроку</button>
+    return {
+        element: (
+            <div className='lobbyWrapper' style={{ backgroundImage: getImageUrl(publicBackgroundPath) }}>
+                <button onClick={createLobby}>Создать игру</button>
+                <button onClick={showJoinDialog}>Подключиться к другому игроку</button>
 
-        <dialog ref={joinLobbyDialog}>
-            <p>Введите код комнаты</p>
-            <input ref={lobbyKeyInput} onKeyDown={lobbyKeyInputOnKeyDown} type="text" maxLength={4} autoFocus placeholder="xxxx" />
-            <p id="lobbyKeyWarningMessage" ref={lobbyKeyWarningMessage}></p>
-            <button className="enterLobbyBtn" onClick={joinLobby}>Войти</button>
-            <button className="exitBtn" onClick={hideJoinDialog}>Отмена</button>
-        </dialog>
-    </div>
+                <dialog ref={joinLobbyDialog}>
+                    <p>Введите код комнаты</p>
+                    <input ref={lobbyKeyInput} onKeyDown={lobbyKeyInputOnKeyDown} type="text" maxLength={KEY_LENGTH} autoFocus placeholder={'x'.repeat(KEY_LENGTH)} />
+                    <p id="lobbyKeyWarningMessage" ref={lobbyKeyWarningMessage}></p>
+                    <button className="enterLobbyBtn" onClick={joinLobby}>Войти</button>
+                    <button className="exitBtn" onClick={hideJoinDialog}>Отмена</button>
+                </dialog>
+            </div>
+        )
+    }
 }
 
 

@@ -1,6 +1,6 @@
-@import url(checkersLobbyJoinDialogButtons.css);
+@import url(lobbyJoinDialogButtons.css);
 
-.checkersLobbyWrapper dialog {
+.lobbyWrapper dialog {
     text-align: center;
     color: whitesmoke;
 
@@ -10,19 +10,19 @@
     background-color: var(--background);
 }
 
-.checkersLobbyWrapper dialog::backdrop {
+.lobbyWrapper dialog::backdrop {
     background-color: rgba(0, 0, 0, 0.5);
 }
 
-.checkersLobbyWrapper dialog p {
+.lobbyWrapper dialog p {
     font-size: 1.4em;
 }
 
-.checkersLobbyWrapper dialog button {
+.lobbyWrapper dialog button {
     display: inline;
 }
 
-.checkersLobbyWrapper dialog input {
+.lobbyWrapper dialog input {
     font-size: 1.5em;
     text-align: center;
     width: 5em;
