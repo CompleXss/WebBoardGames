@@ -1,7 +1,7 @@
 import axios from 'axios'
 import { useEffect } from 'react'
 import { useQuery } from 'react-query'
-import { mapCheckers } from './gameHistoryMappers'
+import { mapCheckers, mapMonopoly } from './gameHistoryMappers'
 import { Games, GameHistory } from '../../utilities/Api_DataTypes'
 import Loading from '../Loading/loading'
 import ENDPOINTS from '../../utilities/Api_Endpoints'
@@ -20,9 +20,18 @@ export default function History() {
         .filter(name => history[name].length !== 0).map((name, index) => {
             switch (name) {
                 case Games.checkers:
-                    return <div className='table_wrapper' key={'Game ' + index}>
-                        {mapCheckers(myID, history[name])}
-                    </div>
+                    return (
+                        <div className='table_wrapper' key={'Game ' + index}>
+                            {mapCheckers(myID, history[name])}
+                        </div>
+                    )
+
+                case Games.monopoly:
+                    return (
+                        <div className='table_wrapper' key={'Game ' + index}>
+                            {mapMonopoly(myID, history[name])}
+                        </div>
+                    )
 
                 default:
                     return <h1 style={{ color: 'red' }} key={'Game ' + index}> Неизвестная игра </h1>

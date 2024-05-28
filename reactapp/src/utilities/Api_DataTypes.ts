@@ -19,11 +19,10 @@ export type LeaderboardData = {
 }
 
 export type GameHistory = {
-    [gameName: string]: CheckersHistoryData[]
+    [gameName: string]: GameHistoryData[]
 }
 
-export type CheckersHistoryData = {
-    // gamePlayers: { isWinner: boolean, user: User }[]
+export type GameHistoryData = {
     winners: User[]
     loosers: User[]
     dateTimeStart: Date

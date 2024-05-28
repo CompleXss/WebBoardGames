@@ -1,13 +1,13 @@
 import { UserGameStats } from "../../utilities/Api_DataTypes"
 
-export function mapCheckers(leaderboard: UserGameStats[]) {
+export function mapDefault(leaderboard: UserGameStats[], gameName: string) {
     if (leaderboard.length === 0) return null
 
     return <table>
-        <caption>Шашки</caption>
+        <caption>{gameName}</caption>
         <thead>
             <tr>
-                <td>Игрок</td>
+                <td style={{ width: '30%' }}>Игрок</td>
                 <td>Кол-во игр</td>
                 <td>Кол-во побед</td>
                 <td>Процент побед</td>

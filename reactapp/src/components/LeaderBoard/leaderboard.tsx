@@ -2,7 +2,7 @@ import axios from 'axios'
 import { useEffect } from 'react'
 import { useQuery } from 'react-query'
 import { Games, LeaderboardData } from '../../utilities/Api_DataTypes'
-import { mapCheckers } from './leaderboardMappers'
+import { mapDefault } from './leaderboardMappers'
 import ENDPOINTS from '../../utilities/Api_Endpoints'
 import Loading from '../Loading/loading'
 
@@ -18,9 +18,18 @@ export default function Leaderboard() {
         .filter(name => leaderboard[name].length !== 0).map((name, index) => {
             switch (name) {
                 case Games.checkers:
-                    return <div className='table_wrapper' key={'Game ' + index}>
-                        {mapCheckers(leaderboard[name])}
-                    </div>
+                    return (
+                        <div className='table_wrapper' key={'Game ' + index}>
+                            {mapDefault(leaderboard[name], 'Шашки')}
+                        </div>
+                    )
+
+                case Games.monopoly:
+                    return (
+                        <div className='table_wrapper' key={'Game ' + index}>
+                            {mapDefault(leaderboard[name], 'Монополия')}
+                        </div>
+                    )
 
                 default:
                     return <h1 style={{ color: 'red' }} key={'Game ' + index}> Неизвестная игра </h1>
