@@ -1,0 +1,43 @@
+.profileContainer .changeValueDialog {
+    text-align: start;
+    color: whitesmoke;
+
+    width: 355px;
+    padding-left: 32px;
+    padding-right: 32px;
+    border-radius: 12px;
+    border: 2px solid black;
+    box-shadow: 0 0 12px var(--background);
+    background-color: var(--foreground);
+}
+
+.profileContainer .changeValueDialog::backdrop {
+
+    background-color: rgba(0, 0, 0, 0.5);
+}
+
+.profileContainer .changeValueDialog h1 {
+    text-align: center;
+}
+
+
+
+.profileContainer .changeValueDialog input {
+    border: 2px solid  black;
+    width: 100%;
+}
+
+.profileContainer .changeValueDialog input:disabled {
+    color: lightgray;
+    border-color: gray;
+}
+
+.profileContainer .changeValueDialog .buttonsWrapper {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+}
+
+.profileContainer .changeValueDialog button {
+    width: 100%;
+}

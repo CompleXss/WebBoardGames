@@ -67,7 +67,7 @@ public static class AuthEndpoint
 		var user = await usersRepository.GetByLoginAsync(userDto.Login);
 
 		if (user is null || !auth.VerifyPasswordHash(userDto.Password, user.PasswordHash, user.PasswordSalt))
-			return Results.NotFound("Invalid login or password");
+			return Results.NotFound("Неверный логин или пароль");
 
 		if (!await auth.AddNewTokenPairToResponseCookies(context, user))
 			return Results.Problem("Could not add new token pair to cookies");

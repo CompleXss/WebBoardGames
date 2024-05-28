@@ -9,7 +9,6 @@ public partial class User
 
 	public string PublicID { get; set; } = null!;
 
-	[JsonIgnore]
 	public string Login { get; set; } = null!;
 
 	public string Name { get; set; } = null!;

@@ -1,4 +1,5 @@
 @import url(profileDeleteAccountDialog.css);
+@import url(changeValueDialog.css);
 
 .profileContainer {
     display: grid;
@@ -25,12 +26,14 @@
 }
 
 #accountInfo {
+    display: flex;
+    flex-direction: column;
     box-sizing: border-box;
     border-radius: 12px;
     height: 100%;
     width: 100%;
     padding: 10px 20px;
-    padding-bottom: 30px;
+    padding-bottom: 20px;
 
     grid-row: 2;
     grid-column: 1;
@@ -44,6 +47,7 @@
 
 #accountInfo hr {
     margin-bottom: 20px;
+    width: 100%;
 }
 
 #accountInfo p {
@@ -51,7 +55,7 @@
     margin-right: 8px;
 }
 
-#accountInfo .username {
+#accountInfo .value {
     display: inline-block;
     background-color: var(--background);
     border-radius: 10px;
@@ -59,6 +63,28 @@
 
     margin: 8px 0;
     padding: 6px 12px;
+}
+
+
+#accountInfo .line {
+    display: flex;
+    flex-direction: row;
+}
+
+#accountInfo .editBtn {
+    display: inline-block;
+    padding: 6px 12px;
+    margin-left: 10px;
+    margin-right: 0;
+    
+    color: transparent;
+    background-image: url(/public/icons/edit.svg);
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+
+    background-color: transparent;
+    box-shadow: none;
 }
 
 #loginDeviceInfo {
@@ -138,6 +164,12 @@
     grid-column: 2;
 
     padding-right: 16px;
+}
+
+#accountInfo .changePasswordBtn {
+    margin: 0;
+    margin-top: auto;
+    padding: 10px 16px;
 }
 
 

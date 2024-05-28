@@ -40,6 +40,57 @@ public class UsersRepository(AppDbContext db)
 
 
 
+	public async Task<bool> UpdateUserName(string userPublicID, string name)
+	{
+		var user = await GetByPublicIdAsync(userPublicID);
+		if (user is null) return false;
+
+		try
+		{
+			user.Name = name;
+			return await db.SaveChangesAsync() > 0;
+		}
+		catch (Exception)
+		{
+			return false;
+		}
+	}
+
+	public async Task<bool> UpdateUserLogin(string userPublicID, string login)
+	{
+		var user = await GetByPublicIdAsync(userPublicID);
+		if (user is null) return false;
+
+		try
+		{
+			user.Login = login;
+			return await db.SaveChangesAsync() > 0;
+		}
+		catch (Exception)
+		{
+			return false;
+		}
+	}
+
+	public async Task<bool> UpdateUserPassword(string userPublicID, byte[] passwordHash, byte[] passwordSalt)
+	{
+		var user = await GetByPublicIdAsync(userPublicID);
+		if (user is null) return false;
+
+		try
+		{
+			user.PasswordHash = passwordHash;
+			user.PasswordSalt = passwordSalt;
+			return await db.SaveChangesAsync() > 0;
+		}
+		catch (Exception)
+		{
+			return false;
+		}
+	}
+
+
+
 	public async Task<bool> DeleteByPublicIdAsync(string userPublicID)
 	{
 		var userToRemove = await GetByPublicIdAsync(userPublicID);

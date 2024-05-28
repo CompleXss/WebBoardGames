@@ -2,14 +2,12 @@ import axios from 'axios'
 import React, { useEffect, useRef, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { REDIRECT_QUERY_PARAM_NAME } from '../RequireComponents/RequireAuth'
+import { MIN_LOGIN_LENGTH, MIN_PASSWORD_LENGTH } from 'src/utilities/auth'
 import ENDPOINTS from '../../utilities/Api_Endpoints'
 import './login.css'
 
 // TODO: add request timeout
 // TODO: disable button during request
-
-const MIN_LOGIN_LENGTH = 3
-const MIN_PASSWORD_LENGTH = 3
 
 export default function Login() {
     const loginBtn = useRef<HTMLButtonElement>(null)
@@ -74,7 +72,10 @@ export default function Login() {
     }
 
     function getErrorMessage(e: any) {
-        return (e?.response?.data?.message || 'Server Error')
+        if (e?.response?.status === 404) {
+            return 'Неверный логин или пароль'
+        }
+        return 'Ошибка входа'
     }
 
     function login(login: string, password: string) {
@@ -161,10 +162,12 @@ export default function Login() {
     }
 
     function isLoginInputValid(login: string, password: string): boolean {
-        if (!login || !password || login === '' || password === '') {
+        if (!login || !password || login.trim() === '' || password === '') {
             showWarningText('Заполните все поля')
             return false
         }
+
+        login = login.trim()
 
         if (login.length < MIN_LOGIN_LENGTH) {
             showWarningText('Длина логина должна быть больше ' + (MIN_LOGIN_LENGTH - 1))
@@ -192,6 +195,11 @@ export default function Login() {
 
         if (!name || !password || !repeatPassword || name === '' || password === '' || repeatPassword === '') {
             showWarningText('Заполните все поля')
+            return false
+        }
+
+        if (login.includes(' ')) {
+            showWarningText('В логине не должно быть пробелов')
             return false
         }
 
