@@ -15,6 +15,7 @@ import { ReactComponent as StarIcon } from 'src/svg/star.svg'
 import { DiceCube } from './DiceCube/diceCube';
 import { cumulativeOffset, getImageUrl } from 'src/utilities/frontend.utils';
 import { useWinnerDialog } from '../WinnerDialog/winnerDialog';
+import { getUserInfoByID } from 'src/utilities/EndpointHelpers';
 import reactStringReplace from 'react-string-replace'
 import './monopolyGame.css'
 
@@ -1375,21 +1376,6 @@ function getNumberedFieldName(num: number) {
     if (lastDigit === 0 || lastDigit > 4) return num + ' полей'
 
     return num + ' поля'
-}
-
-async function getUserInfoByID(userID: string): Promise<PlayerInfo> {
-    try {
-        const response = await axios.get(ENDPOINTS.Users.GET_USER_INFO_BY_ID_URL + userID)
-        return response.data as PlayerInfo
-
-    } catch (error) {
-        console.log('Can not get user info!')
-
-        return {
-            publicID: userID,
-            name: 'unknown',
-        }
-    }
 }
 
 function closeCardInfoDialog(e: React.FocusEvent<HTMLDialogElement, Element>) {

@@ -1,10 +1,11 @@
 import axios from "axios"
 import { useEffect, useRef, useState } from "react"
-import { useNavigate } from "react-router-dom"
+import { useLocation, useNavigate } from "react-router-dom"
 import { HubConnection } from "@microsoft/signalr"
 import { useWebsocketConnection } from "src/utilities/useWebsocketHook"
 import { User as PlayerInfo } from "src/utilities/Api_DataTypes"
 import { getImageUrl } from "src/utilities/frontend.utils"
+import { getUserInfoByID } from "src/utilities/EndpointHelpers"
 import ENDPOINTS from "src/utilities/Api_Endpoints"
 import Loading from "src/components/Loading/loading"
 import './lobby.css'
@@ -26,6 +27,7 @@ interface LobbyInfo {
 
 export function useLobby(gameName: string, title: string, publicBackgroundPath: string) {
     const navigate = useNavigate()
+    const location = useLocation()
 
     const [lobbyInfo, setLobbyInfo] = useState<LobbyInfo | undefined>()
     const [isHost, setIsHost] = useState(false)
@@ -40,6 +42,13 @@ export function useLobby(gameName: string, title: string, publicBackgroundPath: 
     const { connection, loading, setLoading, error } = useWebsocketConnection(ENDPOINTS.Hubs.LOBBY + gameName, {
         whenCreatingConnection: clearLobbyInfo,
         whenConnectionCreated: addEventHandlers,
+        whenConnected: () => {
+            const state = location.state as { key: string }
+            if (state?.key) {
+                joinLobby(state.key)
+                location.state = undefined
+            }
+        },
         debugInConsole: true,
     })
 
@@ -172,7 +181,7 @@ export function useLobby(gameName: string, title: string, publicBackgroundPath: 
         joinLobbyDialog.current?.close()
     }
 
-    function joinLobby() {
+    function showJoinLobbyDialog() {
         if (!connection || !lobbyKeyInput.current) return
 
         const lobbyKey = lobbyKeyInput.current.value
@@ -181,6 +190,12 @@ export function useLobby(gameName: string, title: string, publicBackgroundPath: 
             return
         }
         showLobbyKeyWarningText(false)
+
+        joinLobby(lobbyKey)
+    }
+
+    function joinLobby(lobbyKey: string) {
+        if (!connection) return
 
         connection.invoke(ENTER_LOBBY, lobbyKey)
             .then(async response => {
@@ -227,7 +242,7 @@ export function useLobby(gameName: string, title: string, publicBackgroundPath: 
     }
 
     function lobbyKeyInputOnKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
-        if (e.key === 'Enter') joinLobby()
+        if (e.key === 'Enter') showJoinLobbyDialog()
     }
 
     const lobbyPlayers = lobbyPlayerInfos.map((player, index) => {
@@ -285,7 +300,7 @@ export function useLobby(gameName: string, title: string, publicBackgroundPath: 
                     <p>Введите код комнаты</p>
                     <input ref={lobbyKeyInput} onKeyDown={lobbyKeyInputOnKeyDown} type="text" maxLength={KEY_LENGTH} autoFocus placeholder={'x'.repeat(KEY_LENGTH)} />
                     <p id="lobbyKeyWarningMessage" ref={lobbyKeyWarningMessage}></p>
-                    <button className="enterLobbyBtn" onClick={joinLobby}>Войти</button>
+                    <button className="enterLobbyBtn" onClick={showJoinLobbyDialog}>Войти</button>
                     <button className="exitBtn" onClick={hideJoinDialog}>Отмена</button>
                 </dialog>
             </div>
@@ -294,21 +309,6 @@ export function useLobby(gameName: string, title: string, publicBackgroundPath: 
 }
 
 
-
-async function getUserInfoByID(userID: string): Promise<PlayerInfo> {
-    try {
-        const response = await axios.get(ENDPOINTS.Users.GET_USER_INFO_BY_ID_URL + userID)
-        return response.data as PlayerInfo
-
-    } catch (error) {
-        console.log('Could not get user info!')
-
-        return {
-            publicID: userID,
-            name: 'unknown',
-        }
-    }
-}
 
 async function getMyUserInfo(): Promise<PlayerInfo> {
     try {
