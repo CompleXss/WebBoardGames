@@ -1,9 +1,9 @@
 import axios from 'axios'
 import React, { useEffect, useRef, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import { REDIRECT_QUERY_PARAM_NAME } from '../RequireComponents/RequireAuth'
+import { REDIRECT_QUERY_PARAM_NAME } from 'src/components/RequireComponents/RequireAuth'
 import { MIN_LOGIN_LENGTH, MIN_PASSWORD_LENGTH } from 'src/utilities/auth'
-import ENDPOINTS from '../../utilities/Api_Endpoints'
+import ENDPOINTS from 'src/utilities/Api_Endpoints'
 import './login.css'
 
 // TODO: add request timeout
