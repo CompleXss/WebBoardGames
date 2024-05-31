@@ -37,6 +37,7 @@ const ENDPOINTS = {
     GET_IS_IN_GAME: BASE_URL + '/isInGame/',
 
     Hubs: {
+        LOBBY_LIST: BASE_URL + '/lobbyList',
         LOBBY: BASE_URL + '/lobby/',
         GAME: BASE_URL + '/play/',
     },

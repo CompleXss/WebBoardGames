@@ -40,10 +40,6 @@ h1 {
     background: url(/public/images/checkers.jpg)
 }
 
-.chess::before {
-    background: url(/public/images/chess.jpg)
-}
-
 .monopoly::before {
     background: url(/public/images/monopoly.jpg);
 }

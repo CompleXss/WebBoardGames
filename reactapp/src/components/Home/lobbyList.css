@@ -1,0 +1,72 @@
+.lobbyList {
+    width: 80%;
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
+
+    text-align: start;
+    margin-bottom: 32px;
+    padding: 16px 24px;
+    background-color: var(--background);
+    border-radius: 8px;
+}
+
+.lobbyList select {
+    padding: 8px 12px;
+    font-size: 1em;
+    border-radius: 8px;
+    margin-bottom: 16px;
+
+    margin-top: 8px;
+    color: white;
+    border: 1px solid white;
+    background-color: var(--foreground);
+}
+
+.lobbyList .lobby {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    height: 35px;
+
+    gap: 12px;
+    margin-top: 8px;
+    margin-bottom: 8px;
+
+    padding: 8px 12px;
+    border-radius: 8px;
+    background-color: var(--foreground);
+}
+
+.lobbyList .lobby .playersCount {
+    text-wrap: nowrap;
+    padding: 8px 12px;
+    border-radius: 8px;
+    background-color: var(--background);
+}
+
+.lobbyList .lobby .playerName {
+    width: 0;
+    flex-grow: 1;
+    text-overflow: ellipsis;
+    overflow: hidden;
+}
+
+.lobbyList .lobby button {
+    margin-left: auto;
+    border-radius: 8px;
+    cursor: pointer;
+
+    font-size: 1em;
+    border: none;
+    padding: 8px 20px;
+    background-color: var(--white-btn);
+}
+
+.lobbyList .lobby button:hover {
+    background-color: var(--white-btn-hover);
+}
+
+.lobbyList .lobby button:active {
+    background-color: var(--white-btn-active);
+}

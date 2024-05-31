@@ -3,6 +3,13 @@ export enum Games {
     monopoly = 'monopoly',
 }
 
+export const GameNamesRu = new Map<Games, string>([
+    [Games.checkers, 'Шашки'],
+    [Games.monopoly, 'Монополия']
+])
+
+
+
 export type User = {
     publicID: string
     name: string
