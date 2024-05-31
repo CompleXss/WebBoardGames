@@ -40,6 +40,11 @@ public class LobbyService<TGame> : ILobbyService where TGame : PlayableGame
 		return GetUserLobby(userID)?.GetInfo();
 	}
 
+	public IEnumerable<LobbyInfo> GetAllActiveLobbies()
+	{
+		return lobbies.Select(x => x.GetInfo());
+	}
+
 	public async Task<LobbyInfo?> TryCreateLobbyAsync(string hostID, string hostConnectionID)
 	{
 		if (GetUserLobby(hostID) is not null)

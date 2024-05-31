@@ -11,6 +11,8 @@ public static class GameEndpoints
 {
 	public static void MapGameEndpoints(this WebApplication app)
 	{
+		app.MapHub<LobbyListHub>("/lobbyList");
+
 		MapGame<CheckersGame>(app, GameNames.checkers);
 		MapGame<MonopolyGame>(app, GameNames.monopoly);
 	}

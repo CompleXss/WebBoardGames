@@ -137,6 +137,7 @@ public sealed class Lobby : IDisposable
 			HostID = this.HostID,
 			Key = this.Key,
 			PlayerIDs = playerIDsCopy,
+			MaxPlayersCount = lobbyCore.MaxPlayers,
 			Settings = this.Settings,
 			IsFull = this.IsFull,
 			IsEnoughPlayersToStart = this.IsEnoughPlayersToStart,

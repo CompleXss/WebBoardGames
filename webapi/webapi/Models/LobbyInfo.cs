@@ -7,6 +7,8 @@ public record LobbyInfo
 	public required string? HostID { get; init; }
 	public required string Key { get; init; }
 	public required IReadOnlyList<string> PlayerIDs { get; init; }
+	public int PlayersCount => PlayerIDs.Count;
+	public required int MaxPlayersCount { get; init; }
 
 	public bool IsEmpty => PlayerIDs.Count == 0;
 	public required bool IsFull { get; init; }
