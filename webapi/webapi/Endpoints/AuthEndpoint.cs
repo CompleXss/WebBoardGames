@@ -18,11 +18,13 @@ public static class AuthEndpoint
 		// register & login & refresh
 		app.MapPost(AUTH_PATH + "/register", RegisterAsync)
 			.AddEndpointFilter<ValidationFilter<UserRegisterDto>>()
-			.AllowAnonymous();
+			.AllowAnonymous()
+			.RequireRateLimiting("register");
 
 		app.MapPost(AUTH_PATH + "/login", LoginAsync)
 			.AddEndpointFilter<ValidationFilter<UserLoginDto>>()
-			.AllowAnonymous();
+			.AllowAnonymous()
+			.RequireRateLimiting("login");
 
 		app.MapPost(REFRESH_TOKEN_PATH, RefreshTokenAsync)
 			.AllowAnonymous();

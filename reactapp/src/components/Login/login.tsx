@@ -6,9 +6,6 @@ import { MIN_LOGIN_LENGTH, MIN_PASSWORD_LENGTH } from 'src/utilities/auth'
 import ENDPOINTS from 'src/utilities/Api_Endpoints'
 import './login.css'
 
-// TODO: add request timeout
-// TODO: disable button during request
-
 export default function Login() {
     const loginBtn = useRef<HTMLButtonElement>(null)
     const registerBtn = useRef<HTMLButtonElement>(null)
@@ -72,14 +69,24 @@ export default function Login() {
     }
 
     function getErrorMessage(e: any) {
+        if (e?.response?.data?.code === 'Auth.UserAlreadyExists') {
+            return 'Пользователь с таким логином уже существует'
+        }
+        if (e?.response?.status === 429) {
+            return 'Слишком много запросов. Подождите немного'
+        }
         if (e?.response?.status === 404) {
             return 'Неверный логин или пароль'
         }
-        return 'Ошибка входа'
+        return 'Ошибка'
     }
 
     function login(login: string, password: string) {
         console.log('trying to login as: ' + login)
+
+        if (loginBtn.current) {
+            loginBtn.current.disabled = true
+        }
 
         axios.post(ENDPOINTS.Auth.POST_LOGIN_URL, {
             login: login,
@@ -89,6 +96,9 @@ export default function Login() {
             showWarningText('Вход успешен!', 'green')
             setTimeout(() => navigate(redirectAfterLogin), 1000)
         }).catch(e => {
+            if (loginBtn.current) {
+                loginBtn.current.disabled = false
+            }
             console.log(e?.response?.data || e?.message || e)
             showWarningText(getErrorMessage(e))
         })
@@ -96,6 +106,10 @@ export default function Login() {
 
     function register(login: string, name: string, password: string) {
         console.log('trying to register ' + login)
+
+        if (registerBtn.current) {
+            registerBtn.current.disabled = true
+        }
 
         axios.post(ENDPOINTS.Auth.POST_REGISTER_URL, {
             login: login,
@@ -106,6 +120,9 @@ export default function Login() {
             showWarningText('Регистрация успешна!', 'green')
             setTimeout(() => navigate(redirectAfterLogin), 1000)
         }).catch(e => {
+            if (registerBtn.current) {
+                registerBtn.current.disabled = false
+            }
             console.log(e?.response?.data || e?.message || e)
             showWarningText(getErrorMessage(e))
         })

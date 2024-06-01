@@ -37,6 +37,9 @@ builder.Services.AddScoped<UserGameStatisticsRepository>();
 builder.Services.ConfigureAuthentication(config);
 builder.Services.ConfigureAuthorization();
 
+// Configure rate limiting
+builder.Services.ConfigureRateLimiting();
+
 // Configure CORS
 builder.Services.AddCORSPolicy(config);
 
@@ -70,6 +73,7 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
+app.UseRateLimiter();
 
 
 

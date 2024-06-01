@@ -112,11 +112,16 @@
         margin-right 0.3s ease-in-out;
 }
 
-#loginWrapper button:hover {
+#loginWrapper button:disabled {
+    cursor: default;
+    background-color: #aaa;
+}
+
+#loginWrapper button:not(:disabled):hover {
     background-color: #ccc;
 }
 
-#loginWrapper button:active {
+#loginWrapper button:not(:disabled):active {
     background-color: #aaa;
 }
 
