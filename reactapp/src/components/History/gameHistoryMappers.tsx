@@ -5,7 +5,7 @@ export function mapCheckers(myID: string, history: GameHistoryData[]) {
     if (history.length === 0) return null
 
     return <table>
-        <caption>Шашки</caption>
+        {/* <caption>Шашки</caption> */}
         <thead>
             <tr>
                 <td style={{ width: '38%' }}>Противник</td>
@@ -40,7 +40,7 @@ export function mapMonopoly(myID: string, history: GameHistoryData[]) {
     if (history.length === 0) return null
 
     return <table>
-        <caption>Монополия</caption>
+        {/* <caption>Монополия</caption> */}
         <thead>
             <tr>
                 <td style={{ width: '38%' }}>Противники</td>

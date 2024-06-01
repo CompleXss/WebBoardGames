@@ -1,12 +1,14 @@
 import axios from 'axios'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useQuery } from 'react-query'
 import { mapCheckers, mapMonopoly } from './gameHistoryMappers'
-import { Games, GameHistory } from '../../utilities/Api_DataTypes'
+import { Games, GameHistory, GameNamesRu } from '../../utilities/Api_DataTypes'
 import Loading from '../Loading/loading'
 import ENDPOINTS from '../../utilities/Api_Endpoints'
+import './history.css'
 
 export default function History() {
+    const [gameName, setGameName] = useState<Games>(Object.values(Games)[0] ?? Games.checkers)
     const { data, isLoading, isError } = useQuery('history', fetchData)
     const d = data as { userID: string, history: GameHistory }
     const myID = d ? d.userID : null
@@ -17,6 +19,7 @@ export default function History() {
     }, [])
 
     const games = !history || !myID ? [] : Object.keys(history)
+        .filter(name => name === gameName)
         .filter(name => history[name].length !== 0).map((name, index) => {
             switch (name) {
                 case Games.checkers:
@@ -43,9 +46,25 @@ export default function History() {
 
     if (games.length === 0) return <h1> У тебя еще нет истории игр. <br /> Самое время поиграть :) </h1>
 
+    const gameNames: JSX.Element[] = []
+    let i = 0
+    GameNamesRu.forEach((displayName, codeName) => {
+        gameNames.push((
+            <option value={codeName} key={i++}>{displayName}</option>
+        ))
+    })
+
     return (
-        <div>
+        <div className='history'>
             <h1>Твоя история игр</h1>
+            <select value={gameName} onChange={x => {
+                const value = (x.currentTarget.value) as Games
+                if (value in Games) {
+                    setGameName(value)
+                }
+            }}>
+                {gameNames}
+            </select>
             <br />
             {games}
         </div>

@@ -1,0 +1,14 @@
+.history {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.history select {
+    font-size: 1.6em;
+    margin-left: auto;
+    margin-right: auto;
+
+    justify-self: center;
+    align-self: center;
+}
