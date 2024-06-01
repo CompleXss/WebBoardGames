@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using webapi.Data;
+using webapi.Models;
 using webapi.Models.Data;
 
 namespace webapi.Repositories;
@@ -9,35 +10,30 @@ public class GameHistoryRepository(AppDbContext db, ILogger<GameHistoryRepositor
 	private readonly AppDbContext db = db;
 	private readonly ILogger<GameHistoryRepository> logger = logger;
 
-	public Task<List<GameHistory>> GetByUserIdAsync(long userID)
-	{
-		return db.GamePlayers
-			.Where(x => x.UserID == userID)
-			.Include(x => x.GameHistory).ThenInclude(x => x.Game)
-			.Select(x => x.GameHistory)
-			.ToListAsync();
-	}
-
 	public async Task<Dictionary<string, List<GameHistory>>> GetByUserPublicIdAsync(string userPublicID)
 	{
-		var games = await db.Games.ToListAsync();
-		var dict = new Dictionary<string, List<GameHistory>>(games.Count);
+		var games = Enum.GetNames<GameNames>();
+		var dict = new Dictionary<string, List<GameHistory>>(games.Length);
 
-		foreach (var game in games)
+		foreach (var gameName in games)
 		{
-			var history = await db.GamePlayers
-				.Include(x => x.User).Where(x => x.User.PublicID == userPublicID)
-				.Include(x => x.GameHistory)
-				.Include(x => x.GameHistory.Game).Where(x => x.GameHistory.Game.ID == game.ID)
-				.Include(x => x.GameHistory.GamePlayers).ThenInclude(x => x.User)
-				.Select(x => x.GameHistory)
-				.OrderByDescending(x => x.DateTimeStart)
-				.ToListAsync();
-
-			dict[game.Name] = history;
+			var history = await GetByUserPublicIdAsync(userPublicID, gameName);
+			dict[gameName] = history;
 		}
 
 		return dict;
+	}
+
+	public async Task<List<GameHistory>> GetByUserPublicIdAsync(string userPublicID, string gameName)
+	{
+		return await db.GamePlayers
+			.Include(x => x.User).Where(x => x.User.PublicID == userPublicID)
+			.Include(x => x.GameHistory)
+			.Include(x => x.GameHistory.Game).Where(x => x.GameHistory.Game.Name == gameName)
+			.Include(x => x.GameHistory.GamePlayers).ThenInclude(x => x.User)
+			.Select(x => x.GameHistory)
+			.OrderByDescending(x => x.DateTimeStart)
+			.ToListAsync();
 	}
 
 	public async Task<bool> AddAsync(GameHistory history)
