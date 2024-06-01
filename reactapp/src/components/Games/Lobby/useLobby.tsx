@@ -10,9 +10,6 @@ import ENDPOINTS from "src/utilities/Api_Endpoints"
 import Loading from "src/components/Loading/loading"
 import './lobby.css'
 
-// TODO: при обновлении страницы лобби закрывается
-// TODO: lobby key click to copy
-
 const CREATE_LOBBY = 'CreateLobby'
 const ENTER_LOBBY = 'EnterLobby'
 const LEAVE_LOBBY = 'LeaveLobby'
@@ -294,7 +291,7 @@ export function useLobby(gameName: string, title: string, publicBackgroundPath: 
         element: (
             <div className='lobbyWrapper' style={{ backgroundImage: getImageUrl(publicBackgroundPath) }}>
                 <button onClick={createLobby}>Создать игру</button>
-                <button onClick={showJoinDialog}>Подключиться к другому игроку</button>
+                <button onClick={showJoinDialog}>Подключиться к другому игроку по коду</button>
 
                 <dialog ref={joinLobbyDialog}>
                     <p>Введите код комнаты</p>
