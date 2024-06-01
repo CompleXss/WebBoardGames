@@ -4,6 +4,9 @@ select {
     border-radius: 8px;
     margin-bottom: 16px;
 
+    font-family: -apple-system, BlinkMacSystemFont, 'Montserrat', 'Roboto', 'Segoe UI', 'Oxygen',
+        'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+        sans-serif;
     margin-top: 8px;
     color: white;
     border: 1px solid white;
