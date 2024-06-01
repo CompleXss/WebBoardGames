@@ -2,6 +2,7 @@
 @import url(globalStyles/buttons.css);
 @import url(globalStyles/input.css);
 @import url(globalStyles/expandable.css);
+@import url(globalStyles/select.css);
 
 .wrapper {
     min-height: 100vh;

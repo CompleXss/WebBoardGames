@@ -112,7 +112,7 @@ export default function Home() {
                 error ? <h2>Не удалось загрузить список лобби</h2> :
 
                     <div className='lobbyList'>
-                        <select value={gameName} className='gameNameSelect' onChange={x => {
+                        <select value={gameName} onChange={x => {
                             const value = (x.currentTarget.value) as Games
                             if (value in Games) {
                                 setGameName(value)
