@@ -59,6 +59,9 @@ export default function Profile() {
 
 
     function openDeleteDialog() {
+        if (deleteAccountPassInput.current) {
+            deleteAccountPassInput.current.value = ''
+        }
         deleteAccountDialog.current?.showModal()
     }
 
