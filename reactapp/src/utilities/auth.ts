@@ -3,7 +3,7 @@ import ENDPOINTS from "./Api_Endpoints";
 import { NavigateFunction } from "react-router-dom";
 
 export const MIN_LOGIN_LENGTH = 3
-export const MIN_PASSWORD_LENGTH = 3
+export const MIN_PASSWORD_LENGTH = 8
 
 
 

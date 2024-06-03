@@ -9,10 +9,10 @@ public class ChangePasswordValidation : AbstractValidator<ChangeUserPasswordDto>
 	{
 		RuleFor(x => x.OldPassword)
 			.NotEmpty()
-			.MinimumLength(3);
+			.MinimumLength(8);
 
 		RuleFor(x => x.NewPassword)
 			.NotEmpty()
-			.MinimumLength(3);
+			.MinimumLength(8);
 	}
 }

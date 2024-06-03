@@ -16,6 +16,6 @@ public class LoginValidation : AbstractValidator<UserLoginDto>
 		// TODO: password validation
 		RuleFor(x => x.Password)
 			.NotEmpty()
-			.MinimumLength(3);
+			.MinimumLength(8);
 	}
 }
