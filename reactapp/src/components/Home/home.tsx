@@ -32,7 +32,7 @@ export default function Home() {
     useEffect(() => {
         document.title = 'Главная'
         addMeta('description', 'Настольные игры онлайн')
-        addMeta('keywords', 'Настольные игры, шашки, шахматы, монополия')
+        addMeta('keywords', 'Настольные игры, шашки, монополия')
     }, [])
 
     useEffect(() => {
