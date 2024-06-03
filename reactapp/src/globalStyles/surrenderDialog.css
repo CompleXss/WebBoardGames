@@ -1,0 +1,52 @@
+.surrenderDialog {
+    padding: 24px 36px;
+    border-radius: 10px;
+
+    border: none;
+    color: white;
+    box-shadow: 0 0 20px black;
+    background-color: var(--foreground);
+}
+
+.surrenderDialog[open]::backdrop {
+    background-color: rgba(0, 0, 0, 0.5);
+}
+
+.surrenderDialog .buttons {
+    display: flex;
+    flex-direction: row;
+    justify-content: stretch;
+    gap: 12px;
+}
+
+.surrenderDialog button {
+    width: 100%;
+    padding: 8px 16px;
+    border: none;
+    border-radius: 8px;
+
+    cursor: pointer;
+    font-size: large;
+    background-color: var(--white-btn);
+}
+
+.surrenderDialog button:hover {
+    background-color: var(--white-btn-hover);
+}
+
+.surrenderDialog button:active {
+    background-color: var(--white-btn-active);
+}
+
+.surrenderDialog button:nth-of-type(1) {
+    color: white;
+    background-color: var(--red-btn);
+}
+
+.surrenderDialog button:nth-of-type(1):hover {
+    background-color: var(--red-btn-hover);
+}
+
+.surrenderDialog button:nth-of-type(1):active {
+    background-color: var(--red-btn-active);
+}

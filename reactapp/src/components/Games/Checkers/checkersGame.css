@@ -114,8 +114,6 @@
 
     height: 100%;
     width: 100%;
-
-    background-color: var(--background);
 }
 
 .checkersContainer .enemyZone h1 {
@@ -130,6 +128,24 @@
 
 
 
+.checkersContainer .surrenderBtn {
+    font-size: large;
+    border: none;
+    border-radius: 6px;
+    padding: 8px 24px;
+
+    cursor: pointer;
+    color: white;
+    background-color: var(--red-btn);
+}
+
+.checkersContainer .surrenderBtn:hover {
+    background-color: var(--red-btn-hover);
+}
+
+.checkersContainer .surrenderBtn:active {
+    background-color: var(--red-btn-active);
+}
 
 
 

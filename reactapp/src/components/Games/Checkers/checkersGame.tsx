@@ -33,6 +33,7 @@ export default function CheckersGame() {
     const enemyIsOffline = useRef<HTMLHeadingElement>(null)
     const whosTurn = useRef<HTMLHeadingElement>(null)
     const { showWinner, element: winnerDialog, } = useWinnerDialog()
+    const surrenderDialog = useRef<HTMLDialogElement>(null)
 
     useEffect(() => {
         document.title = 'Шашки'
@@ -222,6 +223,20 @@ export default function CheckersGame() {
             .catch(e => console.log(e))
     }
 
+    function showSurrenderDialog() {
+        surrenderDialog.current?.showModal()
+    }
+
+    function surrender() {
+        connection?.invoke('Surrender')
+            .then(x => {
+                if (x.statusCOde && x.statusCode !== 200) {
+                    console.log(x.value)
+                }
+            })
+            .catch(_ => { })
+    }
+
 
 
     if (loading || reloading) return <Loading />
@@ -243,9 +258,22 @@ export default function CheckersGame() {
             </div>
         </div>
 
-        {/* <div className='myZone'>
-            <h1>Время игры?</h1>
-        </div> */}
+        <div className='myZone'>
+            <button className='surrenderBtn' onClick={showSurrenderDialog}>Сдаться 💀</button>
+        </div>
+
+        <dialog ref={surrenderDialog} className='surrenderDialog'>
+            <h2>Вы уверены, что хотите сдаться?</h2>
+            <div className='buttons'>
+                <button onClick={() => {
+                    surrender()
+                    surrenderDialog.current?.close()
+                }}>Да</button>
+                <button onClick={() => {
+                    surrenderDialog.current?.close()
+                }}>Нет</button>
+            </div>
+        </dialog>
     </div>
 }
 

@@ -99,6 +99,7 @@ export default function MonopolyGame() {
     const playerDots = useRef<HTMLDivElement>(null)
     const [playerDotPositions, setPlayerDotPositions] = useState<Map<string, { x: number, y: number }>>()
     const { showWinner, element: winnerDialog, } = useWinnerDialog()
+    const surrenderDialog = useRef<HTMLDialogElement>(null)
 
     useEffect(() => {
         document.title = 'Монополия'
@@ -333,6 +334,10 @@ export default function MonopolyGame() {
                 }
             })
             .catch(e => console.log(e))
+    }
+
+    function showSurrenderDialog() {
+        surrenderDialog.current?.showModal()
     }
 
     function surrender() {
@@ -1067,7 +1072,7 @@ export default function MonopolyGame() {
                         <button>Договор 💸</button>
                     )}
                     {playerID === gameState.myID && (
-                        <button onClick={surrender}>Сдаться 💀</button>
+                        <button onClick={showSurrenderDialog}>Сдаться 💀</button>
                     )}
                 </div>
             </div>
@@ -1248,6 +1253,19 @@ export default function MonopolyGame() {
                     </div>
                 </div>
             </div>
+
+            <dialog ref={surrenderDialog} className='surrenderDialog'>
+                <h2>Вы уверены, что хотите сдаться?</h2>
+                <div className='buttons'>
+                    <button onClick={() => {
+                        surrender()
+                        surrenderDialog.current?.close()
+                    }}>Да</button>
+                    <button onClick={() => {
+                        surrenderDialog.current?.close()
+                    }}>Нет</button>
+                </div>
+            </dialog>
         </div>
     )
 }
