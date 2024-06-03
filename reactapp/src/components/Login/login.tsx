@@ -288,7 +288,6 @@ function getRepeatPasswordInputElement(): HTMLInputElement | null {
 function executeOnEnterPress(action: Function) {
     return (e: React.KeyboardEvent<HTMLInputElement>) => {
         if (e.key !== 'Enter') return
-        console.log('enter')
         action()
     }
 }
