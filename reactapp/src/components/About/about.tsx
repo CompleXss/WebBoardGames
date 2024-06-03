@@ -3,14 +3,25 @@ import './about.css'
 
 export default function About() {
     useEffect(() => {
-        document.title = 'О создателе'
+        document.title = 'О нас'
     }, [])
 
-    return <div className='aboutContainer'>
-        <h1> Это приложение — дипломная работа студента 4 курса под ником </h1>
-        <h1 className='nick'>CompleX</h1>
-        <hr />
-        <a href='https://github.com/CompleXss'>Мой Github</a>
-        <a href='https://github.com/CompleXss/WebBoardGames'>Репозиторий этого приложения на Github</a>
-    </div>
+    return (
+        <div className='aboutContainer'>
+            <h2> Эта бесплатная онлайн-платформа — место, где можно поиграть в настольных игр по сети с друзьями или незнакомцами. </h2>
+            <h3> Все игры абсолютно бесплатны, а ещё у платформы открытый исходный код! </h3>
+            <hr />
+
+            <p> Хочется помочь с созданием или улучшением игр и других аспектов платформы? </p>
+            <p> А может, вы задаётесь вопросом: «А точно ли кубик меня не обманывает?» и хотите проверить, как оно там всё работает под капотом? </p>
+            <p> В любом случае, добро пожаловать на страничку репозитория в гитхабе!  </p>
+            <br />
+
+            <a href='https://github.com/CompleXss/WebBoardGames' className='github'>Репозиторий этой платформы</a>
+            <a href='https://github.com/CompleXss' className='github'>Профиль создателя</a>
+            <hr />
+
+            <p>Все представленные здесь бренды и торговые марки принадлежат правообладателям и размещены на правах рекламы.</p>
+        </div>
+    )
 }
