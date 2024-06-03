@@ -105,7 +105,7 @@ public abstract class PlayableGame : IDisposable
 			return;
 		}
 
-		hub.Clients.Groups(Key).SendAsync(method, arg); // todo: execute sync ?
+		hub.Clients.Groups(Key).SendAsync(method, arg);
 	}
 
 	protected void CloseGameWithNoWinner()

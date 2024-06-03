@@ -68,8 +68,6 @@ enum ActionType {
 
 
 
-// todo: get setup info instead of map json
-
 const DICE_TIME = 1000
 const AFTER_DICE_WAIT_TIME = 500
 const MOVE_TIME = 1000
@@ -137,8 +135,6 @@ export default function MonopolyGame() {
         const playerIDs = Object.keys(gameState.players)
         for (const playerID of playerIDs) {
             const info = gameState.players[playerID]
-            // todo update player state???
-
             movePlayerDot_direct(playerID, info.position)
         }
     }, [gameState])
@@ -221,7 +217,6 @@ export default function MonopolyGame() {
                 return
             }
 
-            // todo gameClosed
             showWinner(winnerID)
         })
 
@@ -313,7 +308,7 @@ export default function MonopolyGame() {
         function isEnoughMoneyToPay(payAmount: number): boolean {
             if (!gameState) return false
 
-            // todo
+            // todo isEnoughMoneyToPay
 
             return payAmount <= gameState.players[gameState.myID].money
         }
@@ -368,7 +363,6 @@ export default function MonopolyGame() {
             .catch(e => { })
     }
 
-    // todo
     function getTextForPayReason(reason: string): { title: string, description: string } {
         switch (reason) {
             case 'ExitPrison':
@@ -391,8 +385,8 @@ export default function MonopolyGame() {
 
             default:
                 return {
-                    title: '',
-                    description: ''
+                    title: 'Надо заплатить',
+                    description: 'Кто ж знал, что все так обернется...'
                 }
         }
     }

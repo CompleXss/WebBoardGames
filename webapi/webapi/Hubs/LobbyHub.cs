@@ -6,9 +6,6 @@ using webapi.Services;
 
 namespace webapi.Hubs;
 
-// TODO: Возможность перезагружать страницу и нормально переподключаться (+ задержка перед киком)
-// TODO: Возможность кикать игроков
-
 public class LobbyHub<TGame> : Hub<ILobbyHub> where TGame : PlayableGame
 {
 	private readonly ILobbyService lobbyService;

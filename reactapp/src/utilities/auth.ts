@@ -48,10 +48,7 @@ async function refreshTokenPair(config: any) {
             return axios(config)
         }
 
-    } catch (e) {
-        //const response = (e as any).response
-        //console.log(response ?? e)
-    }
+    } catch (e) { }
 }
 
 export function setNavigateFunc(navigate: NavigateFunction) {

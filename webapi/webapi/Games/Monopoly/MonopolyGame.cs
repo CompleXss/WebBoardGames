@@ -795,7 +795,6 @@ public class MonopolyGame : PlayableGame
 	/// </returns>
 	private bool ApplyEventCellEffect(int playerIndex, string eventName)
 	{
-		// todo event cells
 		string playerID = PlayerIDs[playerIndex];
 		float rng = random.NextSingle();
 
