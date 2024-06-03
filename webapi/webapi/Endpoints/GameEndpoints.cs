@@ -11,7 +11,8 @@ public static class GameEndpoints
 {
 	public static void MapGameEndpoints(this WebApplication app)
 	{
-		app.MapHub<LobbyListHub>("/lobbyList");
+		app.MapHub<LobbyListHub>("/lobbyList")
+			.AllowAnonymous();
 
 		MapGame<CheckersGame>(app, GameNames.checkers);
 		MapGame<MonopolyGame>(app, GameNames.monopoly);
