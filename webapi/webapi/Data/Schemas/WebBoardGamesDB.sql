@@ -5,7 +5,7 @@
 -- Dumped from database version 16.2
 -- Dumped by pg_dump version 16.2
 
--- Started on 2024-05-27 03:13:19
+-- Started on 2024-06-03 18:14:58
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -316,10 +316,10 @@ CREATE TRIGGER update_user_game_statistics_after_game_players_change AFTER INSER
 
 --
 -- TOC entry 4686 (class 2620 OID 17240)
--- Name: game_history update_user_game_statistics_before_game_players_change; Type: TRIGGER; Schema: public; Owner: -
+-- Name: game_history update_user_game_statistics_before_game_history_change; Type: TRIGGER; Schema: public; Owner: -
 --
 
-CREATE TRIGGER update_user_game_statistics_before_game_players_change BEFORE DELETE ON public.game_history FOR EACH ROW EXECUTE FUNCTION public.decrement_user_game_statistics();
+CREATE TRIGGER update_user_game_statistics_before_game_history_change BEFORE DELETE ON public.game_history FOR EACH ROW EXECUTE FUNCTION public.decrement_user_game_statistics();
 
 
 --
@@ -341,12 +341,12 @@ ALTER TABLE ONLY public.game_players
 
 
 --
--- TOC entry 4685 (class 2606 OID 16605)
+-- TOC entry 4685 (class 2606 OID 17241)
 -- Name: game_players game_players_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.game_players
-    ADD CONSTRAINT game_players_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id) ON DELETE SET NULL;
+    ADD CONSTRAINT game_players_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id) ON DELETE CASCADE;
 
 
 --
@@ -376,7 +376,7 @@ ALTER TABLE ONLY public.user_refresh_token
     ADD CONSTRAINT user_refresh_token_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id) ON DELETE CASCADE;
 
 
--- Completed on 2024-05-27 03:13:19
+-- Completed on 2024-06-03 18:14:59
 
 --
 -- PostgreSQL database dump complete
