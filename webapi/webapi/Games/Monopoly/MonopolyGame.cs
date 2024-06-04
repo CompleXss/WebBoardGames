@@ -744,7 +744,7 @@ public class MonopolyGame : PlayableGame
 		else if (expectedActionTypes.Count == 0)
 		{
 			// should not be happening
-			expectedActionTypes.Add(MonopolyPlayerAction.Type.DiceToMove);
+			MakeNextPlayerActing();
 		}
 	}
 
