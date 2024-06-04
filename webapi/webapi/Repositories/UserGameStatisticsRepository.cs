@@ -32,7 +32,7 @@ public class UserGameStatisticsRepository(AppDbContext db)
 			.Include(x => x.Game)
 			.Include(x => x.User)
 			.OrderByDescending(x => x.WinCount)
-			.OrderBy(x => x.PlayCount)
+			.ThenByDescending(x => x.PlayCount)
 			.Take(count)
 			.ToListAsync();
 	}
@@ -43,7 +43,7 @@ public class UserGameStatisticsRepository(AppDbContext db)
 			.Include(x => x.Game).Where(x => x.Game.Name == gameName)
 			.Include(x => x.User)
 			.OrderByDescending(x => x.WinCount)
-			.OrderBy(x => x.PlayCount)
+			.ThenByDescending(x => x.PlayCount)
 			.Take(count)
 			.ToListAsync();
 	}
