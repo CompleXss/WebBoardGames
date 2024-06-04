@@ -1035,7 +1035,7 @@ export default function MonopolyGame() {
         const name = playerInfos.get(playerID)?.name ?? '???'
 
         return (
-            <div className='playerCardDropDown' onClick={e => {
+            <div className='playerCardDropDown' key={i} onClick={e => {
                 const element = e.currentTarget.querySelector('.playerCardButtons')
                 element?.classList.toggle('show')
 
@@ -1056,7 +1056,7 @@ export default function MonopolyGame() {
 
                 window.addEventListener('click', close)
             }}>
-                <div className='playerCard' mnpl-dead={player.isDead ? 1 : undefined} key={i}>
+                <div className='playerCard' mnpl-dead={player.isDead ? 1 : undefined}>
                     <p>{name}</p>
                     <p>
                         {player.isDead ? '💀' : numberWithCommas(player.money)}
