@@ -209,7 +209,7 @@ export default function MonopolyGame() {
         connection.onreconnecting(() => setReloading(true))
         connection.onreconnected(getGameState)
         connection.onclose(() => {
-            //navigate('/') // todo uncomment
+            navigate('/')
         })
 
         connectionOnExclusive(connection, 'GameClosed', winnerID => {
@@ -308,9 +308,6 @@ export default function MonopolyGame() {
 
         function isEnoughMoneyToPay(payAmount: number): boolean {
             if (!gameState) return false
-
-            // todo isEnoughMoneyToPay
-
             return payAmount <= gameState.players[gameState.myID].money
         }
     }
@@ -1068,9 +1065,9 @@ export default function MonopolyGame() {
                     <div className={'onlineIndicator ' + (player.isOnline ? 'on' : 'off')}></div>
                 </div>
                 <div className='playerCardButtons'>
-                    {!player.isDead && playerID !== gameState.myID && (
+                    {/* {!player.isDead && playerID !== gameState.myID && (
                         <button>Договор 💸</button>
-                    )}
+                    )} */}
                     {playerID === gameState.myID && (
                         <button onClick={showSurrenderDialog}>Сдаться 💀</button>
                     )}
@@ -1078,57 +1075,6 @@ export default function MonopolyGame() {
             </div>
         )
     })
-
-
-
-    // todo delete temp players
-    playersElements.push((
-        <div className='playerCardDropDown' onClick={e => {
-            const element = e.currentTarget.querySelector('.playerCardButtons')
-            element?.classList.toggle('show')
-
-            const closest = (e.target as Element)?.closest('.playerCardDropDown')
-
-            function close(e: MouseEvent) {
-                const target = e.target as Element
-                if (!target) return
-
-                if (target.closest('.playerCardDropDown') !== closest) {
-                    element?.classList.toggle('show')
-                }
-
-                if (!element?.classList.contains('show')) {
-                    window.removeEventListener('click', close)
-                }
-            }
-
-            window.addEventListener('click', close)
-        }}>
-            <div className='playerCard' key={10}>
-                <p>testasd;lkiahs;lkdhasjklhd</p>
-                <p>99,999</p>
-                <div className='line' style={{ backgroundColor: 'red' }}></div>
-                <div className='onlineIndicator on'></div>
-            </div>
-            <div className='playerCardButtons'>
-                <button>Договор 💸</button>
-            </div>
-        </div>
-    ))
-
-    playersElements.push((
-        <div className='playerCardDropDown'>
-            <div className='playerCard' mnpl-dead={1} key={11}>
-                <p>im dead bruh</p>
-                <p>💀</p>
-                <div className='line' style={{ backgroundColor: 'green' }}></div>
-                <div className='onlineIndicator off'></div>
-            </div>
-            <div className='playerCardButtons'>
-                {/* <button>Договор 💸</button> */}
-            </div>
-        </div>
-    ))
 
 
 
