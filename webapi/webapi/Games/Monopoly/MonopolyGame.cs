@@ -230,15 +230,6 @@ public class MonopolyGame : PlayableGame
 			return false;
 		}
 
-
-
-		// todo remove cw
-		Console.WriteLine("=== New action ===");
-		Console.WriteLine(action.ActionType.ToString());
-		Console.WriteLine(action.CellID);
-
-
-
 		if (!ValidateActionType(action.ActionType))
 		{
 			error = "Недопустимое действие в данный момент.";
@@ -247,6 +238,8 @@ public class MonopolyGame : PlayableGame
 
 		var expectedActionTypes_BACKUP = expectedActionTypes.ToArray();
 		expectedActionTypes.Clear();
+
+		error = string.Empty;
 
 		bool actionResult = action.ActionType switch
 		{
@@ -270,7 +263,9 @@ public class MonopolyGame : PlayableGame
 		}
 		else
 		{
-			error = "Так походить нельзя.";
+			if (string.IsNullOrWhiteSpace(error))
+				error = "Так походить нельзя.";
+
 			expectedActionTypes.Clear();
 			expectedActionTypes.AddRange(expectedActionTypes_BACKUP);
 		}
