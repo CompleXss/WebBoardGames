@@ -29,7 +29,7 @@ public class GameService<TGame> : IGameService where TGame : PlayableGame
 
 	public bool TryStartNewGame(IReadOnlyList<string> playerIDs, object? settings)
 	{
-		var game = gameFactory(gameCore, (IHubContext)hub, playerIDs, settings);
+		var game = gameFactory(gameCore, (IHubContext)hub, logger, playerIDs, settings);
 		if (game.ErrorWhileCreating)
 			return false;
 

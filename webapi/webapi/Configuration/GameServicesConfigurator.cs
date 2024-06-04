@@ -26,7 +26,7 @@ public static class GameServicesConfigurator
 				minPlayersCount: 2,
 				maxPlayersCount: 2
 			),
-			(gameCore, hub, playerIDs, _) => new CheckersGame(gameCore, hub, playerIDs)
+			(gameCore, hub, logger, playerIDs, _) => new CheckersGame(gameCore, hub, logger, playerIDs)
 		);
 
 		// monopoly
@@ -43,7 +43,7 @@ public static class GameServicesConfigurator
 				minPlayersCount: 2,
 				maxPlayersCount: 4
 			),
-			(gameCore, hub, playerIDs, _) => new MonopolyGame(gameCore, hub, playerIDs)
+			(gameCore, hub, logger, playerIDs, _) => new MonopolyGame(gameCore, hub, logger, playerIDs)
 		);
 	}
 

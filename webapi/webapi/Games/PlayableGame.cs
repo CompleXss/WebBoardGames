@@ -7,10 +7,11 @@ namespace webapi.Games;
 
 public abstract class PlayableGame : IDisposable
 {
-	public delegate PlayableGame Factory(GameCore gameCore, IHubContext hub, IReadOnlyList<string> playerIDs, object? settings);
+	public delegate PlayableGame Factory(GameCore gameCore, IHubContext hub, ILogger logger, IReadOnlyList<string> playerIDs, object? settings);
 
 	private readonly GameCore gameCore;
 	private readonly IHubContext hub;
+	private readonly ILogger logger;
 
 	public string Key { get; }
 	private readonly int key;
@@ -46,10 +47,11 @@ public abstract class PlayableGame : IDisposable
 	private bool keyCaptured;
 	private bool _disposed;
 
-	public PlayableGame(GameCore gameCore, IHubContext hub, IReadOnlyList<string> playerIDs)
+	public PlayableGame(GameCore gameCore, IHubContext hub, ILogger logger, IReadOnlyList<string> playerIDs)
 	{
 		this.gameCore = gameCore;
 		this.hub = hub;
+		this.logger = logger;
 		this.keyCaptured = gameCore.KeyPool.TryGetRandom(out key);
 		this.ErrorWhileCreating = !keyCaptured;
 
@@ -230,6 +232,7 @@ public abstract class PlayableGame : IDisposable
 
 			try
 			{
+				logger.LogInformation("All players disconnected from {gameName} game with key {key}. Closing this game in 1 minute.", this.gameCore.GameName, this.Key);
 				await Task.Delay(TimeSpan.FromMinutes(1), cts.Token);
 
 				CloseGameWithNoWinner();
@@ -244,6 +247,8 @@ public abstract class PlayableGame : IDisposable
 			{
 				if (cts is null)
 					return;
+
+				logger.LogInformation("Player connected to {gameName} game with key {key}. Stopped closing this game.", this.gameCore.GameName, this.Key);
 
 				try
 				{

@@ -13,8 +13,8 @@ public sealed class CheckersGame : PlayableGame
 
 	public CheckersCell[,] Board { get; } = new CheckersCell[8, 8];
 
-	public CheckersGame(GameCore gameCore, IHubContext hub, IReadOnlyList<string> playerIDs)
-		: base(gameCore, hub, playerIDs)
+	public CheckersGame(GameCore gameCore, IHubContext hub, ILogger logger, IReadOnlyList<string> playerIDs)
+		: base(gameCore, hub, logger, playerIDs)
 	{
 		if (ErrorWhileCreating)
 		{

@@ -98,8 +98,8 @@ public class MonopolyGame : PlayableGame
 		if (PRISON_CELL_INDEX == -1) throw new Exception("Monopoly: Prison cell not found");
 	}
 
-	public MonopolyGame(GameCore gameCore, IHubContext hub, IReadOnlyList<string> playerIDs)
-		: base(gameCore, hub, playerIDs)
+	public MonopolyGame(GameCore gameCore, IHubContext hub, ILogger logger, IReadOnlyList<string> playerIDs)
+		: base(gameCore, hub, logger, playerIDs)
 	{
 		playersMoney = Enumerable.Repeat(START_MONEY, playerIDs.Count).ToArray();
 		playerPositions = Enumerable.Repeat(0, playerIDs.Count).ToArray();
