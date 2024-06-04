@@ -17,7 +17,7 @@ public class LobbyListHub(IServiceProvider serviceProvider) : Hub
 		if (lobbyService is null)
 			return Results.BadRequest("Could not get service for given game");
 
-		var lobbies = lobbyService.GetAllActiveLobbies();
+		var lobbies = lobbyService.GetAllPublicLobbies();
 		return Results.Ok(new { lobbies });
 	}
 }

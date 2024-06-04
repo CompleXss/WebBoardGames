@@ -155,6 +155,25 @@
     margin-right: 24px;
 }
 
+.lobbyWrapper .isPublicSwitchWrapper {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 12px;
+    font-size: 1.2em;
+
+    margin: 0;
+    margin-bottom: 12px;
+}
+
+.lobbyWrapper .isPublicSwitchWrapper p {
+    margin: 0;
+}
+
+.lobbyWrapper .isPublicSwitchWrapper label {
+    flex-shrink: 0;
+}
+
 
 
 @media all and (max-width: 1000px) {

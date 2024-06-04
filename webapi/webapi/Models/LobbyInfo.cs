@@ -13,4 +13,5 @@ public record LobbyInfo
 	public bool IsEmpty => PlayerIDs.Count == 0;
 	public required bool IsFull { get; init; }
 	public required bool IsEnoughPlayersToStart { get; init; }
+	public required bool IsPublic { get; init; }
 }

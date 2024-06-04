@@ -17,6 +17,7 @@ const CLOSE_LOBBY = 'CloseLobby'
 const KEY_LENGTH = 4
 
 interface LobbyInfo {
+    isPublic: boolean
     hostID: string
     key: string
     playerIDs: string[]
@@ -242,6 +243,20 @@ export function useLobby(gameName: string, title: string, publicBackgroundPath: 
         if (e.key === 'Enter') showJoinLobbyDialog()
     }
 
+    function makeLobbyPublic(value: boolean) {
+        connection?.invoke('MakeLobbyPublic', value)
+            .then(response => {
+                if (response?.statusCode === 200 && response?.value?.success) {
+                    setLobbyInfo(info => {
+                        if (!info) return info
+                        info.isPublic = value
+                        return { ...info }
+                    })
+                }
+            })
+            .catch(_ => { })
+    }
+
     const lobbyPlayers = lobbyPlayerInfos.map((player, index) => {
         let name = player.name
         if (lobbyInfo?.hostID && lobbyInfo.hostID === player.publicID) {
@@ -266,6 +281,20 @@ export function useLobby(gameName: string, title: string, publicBackgroundPath: 
                     <h2>Код комнаты</h2>
                     <h1 className="lobbyKey">{lobbyInfo.key}</h1>
                 </div>
+
+                {isHost && (
+                    <div className="isPublicSwitchWrapper">
+                        <p>Разрешить вход с главной страницы</p>
+                        <label className="switch">
+                            <input type="checkbox" checked={lobbyInfo?.isPublic} onChange={e => {
+                                if (!e?.currentTarget) return
+                                const value = e.currentTarget.checked
+                                makeLobbyPublic(value)
+                            }}></input>
+                            <span className="slider"></span>
+                        </label>
+                    </div>
+                )}
 
                 <div className="playerListButtonsWrapper">
                     <fieldset className="playersList">

@@ -4,6 +4,7 @@
 @import url(globalStyles/expandable.css);
 @import url(globalStyles/select.css);
 @import url(globalStyles/surrenderDialog.css);
+@import url(globalStyles/switch.css);
 
 .wrapper {
     min-height: 100vh;

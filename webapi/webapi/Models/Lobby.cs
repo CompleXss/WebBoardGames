@@ -17,19 +17,19 @@ public sealed class Lobby : IDisposable
 	public IReadOnlyList<string> ConnectionIDs => connectionIDs;
 	private readonly List<string> connectionIDs;
 
-	public bool CanConnect
+	public bool IsPublic
 	{
 		get
 		{
-			lock (this) return canConnect;
+			lock (this) return isPublic;
 		}
 
 		set
 		{
-			lock (this) canConnect = value;
+			lock (this) isPublic = value;
 		}
 	}
-	private bool canConnect = true;
+	private bool isPublic = false;
 
 	public bool IsEmpty => PlayerIDs.Count == 0;
 	public bool IsFull => PlayerIDs.Count >= lobbyCore.MaxPlayers;
@@ -72,11 +72,11 @@ public sealed class Lobby : IDisposable
 
 	/// <returns>
 	/// <see langword="true"/> if player was added successfully.<br/>
-	/// <see langword="false"/> if lobby is full or <see cref="CanConnect"/> is <see langword="false"/>.
+	/// <see langword="false"/> if lobby is full or should be closed.
 	/// </returns>
 	public bool TryAddPlayer(string playerID, string connectionID)
 	{
-		if (isClosing || !CanConnect)
+		if (isClosing)
 			return false;
 
 		lock (this.playerIDs)
@@ -141,6 +141,7 @@ public sealed class Lobby : IDisposable
 			Settings = this.Settings,
 			IsFull = this.IsFull,
 			IsEnoughPlayersToStart = this.IsEnoughPlayersToStart,
+			IsPublic = this.IsPublic,
 		};
 	}
 

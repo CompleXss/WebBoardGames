@@ -103,6 +103,19 @@ public class LobbyHub<TGame> : Hub<ILobbyHub> where TGame : PlayableGame
 		return Results.Ok();
 	}
 
+	public async Task<IResult> MakeLobbyPublic(bool value)
+	{
+		var user = await GetUserInfoAsync();
+		if (user is null) return Results.Unauthorized();
+
+		var lobby = lobbyService.GetUserLobbyInfo(user.PublicID);
+		if (lobby is null) return Results.BadRequest("Ошибка. Лобби не найдено");
+		if (lobby.HostID != user.PublicID) return Results.BadRequest("Вы не хост этого лобби");
+
+		bool success = lobbyService.MakeLobbyPublic(lobby.Key, value);
+		return Results.Ok(new { success });
+	}
+
 	public async Task<IResult> StartGame()
 	{
 		var user = await GetUserInfoAsync();

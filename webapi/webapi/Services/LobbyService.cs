@@ -40,9 +40,9 @@ public class LobbyService<TGame> : ILobbyService where TGame : PlayableGame
 		return GetUserLobby(userID)?.GetInfo();
 	}
 
-	public IEnumerable<LobbyInfo> GetAllActiveLobbies()
+	public IEnumerable<LobbyInfo> GetAllPublicLobbies()
 	{
-		return lobbies.Select(x => x.GetInfo());
+		return lobbies.Where(x => x.IsPublic).Select(x => x.GetInfo());
 	}
 
 	public async Task<LobbyInfo?> TryCreateLobbyAsync(string hostID, string hostConnectionID)
@@ -109,6 +109,16 @@ public class LobbyService<TGame> : ILobbyService where TGame : PlayableGame
 		}
 
 		return lobby.Key;
+	}
+
+	public bool MakeLobbyPublic(string lobbyKey, bool value)
+	{
+		var lobby = GetLobbyByKey(lobbyKey);
+		if (lobby is null)
+			return false;
+
+		lobby.IsPublic = value;
+		return true;
 	}
 
 	public bool SetLobbySettings(string lobbyKey, object? settings)
