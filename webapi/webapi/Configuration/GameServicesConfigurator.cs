@@ -34,13 +34,13 @@ public static class GameServicesConfigurator
 			new LobbyCore(
 				gameName: GameNames.monopoly,
 				maxLobbiesCount: 10_000,
-				minPlayersToStartGame: 1,
+				minPlayersToStartGame: 2,
 				maxPlayersIncludingHost: 4
 			),
 			new GameCore(
 				gameName: GameNames.monopoly,
 				maxGamesCount: 10_000,
-				minPlayersCount: 1,
+				minPlayersCount: 2,
 				maxPlayersCount: 4
 			),
 			(gameCore, hub, playerIDs, _) => new MonopolyGame(gameCore, hub, playerIDs)
