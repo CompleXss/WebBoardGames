@@ -15,7 +15,7 @@
 Хочешь создать новую игру? Инструкция [в этом разделе](#как-создать-новую-игру).
 
 # Как запустить локально
-Создай базу данных PostgreSQL по схеме `/webapi/webapi/Data/Schemas/WebBoardGamesDB.sql`
+Создай базу данных PostgreSQL по схеме `webapi/webapi/Data/Schemas/WebBoardGamesDB.sql`
 
 Добавь в файл `webapi/webapi/appsettings.Development.json` строку подключения к БД и случайный jwt ключ длиной 128 символов (вместо `stub`):
 ```json
