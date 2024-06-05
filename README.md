@@ -17,16 +17,16 @@
 # Как запустить локально
 Создай базу данных PostgreSQL по схеме `/webapi/webapi/Data/Schemas/WebBoardGamesDB.sql`
 
-Добавь файл `secrets.json` через свою IDE или вручную в `%AppData%/Roaming/Microsoft/UserSecrets/{project user secret ID}` со следующим содержимым:
+Добавь в файл `webapi/webapi/appsettings.Development.json` строку подключения к БД и случайный jwt ключ длиной 128 символов (вместо `stub`):
 ```json
-{
   "ConnectionStrings": {
-    "DefaultConnection": "your postgresql connection string"
+    "DefaultConnection": "stub"
   },
   "Jwt": {
-    "Key": "your 128 character-long random secret key"
-  }
-}
+    "Issuer": "http://localhost:5042",
+    "Audience": "http://localhost:3000",
+    "Key": "stub"
+  },
 ```
 
 Windows:
