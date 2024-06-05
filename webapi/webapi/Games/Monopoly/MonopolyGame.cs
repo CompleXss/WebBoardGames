@@ -4,7 +4,7 @@ using webapi.Models;
 
 namespace webapi.Games.Monopoly;
 
-public class MonopolyGame : PlayableGame
+public sealed class MonopolyGame : PlayableGame
 {
 	private const int START_MONEY = 16_000;
 	private const int PRISON_EXIT_PRICE = 500;
