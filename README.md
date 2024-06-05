@@ -15,6 +15,20 @@
 Хочешь создать новую игру? Инструкция [в этом разделе](#как-создать-новую-игру).
 
 # Как запустить локально
+Создай базу данных PostgreSQL по схеме `/webapi/webapi/Data/Schemas/WebBoardGamesDB.sql`
+
+Добавь файл `secrets.json` через свою IDE или вручную в `%AppData%/Roaming/Microsoft/UserSecrets/{project user secret ID}` со следующим содержимым:
+```json
+{
+  "ConnectionStrings": {
+    "DefaultConnection": "your postgresql connection string"
+  },
+  "Jwt": {
+    "Key": "your 128 character-long random secret key"
+  }
+}
+```
+
 Windows:
 - Запусти ``run_server.bat``
 - Запусти ``run_client.bat``
