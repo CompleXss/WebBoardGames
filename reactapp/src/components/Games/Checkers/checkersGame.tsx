@@ -2,10 +2,10 @@ import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { HubConnection } from '@microsoft/signalr';
 import { useWebsocketConnection } from '../../../utilities/useWebsocketHook';
+import { useWinnerDialog } from '../WinnerDialog/winnerDialog';
 import { GameNames } from 'src/utilities/GameNames';
 import ENDPOINTS from '../../../utilities/Api_Endpoints';
 import Loading from "../../Loading/loading";
-import { useWinnerDialog } from '../WinnerDialog/winnerDialog';
 import './checkersGame.css'
 
 interface DraughtInfo {
@@ -19,7 +19,13 @@ interface GameData {
     allyPositions: DraughtInfo[]
     enemyPositions: DraughtInfo[]
     isMyTurn: boolean
-    //lastMove?: { from: Point, to: Point }[]
+    isEnemyConnected: boolean
+    ongoingMoveFrom?: { x: number, y: number }
+}
+
+interface Move {
+    from: { x: number, y: number }
+    to: { x: number, y: number }
 }
 
 
@@ -54,20 +60,8 @@ export default function CheckersGame() {
         })
 
         connection.on('GameStateChanged', getBoardState)
-
-        connection.on('UserDisconnected', userID => {
-            if (!enemyIsOffline.current) return
-
-            enemyIsOffline.current.textContent = 'Противник отключён'
-            enemyIsOffline.current.style.color = '#cc0000' // red
-        })
-
-        connection.on('UserReconnected', userID => {
-            if (!enemyIsOffline.current) return
-
-            enemyIsOffline.current.textContent = 'Противник онлайн'
-            enemyIsOffline.current.style.color = 'whitesmoke'
-        })
+        connection.on('UserDisconnected', () => setEnemyIsConnected(false))
+        connection.on('UserReconnected', () => setEnemyIsConnected(true))
 
         connection.onreconnecting(() => setReloading(true))
         connection.onreconnected(() => {
@@ -103,23 +97,41 @@ export default function CheckersGame() {
             .catch(e => console.log(e))
     }
 
-    // ВАШ ХОД -- ХОД ПРОТИВНИКА
     useEffect(() => {
-        if (!whosTurn.current) return
         if (!gameData) return
 
-        if (gameData.isMyTurn) {
-            whosTurn.current.textContent = 'Ваш ход'
-            whosTurn.current.style.backgroundColor = '#005500'
-        }
-        else {
-            whosTurn.current.textContent = 'Ход противника'
-            whosTurn.current.style.backgroundColor = '#3a3a3a'
+        if (whosTurn.current) {
+            if (gameData.isMyTurn) {
+                whosTurn.current.textContent = 'Ваш ход'
+                whosTurn.current.style.backgroundColor = '#005500'
+            }
+            else {
+                whosTurn.current.textContent = 'Ход противника'
+                whosTurn.current.style.backgroundColor = '#3a3a3a'
+            }
         }
 
+        setEnemyIsConnected(gameData.isEnemyConnected)
+
+        if (gameData.ongoingMoveFrom) {
+            draughtClick(gameData.ongoingMoveFrom.x, gameData.ongoingMoveFrom.y)
+        }
     }, [gameData])
 
 
+
+    function setEnemyIsConnected(state: boolean) {
+        if (!enemyIsOffline.current) return
+
+        if (state) {
+            enemyIsOffline.current.textContent = 'Противник онлайн'
+            enemyIsOffline.current.style.color = 'whitesmoke'
+        }
+        else {
+            enemyIsOffline.current.textContent = 'Противник отключён'
+            enemyIsOffline.current.style.color = '#cc0000' // red
+        }
+    }
 
     function spawnCells() {
         const cells: JSX.Element[] = new Array(64)
@@ -192,7 +204,7 @@ export default function CheckersGame() {
     function cellClick(x: number, y: number) {
         if (!gameData?.isMyTurn || !fromCell) return
 
-        makeMove([{ from: fromCell, to: { x, y } }])
+        makeMove({ from: fromCell, to: { x, y } })
 
         setFromCell(cell => {
             setFromCellColor(cell, 'transparent')
@@ -213,8 +225,8 @@ export default function CheckersGame() {
         })
     }
 
-    function makeMove(moves: { from: { x: number, y: number }, to: { x: number, y: number } }[]) {
-        connection?.invoke('MakeMove', moves)
+    function makeMove(move: Move) {
+        connection?.invoke('MakeMove', move)
             .then(response => {
                 if (response?.statusCode !== 200) {
                     console.log(response.value)
@@ -279,13 +291,13 @@ export default function CheckersGame() {
 
 
 
-// function moveDraught(from: Draught, to: Draught) {
-//     if (from.x === to.x && from.y === to.y) return
+function moveDraught(from: { x: number, y: number }, to: { x: number, y: number }) {
+    if (from.x === to.x && from.y === to.y) return
 
-//     const unit = document.getElementById(`unit ${from.x}${from.y}`)
-//     if (!unit) return
+    const unit = document.getElementById(`unit ${from.x}${from.y}`)
+    if (!unit) return
 
-//     unit.style.transform = `
-//         translateX(calc(${to.x} * 100%))
-//         translateY(calc(${to.y} * 100%))`
-// }
+    unit.style.transform = `
+        translateX(calc(${to.x} * 100%))
+        translateY(calc(${to.y} * 100%))`
+}

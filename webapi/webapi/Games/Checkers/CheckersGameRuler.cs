@@ -2,12 +2,14 @@
 
 namespace webapi.Games.Checkers;
 
-// TODO: Eating is mandatory ??? (шашки)
-
 public static class CheckersGameRuler
 {
-	public static bool Validate(CheckersCell[,] board, CheckersMove[] moves, CheckersCellStates playerColor, out string validationError)
+	private const bool EATING_IS_MANDATORY = true;
+
+	public static bool Validate(CheckersCell[,] board, in CheckersMove move, CheckersCellStates playerColor, out bool shouldMoveOneMoreTime, out string validationError)
 	{
+		shouldMoveOneMoreTime = false;
+
 		if (playerColor == CheckersCellStates.None)
 		{
 			validationError = "Цвет игрока не определен";
@@ -15,123 +17,110 @@ public static class CheckersGameRuler
 		}
 
 		// simple checks
-		if (!FirstStage(board, moves, playerColor, out validationError))
+		if (!FirstStage(board, move, playerColor, out validationError))
 			return false;
 
 		// advanced checks
-		if (!SecondStage(board, moves, playerColor, out validationError))
+		if (!SecondStage(board, move, playerColor, out shouldMoveOneMoreTime, out validationError))
 			return false;
 
 		validationError = string.Empty;
 		return true;
 	}
 
-	private static bool FirstStage(CheckersCell[,] board, CheckersMove[] moves, CheckersCellStates playerColor, out string validationError)
+	private static bool FirstStage(CheckersCell[,] board, in CheckersMove move, CheckersCellStates playerColor, out string validationError)
 	{
-		if (moves.Length == 0)
+		if (board[move.From.X, move.From.Y].DraughtColor != playerColor)
 		{
-			validationError = "Ход пустой";
+			validationError = "Ход не своей шашкой";
 			return false;
 		}
 
-		foreach (var move in moves)
+		if (board[move.To.X, move.To.Y].DraughtColor != CheckersCellStates.None)
 		{
-			if (board[move.From.X, move.From.Y].DraughtColor != playerColor)
-			{
-				validationError = "Ход не своей шашкой";
-				return false;
-			}
+			validationError = "Ход не на пустую клетку";
+			return false;
+		}
 
-			if (board[move.To.X, move.To.Y].DraughtColor != CheckersCellStates.None)
-			{
-				validationError = "Ход не на пустую клетку";
-				return false;
-			}
+		if (move.From.X < 0 || move.From.X > 7 ||
+			move.From.Y < 0 || move.From.Y > 7)
+		{
+			validationError = " Ход вышел за пределы доски";
+			return false;
+		}
 
-			if (move.From.X < 0 || move.From.X > 7 ||
-				move.From.Y < 0 || move.From.Y > 7)
-			{
-				validationError = " Ход вышел за пределы доски";
-				return false;
-			}
-
-			if (!IsMoveDiagonal(move.From, move.To))
-			{
-				validationError = "Ход не по диагонали (или на ту же клетку)";
-				return false;
-			}
+		if (!IsMoveDiagonal(move.From, move.To))
+		{
+			validationError = "Ход не по диагонали (или на ту же клетку)";
+			return false;
 		}
 
 		validationError = string.Empty;
 		return true;
 	}
 
-	private static bool SecondStage(CheckersCell[,] board, CheckersMove[] moves, CheckersCellStates playerColor, out string validationError)
+	private static bool SecondStage(CheckersCell[,] board, in CheckersMove move, CheckersCellStates playerColor, out bool shouldMoveOneMoreTime, out string validationError)
 	{
 		board = CloneBoard(board);
 
-		var enemyColor = playerColor == CheckersCellStates.Black ? CheckersCellStates.White : CheckersCellStates.Black;
-		bool shouldEat = false;
+		var enemyColor = GetEnemyColor(playerColor);
 
-		for (int i = 0; i < moves.Length; i++)
+		var from = move.From;
+		var to = move.To;
+		int distance = Math.Abs(to.X - from.X);
+		var moveVector = new Point(Math.Sign(to.X - from.X), Math.Sign(to.Y - from.Y));
+
+		bool isNotQueen = !board[from.X, from.Y].IsQueen;
+		if (isNotQueen && distance > 2)
 		{
-			var from = moves[i].From;
-			var to = moves[i].To;
-			int distance = Math.Abs(to.X - from.X);
-			var moveVector = new Point(Math.Sign(to.X - from.X), Math.Sign(to.Y - from.Y));
+			validationError = "Ход обычной шашкой больше, чем на 2 клетки";
+			shouldMoveOneMoreTime = false;
+			return false;
+		}
 
-
-
-			bool isNotQueen = !board[from.X, from.Y].IsQueen;
-			if (isNotQueen && distance > 2)
+		bool ate = false;
+		for (int j = 1; j < distance; j++)
+		{
+			var passedDraughtColor = board[from.X + moveVector.X * j, from.Y + moveVector.Y * j].DraughtColor;
+			if (passedDraughtColor == playerColor)
 			{
-				validationError = "Ход обычной шашкой больше, чем на 2 клетки";
+				validationError = "Игрок съел свою шашку";
+				shouldMoveOneMoreTime = false;
 				return false;
 			}
 
-			bool ate = false;
-			for (int j = 1; j < distance; j++)
-			{
-				var passedDraughtColor = board[from.X + moveVector.X * j, from.Y + moveVector.Y * j].DraughtColor;
-				if (passedDraughtColor == playerColor)
-				{
-					validationError = "Игрок съел свою шашку";
-					return false;
-				}
-
-				ate = ate || passedDraughtColor == enemyColor;
-			}
+			ate = ate || passedDraughtColor == enemyColor;
+		}
 
 
 
-			if (ate)
-			{
-				shouldEat = true; // Съел хотя бы 1 шашку --> на следующих мувах тоже обязательно надо кушать
-				CheckersGame.ApplyMove(board, moves[i]);
-				continue;
-			}
-
-			// else
-			if (isNotQueen && distance == 2)
-			{
-				validationError = "Ход обычной шашкой на 2 клетки, но не съел ни одного врага";
-				return false;
-			}
-
-			if (shouldEat)
-			{
-				validationError = "Начал есть, а потом просто передвинул шашку, никого не съев (в пределах одного хода)";
-				return false;
-			}
-
-			if (isNotQueen && !IsGoingUpwards(moves[i], playerColor))
-			{
-				validationError = "Ход обычной шашкой не вверх";
-				return false;
-			}
-
+		if (ate)
+		{
 			validationError = string.Empty;
+			CheckersGame.ApplyMove(board, move);
+			shouldMoveOneMoreTime = CanEatFromPosition(board, to.X, to.Y);
 			return true;
+		}
+
+		// else (if move with no eating)
+		shouldMoveOneMoreTime = false;
+
+		if (EATING_IS_MANDATORY && CanEat(board, playerColor))
+		{
+			validationError = "Кушать обязательно";
+			return false;
+		}
+
+		if (isNotQueen && distance == 2)
+		{
+			validationError = "Ход обычной шашкой на 2 клетки, но не съел ни одного врага";
+			return false;
+		}
+
+		if (isNotQueen && !IsGoingUpwards(move, playerColor))
+		{
+			validationError = "Ход обычной шашкой не вверх";
+			return false;
 		}
 
 		validationError = string.Empty;
@@ -145,7 +134,7 @@ public static class CheckersGameRuler
 		if (playerColor == CheckersCellStates.Black)
 			board = CloneAndReverse(board);
 
-		var enemyColor = playerColor == CheckersCellStates.Black ? CheckersCellStates.White : CheckersCellStates.Black;
+		var enemyColor = GetEnemyColor(playerColor);
 
 		for (int x = 0; x < 8; x++)
 			for (int y = 0; y < 8; y++)
@@ -187,219 +176,68 @@ public static class CheckersGameRuler
 		return true;
 	}
 
-	public static CheckersCell[,] CloneAndReverse(CheckersCell[,] board)
-	{
-		var boardCopy = new CheckersCell[8, 8];
 
+
+	private static bool CanEat(CheckersCell[,] board, CheckersCellStates playerColor)
+	{
 		for (int x = 0; x < 8; x++)
 			for (int y = 0; y < 8; y++)
-			{
-				if (board[x, y].DraughtColor == CheckersCellStates.None)
-					continue;
+				if (board[x, y].DraughtColor == playerColor && CanEatFromPosition(board, x, y))
+				{
+					return true;
+				}
 
-				boardCopy[7 - x, 7 - y] = board[x, y];
-			}
-
-		return boardCopy;
+		return false;
 	}
 
+	private static bool CanEatFromPosition(CheckersCell[,] board, int x, int y)
+	{
+		bool isNotQueen = !board[x, y].IsQueen;
+		var playerColor = board[x, y].DraughtColor;
+		var enemyColor = GetEnemyColor(playerColor);
+
+		// top-left
+		if (CanEatInDirection(x, y, -1, 1))
+			return true;
+
+		// top-right
+		if (CanEatInDirection(x, y, 1, 1))
+			return true;
+
+		// bottom-left
+		if (CanEatInDirection(x, y, -1, -1))
+			return true;
+
+		// bottom-right
+		if (CanEatInDirection(x, y, 1, -1))
+			return true;
+
+		return false;
 
 
-	//private static bool CheckCanDraughtEat(List<Draught> draughts, Draught draught, Player pl)
-	//{
-	//	CheckQueen(draught, pl);
 
-	//	if (!draught.IsQueen)
-	//	{
-	//		Vector2 draughtPos = GetPositionPoint(draught.Position);
-	//		Vector2 draughtMove1 = new Vector2(1, 1);
-	//		Vector2 draughtMove2 = new Vector2(1, -1);
-	//		Vector2 draughtMove3 = new Vector2(-1, 1);
-	//		Vector2 draughtMove4 = new Vector2(-1, -1);
+		bool CanEatInDirection(int x, int y, int xIncrement, int yIncrement)
+		{
+			while (
+				(xIncrement == -1 && x > 1 || xIncrement == 1 && x < 6) &&
+				(yIncrement == -1 && y > 1 || yIncrement == 1 && y < 6))
+			{
+				x += xIncrement;
+				y += yIncrement;
 
-	//		Draught tmpDraught1 = draughts.Find(X => X.Position == GetPosition(draughtPos + draughtMove1));
-	//		Draught tmpDraught2 = draughts.Find(X => X.Position == GetPosition(draughtPos + draughtMove2));
-	//		Draught tmpDraught3 = draughts.Find(X => X.Position == GetPosition(draughtPos + draughtMove3));
-	//		Draught tmpDraught4 = draughts.Find(X => X.Position == GetPosition(draughtPos + draughtMove4));
+				if (board[x, y].DraughtColor == enemyColor &&
+					board[x + xIncrement, y + yIncrement].DraughtColor == CheckersCellStates.None)
+				{
+					return true;
+				}
 
-	//		if (tmpDraught1 != null && tmpDraught1.DColor != draught.DColor)
-	//		{
-	//			Draught tmpDraught11 = draughts.Find(X => X.Position == GetPosition(draughtPos + draughtMove1 + draughtMove1));
-	//			if (tmpDraught11 == null && GetPosition(draughtPos + draughtMove1 + draughtMove1) != "")
-	//			{
-	//				return true;
-	//			}
-	//		}
+				if (isNotQueen)
+					break;
+			}
 
-	//		if (tmpDraught2 != null && tmpDraught2.DColor != draught.DColor)
-	//		{
-	//			Draught tmpDraught22 = draughts.Find(X => X.Position == GetPosition(draughtPos + draughtMove2 + draughtMove2));
-	//			if (tmpDraught22 == null && GetPosition(draughtPos + draughtMove2 + draughtMove2) != "")
-	//			{
-	//				return true;
-	//			}
-	//		}
-
-	//		if (tmpDraught3 != null && tmpDraught3.DColor != draught.DColor)
-	//		{
-	//			Draught tmpDraught33 = draughts.Find(X => X.Position == GetPosition(draughtPos + draughtMove3 + draughtMove3));
-	//			if (tmpDraught33 == null && GetPosition(draughtPos + draughtMove3 + draughtMove3) != "")
-	//			{
-	//				return true;
-	//			}
-	//		}
-
-	//		if (tmpDraught4 != null && tmpDraught4.DColor != draught.DColor)
-	//		{
-	//			Draught tmpDraught44 = draughts.Find(X => X.Position == GetPosition(draughtPos + draughtMove4 + draughtMove4));
-	//			if (tmpDraught44 == null && GetPosition(draughtPos + draughtMove4 + draughtMove4) != "")
-	//			{
-	//				return true;
-	//			}
-	//		}
-	//	}
-	//	else
-	//	{
-	//		Vector2 draughtPos = GetPositionPoint(draught.Position);
-	//		Vector2 draughtPos1 = draughtPos;
-	//		Vector2 draughtPos2 = draughtPos;
-	//		Vector2 draughtPos3 = draughtPos;
-	//		Vector2 draughtPos4 = draughtPos;
-
-
-	//		Vector2 draughtMove1 = new Vector2(1, 1);
-	//		Vector2 draughtMove2 = new Vector2(1, -1);
-	//		Vector2 draughtMove3 = new Vector2(-1, 1);
-	//		Vector2 draughtMove4 = new Vector2(-1, -1);
-
-	//		bool isSearch1 = true;
-	//		bool isSearch2 = true;
-	//		bool isSearch3 = true;
-	//		bool isSearch4 = true;
-
-	//		bool isPossible1 = false;
-	//		bool isPossible2 = false;
-	//		bool isPossible3 = false;
-	//		bool isPossible4 = false;
-
-	//		while (isSearch1 || isSearch2 || isSearch3 || isSearch4)
-	//		{
-	//			if (isSearch1)
-	//			{
-	//				draughtPos1 += draughtMove1;
-	//				Draught tmpDraught = draughts.Find(X => X.Position == GetPosition(draughtPos1));
-	//				if (tmpDraught != null)
-	//				{
-	//					if (tmpDraught.DColor != draught.DColor)
-	//					{
-	//						if (isPossible1)
-	//						{
-	//							isSearch1 = false;
-	//							isPossible1 = false;
-	//						}
-	//						isPossible1 = true;
-	//					}
-	//					else
-	//					{
-	//						isSearch1 = false;
-	//						isPossible1 = false;
-	//					}
-	//				}
-	//				else if (!(GetPosition(draughtPos1) == "") && isPossible1)
-	//				{
-	//					return true;
-	//				}
-
-	//				if (GetPosition(draughtPos1) == "") isSearch1 = false;
-	//			}
-	//			if (isSearch2)
-	//			{
-	//				draughtPos2 += draughtMove2;
-	//				Draught tmpDraught = draughts.Find(X => X.Position == GetPosition(draughtPos2));
-	//				if (tmpDraught != null)
-	//				{
-	//					if (tmpDraught.DColor != draught.DColor)
-	//					{
-	//						if (isPossible2)
-	//						{
-	//							isSearch2 = false;
-	//							isPossible2 = false;
-	//						}
-	//						isPossible2 = true;
-	//					}
-	//					else
-	//					{
-	//						isSearch2 = false;
-	//						isPossible2 = false;
-	//					}
-	//				}
-	//				else if (!(GetPosition(draughtPos2) == "") && isPossible2)
-	//				{
-	//					return true;
-	//				}
-
-	//				if (GetPosition(draughtPos2) == "") isSearch2 = false;
-	//			}
-	//			if (isSearch3)
-	//			{
-	//				draughtPos3 += draughtMove3;
-	//				Draught tmpDraught = draughts.Find(X => X.Position == GetPosition(draughtPos3));
-	//				if (tmpDraught != null)
-	//				{
-	//					if (tmpDraught.DColor != draught.DColor)
-	//					{
-	//						if (isPossible3)
-	//						{
-	//							isSearch3 = false;
-	//							isPossible3 = false;
-	//						}
-	//						isPossible3 = true;
-	//					}
-	//					else
-	//					{
-	//						isSearch3 = false;
-	//						isPossible3 = false;
-	//					}
-	//				}
-	//				else if (!(GetPosition(draughtPos3) == "") && isPossible3)
-	//				{
-	//					return true;
-	//				}
-
-	//				if (GetPosition(draughtPos3) == "") isSearch3 = false;
-	//			}
-	//			if (isSearch4)
-	//			{
-	//				draughtPos4 += draughtMove4;
-	//				Draught tmpDraught = draughts.Find(X => X.Position == GetPosition(draughtPos4));
-	//				if (tmpDraught != null)
-	//				{
-	//					if (tmpDraught.DColor != draught.DColor)
-	//					{
-	//						if (isPossible4)
-	//						{
-	//							isSearch4 = false;
-	//							isPossible4 = false;
-	//						}
-	//						isPossible4 = true;
-	//					}
-	//					else
-	//					{
-	//						isSearch4 = false;
-	//						isPossible4 = false;
-	//					}
-	//				}
-	//				else if (!(GetPosition(draughtPos4) == "") && isPossible4)
-	//				{
-	//					return true;
-	//				}
-
-	//				if (GetPosition(draughtPos4) == "") isSearch4 = false;
-	//			}
-	//		}
-	//	}
-	//	return false;
-	//}
+			return false;
+		}
+	}
 
 
 
@@ -409,6 +247,11 @@ public static class CheckersGameRuler
 
 		return playerColor == CheckersCellStates.White && yDelta > 0
 			|| playerColor == CheckersCellStates.Black && yDelta < 0;
+	}
+
+	private static CheckersCellStates GetEnemyColor(CheckersCellStates playerColor)
+	{
+		return playerColor == CheckersCellStates.Black ? CheckersCellStates.White : CheckersCellStates.Black;
 	}
 
 	/// <returns> True if move is diagonal and <paramref name="from"/> != <paramref name="to"/>. </returns>
@@ -430,5 +273,21 @@ public static class CheckersGameRuler
 			}
 
 		return newArr;
+	}
+
+	private static CheckersCell[,] CloneAndReverse(CheckersCell[,] board)
+	{
+		var boardCopy = new CheckersCell[8, 8];
+
+		for (int x = 0; x < 8; x++)
+			for (int y = 0; y < 8; y++)
+			{
+				if (board[x, y].DraughtColor == CheckersCellStates.None)
+					continue;
+
+				boardCopy[7 - x, 7 - y] = board[x, y];
+			}
+
+		return boardCopy;
 	}
 }

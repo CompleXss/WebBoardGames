@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.SignalR;
+using System.Drawing;
 using webapi.Extensions;
 using webapi.Models;
 
@@ -8,10 +9,9 @@ public sealed class CheckersGame : PlayableGame
 {
 	public string WhitePlayerID { get; init; }
 	public string BlackPlayerID { get; init; }
-
 	public bool IsWhiteTurn { get; set; } = true;
-
 	public CheckersCell[,] Board { get; } = new CheckersCell[8, 8];
+	private Point? ongoingMoveFrom;
 
 	public CheckersGame(GameCore gameCore, IHubContext hub, ILogger logger, IReadOnlyList<string> playerIDs)
 		: base(gameCore, hub, logger, playerIDs)
@@ -74,12 +74,19 @@ public sealed class CheckersGame : PlayableGame
 		bool isMyTurn = IsWhiteTurn && userColor == CheckersCellStates.White ||
 						!IsWhiteTurn && userColor == CheckersCellStates.Black;
 
+		string enemyID = userColor == CheckersCellStates.Black ? WhitePlayerID : BlackPlayerID;
+		var ongoingMoveFrom = userColor == CheckersCellStates.White
+			? this.ongoingMoveFrom
+			: this.ongoingMoveFrom.HasValue ? new Point(7 - this.ongoingMoveFrom.Value.X, 7 - this.ongoingMoveFrom.Value.Y) : null;
+
 		return new
 		{
 			myColor = userColor.ToString().ToLower(),
 			allyPositions,
 			enemyPositions,
 			isMyTurn,
+			isEnemyConnected = IsPlayerConnected(enemyID),
+			ongoingMoveFrom
 		};
 	}
 
@@ -129,47 +136,42 @@ public sealed class CheckersGame : PlayableGame
 
 	protected override bool TryUpdateState_Internal(string playerID, object data, out string error)
 	{
-		if (!TryDeserializeData(data, out CheckersMove[]? moves))
+		if (!TryDeserializeData(data, out CheckersMove move))
 		{
 			error = "Неправильные данные хода.";
 			return false;
 		}
 
 		var playerColor = GetUserColor(playerID);
+		move = DerelatifyMove(move, playerColor);
 
-		DerelatifyMoves(moves, playerColor);
-		bool moveIsValid = CheckersGameRuler.Validate(Board, moves, playerColor, out error);
+		if (ongoingMoveFrom.HasValue && move.From != ongoingMoveFrom)
+		{
+			error = "Нельзя продолжать ход другой шашкой.";
+			return false;
+		}
 
+		bool moveIsValid = CheckersGameRuler.Validate(Board, move, playerColor, out bool shouldMoveOneMoreTime, out error);
 		if (!moveIsValid)
 			return false;
 
-		ApplyMoves(moves);
+		ApplyMove(Board, move);
+
+		if (shouldMoveOneMoreTime)
+		{
+			ongoingMoveFrom = move.To;
+		}
+		else
+		{
+			ongoingMoveFrom = null;
+			IsWhiteTurn = !IsWhiteTurn;
+		}
+
+		CheckForWinner();
 		return true;
 	}
 
-	public void ApplyMoves(CheckersMove[] moves)
-	{
-		foreach (var move in moves)
-		{
-			ApplyMove(Board, move);
-		}
 
-		IsWhiteTurn = !IsWhiteTurn;
-
-		int whiteCount = CountCellWithState(CheckersCellStates.White);
-		if (whiteCount == 0 || CheckersGameRuler.IsToiletForPlayer(Board, CheckersCellStates.White))
-		{
-			WinnerID = BlackPlayerID;
-			return;
-		}
-
-		int blackCount = CountCellWithState(CheckersCellStates.Black);
-		if (blackCount == 0 || CheckersGameRuler.IsToiletForPlayer(Board, CheckersCellStates.Black))
-		{
-			WinnerID = WhitePlayerID;
-			return;
-		}
-	}
 
 	public static void ApplyMove(CheckersCell[,] board, CheckersMove move)
 	{
@@ -194,28 +196,40 @@ public sealed class CheckersGame : PlayableGame
 		}
 	}
 
-
-
-	public void DerelatifyMoves(CheckersMove[] moves, CheckersCellStates playerColor)
+	private static CheckersMove DerelatifyMove(in CheckersMove move, CheckersCellStates playerColor)
 	{
 		if (!ShouldMirrorMove(playerColor))
-			return;
+			return move;
 
-		for (int i = 0; i < moves.Length; i++)
-		{
-			var from = moves[i].From;
-			from.X = 7 - from.X;
-			from.Y = 7 - from.Y;
+		var from = move.From;
+		from.X = 7 - from.X;
+		from.Y = 7 - from.Y;
 
-			var to = moves[i].To;
-			to.X = 7 - to.X;
-			to.Y = 7 - to.Y;
+		var to = move.To;
+		to.X = 7 - to.X;
+		to.Y = 7 - to.Y;
 
-			moves[i] = new CheckersMove(from, to);
-		}
+		return new CheckersMove(from, to);
 	}
 
 
+
+	private void CheckForWinner()
+	{
+		int whiteCount = CountCellWithState(CheckersCellStates.White);
+		if (whiteCount == 0 || CheckersGameRuler.IsToiletForPlayer(Board, CheckersCellStates.White))
+		{
+			WinnerID = BlackPlayerID;
+			return;
+		}
+
+		int blackCount = CountCellWithState(CheckersCellStates.Black);
+		if (blackCount == 0 || CheckersGameRuler.IsToiletForPlayer(Board, CheckersCellStates.Black))
+		{
+			WinnerID = WhitePlayerID;
+			return;
+		}
+	}
 
 	private int CountCellWithState(CheckersCellStates state)
 	{
