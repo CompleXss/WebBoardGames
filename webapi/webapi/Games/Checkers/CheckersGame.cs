@@ -12,6 +12,7 @@ public sealed class CheckersGame : PlayableGame
 	public bool IsWhiteTurn { get; set; } = true;
 	public CheckersCell[,] Board { get; } = new CheckersCell[8, 8];
 	private Point? ongoingMoveFrom;
+	private CheckersMove lastMove;
 
 	public CheckersGame(GameCore gameCore, IHubContext hub, ILogger logger, IReadOnlyList<string> playerIDs)
 		: base(gameCore, hub, logger, playerIDs)
@@ -84,9 +85,18 @@ public sealed class CheckersGame : PlayableGame
 						!IsWhiteTurn && userColor == CheckersCellStates.Black;
 
 		string enemyID = userColor == CheckersCellStates.Black ? WhitePlayerID : BlackPlayerID;
-		var ongoingMoveFrom = userColor == CheckersCellStates.White
+		var ongoingMoveFrom = !ShouldMirrorMove(userColor)
 			? this.ongoingMoveFrom
 			: this.ongoingMoveFrom.HasValue ? new Point(7 - this.ongoingMoveFrom.Value.X, 7 - this.ongoingMoveFrom.Value.Y) : null;
+
+		var lastMoveFrom = this.lastMove.From;
+		var lastMoveTo = this.lastMove.To;
+		var lastMove = !ShouldMirrorMove(userColor)
+			? this.lastMove
+			: new CheckersMove(
+				new Point(7 - lastMoveFrom.X, 7 - lastMoveFrom.Y),
+				new Point(7 - lastMoveTo.X, 7 - lastMoveTo.Y)
+			);
 
 		return new
 		{
@@ -95,7 +105,8 @@ public sealed class CheckersGame : PlayableGame
 			enemyPositions,
 			isMyTurn,
 			isEnemyConnected = IsPlayerConnected(enemyID),
-			ongoingMoveFrom
+			ongoingMoveFrom,
+			lastMove
 		};
 	}
 
@@ -121,6 +132,7 @@ public sealed class CheckersGame : PlayableGame
 			return false;
 
 		ApplyMove(Board, move);
+		this.lastMove = move;
 
 		if (shouldMoveOneMoreTime)
 		{

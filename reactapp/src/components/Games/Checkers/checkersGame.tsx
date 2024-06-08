@@ -4,15 +4,10 @@ import { HubConnection } from '@microsoft/signalr';
 import { useWebsocketConnection } from '../../../utilities/useWebsocketHook';
 import { useWinnerDialog } from '../WinnerDialog/winnerDialog';
 import { GameNames } from 'src/utilities/GameNames';
+import { sleep } from 'src/utilities/utils';
 import ENDPOINTS from '../../../utilities/Api_Endpoints';
 import Loading from "../../Loading/loading";
 import './checkersGame.css'
-
-interface DraughtInfo {
-    x: number
-    y: number
-    isQueen: boolean
-}
 
 interface GameData {
     myColor: 'white' | 'black'
@@ -21,6 +16,13 @@ interface GameData {
     isMyTurn: boolean
     isEnemyConnected: boolean
     ongoingMoveFrom?: { x: number, y: number }
+    lastMove: Move
+}
+
+interface DraughtInfo {
+    x: number
+    y: number
+    isQueen: boolean
 }
 
 interface Move {
@@ -30,16 +32,18 @@ interface Move {
 
 
 
+const animationDuration = '0.25s'
 const gameName = GameNames.checkers
 
 export default function CheckersGame() {
     const navigate = useNavigate()
     const [gameData, setGameData] = useState<GameData | undefined>()
     const [fromCell, setFromCell] = useState<{ x: number, y: number }>()
-    const enemyIsOffline = useRef<HTMLHeadingElement>(null)
+    const [showAnimation, setShowAnimation] = useState<boolean>(true)
     const whosTurn = useRef<HTMLHeadingElement>(null)
-    const { showWinner, element: winnerDialog, } = useWinnerDialog()
+    const enemyIsOffline = useRef<HTMLHeadingElement>(null)
     const surrenderDialog = useRef<HTMLDialogElement>(null)
+    const { showWinner, element: winnerDialog, } = useWinnerDialog()
 
     useEffect(() => {
         document.title = 'Шашки'
@@ -64,14 +68,10 @@ export default function CheckersGame() {
         connection.on('UserReconnected', () => setEnemyIsConnected(true))
 
         connection.onreconnecting(() => setReloading(true))
-        connection.onreconnected(() => {
-            getBoardState()
-        })
-        connection.onclose(() => {
-            navigate('/')
-        })
+        connection.onreconnected(() => getBoardState())
+        connection.onclose(() => setReloading(true))
 
-        // Определение победителя
+        // decide the winner
         connection.on('GameClosed', winnerID => {
             showWinner(winnerID)
         })
@@ -116,6 +116,10 @@ export default function CheckersGame() {
         if (gameData.ongoingMoveFrom) {
             draughtClick(gameData.ongoingMoveFrom.x, gameData.ongoingMoveFrom.y)
         }
+
+        if (gameData.lastMove) {
+            setShowAnimation(true)
+        }
     }, [gameData])
 
 
@@ -138,17 +142,19 @@ export default function CheckersGame() {
 
         for (let y = 0; y < 8; y++) {
             for (let x = 0; x < 8; x++) {
-                let className = (x & 1) === (y & 1)
+                const className = (x & 1) === (y & 1)
                     ? 'cell white'
                     : 'cell black'
 
-                let id = `cell ${x}${7 - y}`;
+                const id = `cell ${x}${7 - y}`;
                 cells[y * 8 + x] =
                     <button
                         id={id}
                         key={id}
                         className={className}
-                        onClick={() => cellClick(x, 7 - y)}>
+                        onClick={() => cellClick(x, 7 - y)}
+                    >
+                        <div className='inner'></div>
                     </button>
             }
         }
@@ -167,14 +173,21 @@ export default function CheckersGame() {
         index = addDraughtsToArr(cells, data.allyPositions, myColor, index)
         addDraughtsToArr(cells, data.enemyPositions, enemyColor, index)
 
+        if (gameData?.lastMove && showAnimation) {
+            window.requestAnimationFrame(() => {
+                moveDraught(gameData.lastMove.from, gameData.lastMove.to)
+                setShowAnimation(false)
+            })
+        }
+
         return cells
     }
 
     function addDraughtsToArr(cells: JSX.Element[], draughts: DraughtInfo[], color: string, index: number): number {
         for (let i = 0; i < draughts.length; i++, index++) {
-            let dr = draughts[i]
-            let id = `unit ${dr.x}${dr.y}`
-            let isQueen = dr.isQueen ? ' queen' : ''
+            const dr = draughts[i]
+            const id = `unit ${dr.x}${dr.y}`
+            const isQueen = dr.isQueen ? ' queen' : ''
 
             cells[index] =
                 <button
@@ -184,8 +197,9 @@ export default function CheckersGame() {
                     onClick={() => draughtClick(dr.x, dr.y)}
                     style={{
                         transform: `
-                    translateX(calc(${dr.x} * 100%))
-                    translateY(calc(${7 - dr.y} * 100%))`
+                        translateX(${dr.x * 100}%)
+                        translateY(${(7 - dr.y) * 100}%)
+                        `
                     }}>
                 </button>
         }
@@ -195,7 +209,7 @@ export default function CheckersGame() {
     function setFromCellColor(fromCell: { x: number, y: number } | undefined, color: string) {
         if (!fromCell) return
 
-        const cell = document.getElementById(`unit ${fromCell.x}${fromCell.y}`) as HTMLElement
+        const cell = document.getElementById(`cell ${fromCell.x}${fromCell.y}`)?.getElementsByClassName('inner')[0] as HTMLElement | undefined
         if (!cell) return
 
         cell.style.backgroundColor = color
@@ -215,13 +229,13 @@ export default function CheckersGame() {
     function draughtClick(x: number, y: number) {
         if (!gameData?.isMyTurn) return
 
-        const cell = document.getElementById(`unit ${x}${y}`) as HTMLElement
-        if (!cell?.classList.contains(gameData.myColor)) return
+        const unit = document.getElementById(`unit ${x}${y}`) as HTMLElement
+        if (!unit?.classList.contains(gameData.myColor)) return
 
         setFromCell(cell => {
             setFromCellColor(cell, 'transparent')
-            setFromCellColor({ x, y }, '#00cc00')
-            return { x, y };
+            setFromCellColor({ x, y }, '#00cc00') // green
+            return { x, y }
         })
     }
 
@@ -291,13 +305,23 @@ export default function CheckersGame() {
 
 
 
-function moveDraught(from: { x: number, y: number }, to: { x: number, y: number }) {
+async function moveDraught(from: { x: number, y: number }, to: { x: number, y: number }) {
     if (from.x === to.x && from.y === to.y) return
 
-    const unit = document.getElementById(`unit ${from.x}${from.y}`)
+    const unit = document.getElementById(`unit ${to.x}${to.y}`)
     if (!unit) return
 
+    unit.style.transitionDuration = '0s'
     unit.style.transform = `
-        translateX(calc(${to.x} * 100%))
-        translateY(calc(${to.y} * 100%))`
+        translateX(${from.x * 100}%)
+        translateY(${(7 - from.y) * 100}%)
+    `
+    await sleep(1)
+
+    unit.style.transitionDuration = animationDuration
+    unit.style.transform = `
+        translateX(${to.x * 100}%)
+        translateY(${(7 - to.y) * 100}%)
+    `
+    await sleep(1)
 }

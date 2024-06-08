@@ -54,6 +54,14 @@
     background-color: #ddd;
 }
 
+.checkersContainer .board .cell .inner {
+    position: absolute;
+    left: 0;
+    top: 0;
+    height: 100%;
+    width: 100%;
+}
+
 
 
 /* Шашки */
@@ -70,7 +78,7 @@
     background-repeat: no-repeat;
     background-size: contain;
 
-    transition: transform 0.3s ease-in-out;
+    transition: transform 0.3s ease-out;
 }
 
 .checkersContainer .board .unit.white {
