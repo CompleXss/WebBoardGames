@@ -2,7 +2,7 @@
 
 namespace webapi.Games.Checkers;
 
-public static class CheckersGameRuler
+internal static class CheckersGameRuler
 {
 	private const bool EATING_IS_MANDATORY = true;
 

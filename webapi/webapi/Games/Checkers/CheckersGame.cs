@@ -67,6 +67,15 @@ public sealed class CheckersGame : PlayableGame
 			|| !IsWhiteTurn && playerColor == CheckersCellStates.Black;
 	}
 
+	protected override bool Surrender_Internal(string playerID)
+	{
+		WinnerID = playerID == WhitePlayerID
+			? BlackPlayerID
+			: WhitePlayerID;
+
+		return true;
+	}
+
 	protected override object? GetRelativeState_Internal(string playerID)
 	{
 		var userColor = GetUserColor(playerID);
@@ -89,50 +98,6 @@ public sealed class CheckersGame : PlayableGame
 			ongoingMoveFrom
 		};
 	}
-
-	protected override bool Surrender_Internal(string playerID)
-	{
-		WinnerID = playerID == WhitePlayerID
-			? BlackPlayerID
-			: WhitePlayerID;
-
-		return true;
-	}
-
-
-
-	public (Draught[] myDraughts, Draught[] enemyDraughts) GetDraughtsRelativeTo(CheckersCellStates playerColor)
-	{
-		if (playerColor == CheckersCellStates.None)
-			return (Array.Empty<Draught>(), Array.Empty<Draught>());
-
-		var myList = new List<Draught>(12);
-		var enemyList = new List<Draught>(12);
-
-		var enemyColor = playerColor == CheckersCellStates.Black ? CheckersCellStates.White : CheckersCellStates.Black;
-		bool reverse = ShouldMirrorMove(playerColor);
-
-		for (int x = 0; x < 8; x++)
-			for (int y = 0; y < 8; y++)
-				if (Board[x, y].DraughtColor == playerColor)
-				{
-					if (reverse)
-						myList.Add(new Draught(7 - x, 7 - y, Board[x, y].IsQueen));
-					else
-						myList.Add(new Draught(x, y, Board[x, y].IsQueen));
-				}
-				else if (Board[x, y].DraughtColor == enemyColor)
-				{
-					if (reverse)
-						enemyList.Add(new Draught(7 - x, 7 - y, Board[x, y].IsQueen));
-					else
-						enemyList.Add(new Draught(x, y, Board[x, y].IsQueen));
-				}
-
-		return (myList.ToArray(), enemyList.ToArray());
-	}
-
-
 
 	protected override bool TryUpdateState_Internal(string playerID, object data, out string error)
 	{
@@ -210,6 +175,37 @@ public sealed class CheckersGame : PlayableGame
 		to.Y = 7 - to.Y;
 
 		return new CheckersMove(from, to);
+	}
+
+	private (Draught[] myDraughts, Draught[] enemyDraughts) GetDraughtsRelativeTo(CheckersCellStates playerColor)
+	{
+		if (playerColor == CheckersCellStates.None)
+			return (Array.Empty<Draught>(), Array.Empty<Draught>());
+
+		var myList = new List<Draught>(12);
+		var enemyList = new List<Draught>(12);
+
+		var enemyColor = playerColor == CheckersCellStates.Black ? CheckersCellStates.White : CheckersCellStates.Black;
+		bool reverse = ShouldMirrorMove(playerColor);
+
+		for (int x = 0; x < 8; x++)
+			for (int y = 0; y < 8; y++)
+				if (Board[x, y].DraughtColor == playerColor)
+				{
+					if (reverse)
+						myList.Add(new Draught(7 - x, 7 - y, Board[x, y].IsQueen));
+					else
+						myList.Add(new Draught(x, y, Board[x, y].IsQueen));
+				}
+				else if (Board[x, y].DraughtColor == enemyColor)
+				{
+					if (reverse)
+						enemyList.Add(new Draught(7 - x, 7 - y, Board[x, y].IsQueen));
+					else
+						enemyList.Add(new Draught(x, y, Board[x, y].IsQueen));
+				}
+
+		return (myList.ToArray(), enemyList.ToArray());
 	}
 
 

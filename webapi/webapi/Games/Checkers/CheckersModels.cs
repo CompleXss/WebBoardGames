@@ -33,7 +33,7 @@ public readonly struct CheckersMove
 	}
 }
 
-public readonly struct Draught
+internal readonly struct Draught
 {
 	public int X { get; init; }
 	public int Y { get; init; }
