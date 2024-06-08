@@ -1,12 +1,7 @@
-import axios from 'axios';
 import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate } from "react-router-dom";
 import { HubConnection } from '@microsoft/signalr';
 import { useWebsocketConnection } from 'src/utilities/useWebsocketHook';
-import ENDPOINTS from 'src/utilities/Api_Endpoints';
-import Loading from "src/components/Loading/loading"
-import monopolyMap from './monopoly_map.json'
-import cardsInfo from './monopoly_cards.json'
 import { GameNames } from 'src/utilities/GameNames';
 import { StringMap, numberWithCommas, sleep } from 'src/utilities/utils';
 import { User as PlayerInfo } from 'src/utilities/Api_DataTypes';
@@ -16,6 +11,10 @@ import { DiceCube } from './DiceCube/diceCube';
 import { cumulativeOffset, getImageUrl } from 'src/utilities/frontend.utils';
 import { useWinnerDialog } from '../WinnerDialog/winnerDialog';
 import { getUserInfoByID } from 'src/utilities/EndpointHelpers';
+import ENDPOINTS from 'src/utilities/Api_Endpoints';
+import Loading from "src/components/Loading/loading"
+import monopolyMap from './monopoly_map.json'
+import cardsInfo from './monopoly_cards.json'
 import reactStringReplace from 'react-string-replace'
 import './monopolyGame.css'
 
@@ -68,9 +67,9 @@ enum ActionType {
 
 
 
-const DICE_TIME = 1000
-const AFTER_DICE_WAIT_TIME = 500
-const MOVE_TIME = 1000
+const MOVE_TIME_MS = 1000
+const DICE_TIME_MS = 1000
+const AFTER_DICE_WAIT_TIME_MS = 500
 
 const globalData = {
     msToWait: 0,
@@ -87,6 +86,7 @@ export default function MonopolyGame() {
     const [groupInfoParams, setGroupInfoParams] = useState<JSX.Element[]>([])
     const [cardInfoParams, setCardInfoParams] = useState<JSX.Element[]>([])
     const [gridTemplateAreas, setGridTemplateAreas] = useState<string>()
+    const [playerDotPositions, setPlayerDotPositions] = useState<Map<string, { x: number, y: number }>>()
     const chatInput = useRef<HTMLInputElement>(null)
     const clickDialog = useRef<HTMLDialogElement>(null)
     const cardInfoDialog = useRef<HTMLDialogElement>(null)
@@ -97,9 +97,8 @@ export default function MonopolyGame() {
     const diceCube1 = useRef<HTMLDivElement>(null)
     const diceCube2 = useRef<HTMLDivElement>(null)
     const playerDots = useRef<HTMLDivElement>(null)
-    const [playerDotPositions, setPlayerDotPositions] = useState<Map<string, { x: number, y: number }>>()
-    const { showWinner, element: winnerDialog, } = useWinnerDialog()
     const surrenderDialog = useRef<HTMLDialogElement>(null)
+    const { showWinner, element: winnerDialog, } = useWinnerDialog()
 
     useEffect(() => {
         document.title = 'Монополия'
@@ -208,9 +207,7 @@ export default function MonopolyGame() {
 
         connection.onreconnecting(() => setReloading(true))
         connection.onreconnected(getGameState)
-        connection.onclose(() => {
-            navigate('/')
-        })
+        connection.onclose(() => setReloading(true))
 
         connectionOnExclusive(connection, 'GameClosed', winnerID => {
             if (!winnerID) {
@@ -285,8 +282,6 @@ export default function MonopolyGame() {
                 () => makeMove(connection, ActionType.DiceToExitPrison)
             )
         })
-
-        // connection.on('OfferBuyCell', offerBuyCell)
 
         connectionOnExclusive(connection, 'OfferBuyCell', ({ cellID }) => {
             if (!gameState) return
@@ -544,8 +539,8 @@ export default function MonopolyGame() {
                                 if (gameState.isMyTurn && cardInfo.ownerID && cardInfo.ownerID === gameState.myID) {
                                     let upBtn = false
                                     let downBtn = false
-                                    let upgradeBtnName //= 'Купить'
-                                    let downgradeBtnName //= 'Продать'
+                                    let upgradeBtnName
+                                    let downgradeBtnName
 
                                     if (cardInfo.isSold) {
                                         upgradeBtnName = 'Выкупить'
@@ -603,7 +598,6 @@ export default function MonopolyGame() {
                                         }}>{downgradeBtnName}</button>
                                     ))
                                 }
-
 
                                 // description
                                 setCardGroupDescription(
@@ -900,7 +894,7 @@ export default function MonopolyGame() {
             const dotPlayerID = dot.id.substring(dot.id.indexOf('_') + 1)
             if (dotPlayerID === playerID) {
 
-                dot.style.transition = `top: ${MOVE_TIME}ms, left: ${MOVE_TIME}ms`
+                dot.style.transition = `top: ${MOVE_TIME_MS}ms, left: ${MOVE_TIME_MS}ms`
                 dot.style.width = dotSizeCqw + 'cqw'
 
                 let offsetX = cords.offsetSignX * dotSizeCqw / (cords.offsetSignX === 1 ? 1.5 : 2)
@@ -948,7 +942,7 @@ export default function MonopolyGame() {
                 dot.style.left = (getOffsetForCell_cqw(cords.x) + offsetX) + 'cqw'
                 dot.style.top = (getOffsetForCell_cqw(cords.y) - offsetY) + 'cqw'
 
-                await sleep(MOVE_TIME)
+                await sleep(MOVE_TIME_MS)
                 break
             }
         }
@@ -1275,7 +1269,7 @@ async function rollDice(dice: React.RefObject<HTMLElement>, value: number) {
     cube.hidden = false
     await sleep(1)
 
-    cube.style.transition = `transform ${DICE_TIME}ms`
+    cube.style.transition = `transform ${DICE_TIME_MS}ms`
 
     let moveX = 0
     let moveY = 0
@@ -1311,14 +1305,13 @@ async function rollDice(dice: React.RefObject<HTMLElement>, value: number) {
     const xDeg = 90 * (4 + moveX)
     const yDeg = 90 * (4 + moveY)
 
-    cube.style.webkitTransform = 'rotateX(' + xDeg + 'deg) rotateY(' + yDeg + 'deg)'
     cube.style.transform = 'rotateX(' + xDeg + 'deg) rotateY(' + yDeg + 'deg)'
 
     dice.current.ontransitionend = async () => {
-        await sleep(AFTER_DICE_WAIT_TIME)
+        await sleep(AFTER_DICE_WAIT_TIME_MS)
         cube.hidden = true
     }
-    const waitTime = DICE_TIME + AFTER_DICE_WAIT_TIME
+    const waitTime = DICE_TIME_MS + AFTER_DICE_WAIT_TIME_MS
 
     globalData.msToWait = waitTime
     await sleep(waitTime)
