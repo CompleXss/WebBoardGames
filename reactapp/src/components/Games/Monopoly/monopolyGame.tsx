@@ -122,7 +122,7 @@ export default function MonopolyGame() {
 
     useEffect(() => {
         if (connection) {
-            // react captures state values in eventHandler so update we'll them every time
+            // react captures state values in eventHandler so we'll update them every time
             // bruh
             addEventHandlers(connection)
         }
