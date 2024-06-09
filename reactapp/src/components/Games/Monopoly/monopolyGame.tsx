@@ -88,7 +88,7 @@ export default function MonopolyGame() {
     const [cardInfoParams, setCardInfoParams] = useState<JSX.Element[]>([])
     const [gridTemplateAreas, setGridTemplateAreas] = useState<string>()
     const [playerDotPositions, setPlayerDotPositions] = useState<Map<string, { x: number, y: number }>>()
-    const [turnTimerSecondsLeft, setTurnTimerSecondsLeft] = useState<number>(999)
+    const [turnTimerSecondsLeft, setTurnTimerSecondsLeft] = useState<number>(99)
     const chatInput = useRef<HTMLInputElement>(null)
     const clickDialog = useRef<HTMLDialogElement>(null)
     const cardInfoDialog = useRef<HTMLDialogElement>(null)
@@ -137,6 +137,10 @@ export default function MonopolyGame() {
         const playerIDs = Object.keys(gameState.players)
         for (const playerID of playerIDs) {
             const info = gameState.players[playerID]
+            if (info.isDead && playerID === gameState.myID) {
+                clickDialog.current?.close()
+            }
+
             movePlayerDot_direct(playerID, info.position)
         }
     }, [gameState])
@@ -1090,6 +1094,8 @@ export default function MonopolyGame() {
 
     const playerDotElements = !gameState?.players ? [] : Object.keys(gameState.players).map((playerID, i) => {
         const info = gameState.players[playerID]
+        if (info.isDead) return undefined
+
         return (
             <div
                 id={'dot_' + playerID}
