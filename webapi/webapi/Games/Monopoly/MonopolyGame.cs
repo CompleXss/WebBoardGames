@@ -6,6 +6,8 @@ namespace webapi.Games.Monopoly;
 
 public sealed class MonopolyGame : PlayableGame
 {
+	protected override int TurnTimer_LIMIT_Seconds => 90;
+
 	private const int START_MONEY = 16_000;
 	private const int PRISON_EXIT_PRICE = 500;
 	private const int MAX_PRISON_FREE_TRIES = 3;
@@ -99,7 +101,7 @@ public sealed class MonopolyGame : PlayableGame
 	}
 
 	public MonopolyGame(GameCore gameCore, IHubContext hub, ILogger logger, IReadOnlyList<string> playerIDs)
-		: base(gameCore, hub, logger, playerIDs)
+		: base(gameCore, hub, logger, playerIDs, disableTurnTimer: false)
 	{
 		playersMoney = Enumerable.Repeat(START_MONEY, playerIDs.Count).ToArray();
 		playerPositions = Enumerable.Repeat(0, playerIDs.Count).ToArray();
@@ -149,6 +151,15 @@ public sealed class MonopolyGame : PlayableGame
 		}
 
 		PlayerConnected += playerIndex => offerManager.RepeatLastOffer(playerIndex);
+		TurnTimerFired += OnTurnTimerFired;
+	}
+
+	private void OnTurnTimerFired()
+	{
+		var playerID = PlayerIDs[actingPlayerIndex];
+
+		logger.PlayerForfeitsDueToTimer(playerID, this.Key, TurnTimer_LIMIT_Seconds);
+		this.Surrender(playerID);
 	}
 
 
@@ -290,6 +301,8 @@ public sealed class MonopolyGame : PlayableGame
 
 		return false;
 	}
+
+
 
 	//private bool Yes()
 	//{
@@ -1003,6 +1016,7 @@ public sealed class MonopolyGame : PlayableGame
 		doublesInRow = 0;
 		upgradedCellIndexThisTurn = -1;
 		IncrementMovesLeftToLooseCellForAllSold();
+		ResetTurnTimer();
 
 		if (lastDiceIsDouble && !playersDead[actingPlayerIndex])
 		{
@@ -1154,6 +1168,7 @@ public sealed class MonopolyGame : PlayableGame
 			MyID = playerID,
 			IsMyTurn = IsPlayerTurn(playerID),
 			IsAbleToUpgrade = upgradedCellIndexThisTurn == -1,
+			ActingPlayerID = this.PlayerIDs[actingPlayerIndex],
 			Players = playerStates,
 			CellStates = cellStates,
 			ChatMessages = chatLogger.Messages,

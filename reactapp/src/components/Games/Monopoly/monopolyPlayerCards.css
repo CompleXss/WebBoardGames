@@ -32,9 +32,7 @@
 }
 
 .monopolyContainer .playersContainer .playerCard {
-    display: grid;
-    grid-template-columns: 1fr 10px;
-    grid-template-rows: auto auto auto;
+    display: block;
     user-select: none;
 
     height: fit-content;
@@ -48,8 +46,25 @@
     box-shadow: 0 0 2px gray;
 }
 
+.monopolyContainer .playersContainer .playerCard[mnpl-dead] {
+    cursor: default;
+    color: darkgray;
+    background-color: var(--foreground);
+    box-shadow: 0 0 2px lightgray;
+}
+
 .monopolyContainer .playersContainer .playerCard:not([mnpl-dead]) {
     cursor: pointer;
+}
+
+
+
+.monopolyContainer .playersContainer .playerCard .cardLine {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    width: 100%;
+    gap: 4px;
 }
 
 .monopolyContainer .playersContainer .playerCard p {
@@ -59,35 +74,34 @@
     text-wrap: nowrap;
 }
 
-.monopolyContainer .playersContainer .playerCard[mnpl-dead] {
-    color: darkgray;
-    background-color: var(--foreground);
-    box-shadow: 0 0 2px lightgray;
-}
 
-
-
-/* layout */
-.monopolyContainer .playersContainer .playerCard p:nth-of-type(1) {
-    grid-column: 1;
-    grid-row: 1;
-}
-
-.monopolyContainer .playersContainer .playerCard p:nth-of-type(2) {
+/* player's money amount */
+.monopolyContainer .playersContainer .playerCard .money {
     margin-top: 0;
-    grid-column: 1;
-    grid-row: 2;
 }
 
-.monopolyContainer .playersContainer .playerCard .line {
-    grid-column: 1 / 3;
-    grid-row: 3;
+.monopolyContainer .playersContainer .playerCard:not([mnpl-dead]) .money::before {
+    content: '$ ';
 }
+
+.monopolyContainer .playersContainer .playerCard:not([mnpl-dead]) .money:after {
+    content: ' k';
+    color: gray;
+}
+
+
+/* color line */
+.monopolyContainer .playersContainer .playerCard .line {
+    width: 100%;
+    height: 3px;
+    border-radius: 4px;
+}
+
 
 /* online indicator */
 .monopolyContainer .playersContainer .playerCard .onlineIndicator {
     aspect-ratio: 1;
-    width: 100%;
+    width: 10px;
     margin-top: auto;
     margin-bottom: auto;
     border-radius: 100%;
@@ -101,21 +115,11 @@
     background-color: red;
 }
 
-
-
-.monopolyContainer .playersContainer .playerCard:not([mnpl-dead]) p:nth-of-type(2)::before {
-    content: '$ ';
-}
-
-.monopolyContainer .playersContainer .playerCard:not([mnpl-dead]) p:nth-of-type(2):after {
-    content: ' k';
-    color: gray;
-}
-
-.monopolyContainer .playersContainer .playerCard .line {
-    width: 100%;
-    height: 3px;
-    border-radius: 4px;
+.monopolyContainer .playersContainer .playerCard .secondsLeft {
+    overflow: visible;
+    height: fit-content;
+    margin: 0;
+    color: red;
 }
 
 

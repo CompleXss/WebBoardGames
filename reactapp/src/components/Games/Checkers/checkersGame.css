@@ -129,9 +129,15 @@
 }
 
 .checkersContainer .whosTurn {
+    position: relative;
     align-self: flex-start;
     margin-top: 10px;
     width: 100%;
+}
+
+.checkersContainer .turnTimerSeconds {
+    font-size: 0.7em;
+    vertical-align: middle;
 }
 
 

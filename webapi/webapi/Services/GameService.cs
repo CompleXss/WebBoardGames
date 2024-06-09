@@ -50,6 +50,11 @@ public class GameService<TGame> : IGameService where TGame : PlayableGame
 			CloseGame(game);
 		};
 
+		game.TurnTimerTick += secondsLeft =>
+		{
+			typedHub.Clients.Group(game.Key).TurnTimerTicked(secondsLeft);
+		};
+
 		logger.LogInformation("New {gameName} game with key {gameKey} was CREATED.", GameName, game.Key);
 		return true;
 	}

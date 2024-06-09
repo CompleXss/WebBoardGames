@@ -11,7 +11,7 @@ public abstract class PlayableGame : IDisposable
 
 	private readonly GameCore gameCore;
 	private readonly IHubContext hub;
-	private readonly ILogger logger;
+	protected readonly ILogger logger;
 
 	public string Key { get; }
 	private readonly int key;
@@ -21,6 +21,10 @@ public abstract class PlayableGame : IDisposable
 
 	public IReadOnlyList<string?> ConnectionIDs => connectionIDs;
 	private readonly string?[] connectionIDs;
+
+	public DateTime GameStarted { get; }
+	public bool ErrorWhileCreating { get; protected set; }
+	public bool NoPlayersConnected => ConnectionIDs.All(x => x is null);
 
 	public string? WinnerID
 	{
@@ -40,14 +44,16 @@ public abstract class PlayableGame : IDisposable
 	protected event Action<int>? PlayerConnected;
 	protected event Action<int>? PlayerDisconnected;
 
-	public DateTime GameStarted { get; }
-	public bool ErrorWhileCreating { get; protected set; }
-	public bool NoPlayersConnected => ConnectionIDs.All(x => x is null);
+	protected abstract int TurnTimer_LIMIT_Seconds { get; }
+	protected int TurnTimer_LEFT_Seconds { get; private set; }
+	protected event Action? TurnTimerFired = null;
+	public event Action<int>? TurnTimerTick = null;
 
+	private readonly CancellationTokenSource turnTimerCTS = new();
 	private bool keyCaptured;
 	private bool _disposed;
 
-	public PlayableGame(GameCore gameCore, IHubContext hub, ILogger logger, IReadOnlyList<string> playerIDs)
+	public PlayableGame(GameCore gameCore, IHubContext hub, ILogger logger, IReadOnlyList<string> playerIDs, bool disableTurnTimer)
 	{
 		this.gameCore = gameCore;
 		this.hub = hub;
@@ -75,6 +81,9 @@ public abstract class PlayableGame : IDisposable
 		this.connectionIDs = Enumerable.Repeat<string?>(null, playersCount).ToArray();
 
 		SetupGameCloseTimeout();
+
+		if (!disableTurnTimer)
+			SetupTurnTimer();
 	}
 
 
@@ -117,6 +126,55 @@ public abstract class PlayableGame : IDisposable
 
 
 
+	protected void ResetTurnTimer()
+	{
+		TurnTimer_LEFT_Seconds = TurnTimer_LIMIT_Seconds;
+	}
+
+	protected void ResetTurnTimer(int secondsToAdd)
+	{
+		TurnTimer_LEFT_Seconds += secondsToAdd;
+	}
+
+	protected void SetTurnTimer(int seconds)
+	{
+		TurnTimer_LEFT_Seconds = seconds;
+	}
+
+	private void SetupTurnTimer()
+	{
+		ResetTurnTimer();
+		var token = turnTimerCTS.Token;
+
+		Task.Run(async () =>
+		{
+			while (true)
+			{
+				await Task.Delay(1000);
+				if (token.IsCancellationRequested)
+					break;
+
+				TurnTimer_LEFT_Seconds--;
+				TurnTimerTick?.Invoke(TurnTimer_LEFT_Seconds);
+
+				lock (this)
+					if (TurnTimer_LEFT_Seconds <= 0)
+					{
+						if (NoPlayersConnected)
+						{
+							CloseGameWithNoWinner();
+							break;
+						}
+
+						TurnTimerFired?.Invoke();
+						ResetTurnTimer();
+					}
+			}
+		});
+	}
+
+
+
 	public bool IsPlayerTurn(string playerID)
 	{
 		lock (this)
@@ -130,7 +188,12 @@ public abstract class PlayableGame : IDisposable
 	{
 		lock (this)
 		{
-			return Surrender_Internal(playerID);
+			bool success = Surrender_Internal(playerID);
+
+			if (success)
+				ResetTurnTimer();
+
+			return success;
 		}
 	}
 	protected abstract bool Surrender_Internal(string playerID);
@@ -300,6 +363,16 @@ public abstract class PlayableGame : IDisposable
 				gameCore.KeyPool.Return(key);
 				keyCaptured = false;
 			}
+
+			try
+			{
+				if (!turnTimerCTS.IsCancellationRequested)
+				{
+					turnTimerCTS.Cancel();
+					turnTimerCTS.Dispose();
+				}
+			}
+			catch (Exception) { }
 
 			WinnerDefined = null;
 			ClosedWithNoResult = null;

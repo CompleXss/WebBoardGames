@@ -22,6 +22,7 @@ interface GameState {
     myID: string
     isMyTurn: boolean
     isAbleToUpgrade: boolean
+    actingPlayerID: string
     players: StringMap<PlayerState>
     cellStates: StringMap<CellState>
     chatMessages: string[]
@@ -87,6 +88,7 @@ export default function MonopolyGame() {
     const [cardInfoParams, setCardInfoParams] = useState<JSX.Element[]>([])
     const [gridTemplateAreas, setGridTemplateAreas] = useState<string>()
     const [playerDotPositions, setPlayerDotPositions] = useState<Map<string, { x: number, y: number }>>()
+    const [turnTimerSecondsLeft, setTurnTimerSecondsLeft] = useState<number>(999)
     const chatInput = useRef<HTMLInputElement>(null)
     const clickDialog = useRef<HTMLDialogElement>(null)
     const cardInfoDialog = useRef<HTMLDialogElement>(null)
@@ -218,6 +220,8 @@ export default function MonopolyGame() {
             showWinner(winnerID)
         })
 
+        connectionOnExclusive(connection, 'TurnTimerTicked', turnTimerTicked)
+
 
 
         // actions
@@ -310,6 +314,11 @@ export default function MonopolyGame() {
     function connectionOnExclusive(connection: HubConnection, methodName: string, newMethod: (...args: any[]) => any) {
         connection.off(methodName)
         connection.on(methodName, newMethod)
+    }
+
+    function turnTimerTicked(secondsLeft: number) {
+        if (secondsLeft === undefined || secondsLeft === null) return
+        setTurnTimerSecondsLeft(secondsLeft)
     }
 
 
@@ -863,8 +872,6 @@ export default function MonopolyGame() {
         return { x: 1, y: totalCellsInLine - 3 - (num - cellsInLine * 3), offsetSignX: -1, offsetSignY: -1 }
     }
 
-
-
     async function movePlayerDot_direct(playerID: string, cellID: string) {
         if (!playerDots.current) return
         const dotSizeCqw = 3
@@ -1024,9 +1031,13 @@ export default function MonopolyGame() {
 
 
 
-    const playersElements = (!gameState?.players || !gameState.myID) ? [] : Object.keys(gameState.players).map((playerID, i) => {
+    const playersElements = (!gameState?.players || !gameState.myID || !gameState.actingPlayerID) ? [] : Object.keys(gameState.players).map((playerID, i) => {
         const player = gameState.players[playerID]
         const name = playerInfos.get(playerID)?.name ?? '???'
+        const secondsLeft = (gameState.actingPlayerID === playerID && turnTimerSecondsLeft < 30
+            ? turnTimerSecondsLeft.toString()
+            : ''
+        )
 
         return (
             <div className='playerCardDropDown' key={i} onClick={e => {
@@ -1051,12 +1062,17 @@ export default function MonopolyGame() {
                 window.addEventListener('click', close)
             }}>
                 <div className='playerCard' mnpl-dead={player.isDead ? 1 : undefined}>
-                    <p>{name}</p>
-                    <p>
-                        {player.isDead ? '💀' : numberWithCommas(player.money)}
-                    </p>
+                    <div className='cardLine'>
+                        <p>{name}</p>
+                        <div className={'onlineIndicator ' + (player.isOnline ? 'on' : 'off')}></div>
+                    </div>
+                    <div className='cardLine'>
+                        <p className='money'>
+                            {player.isDead ? '💀' : numberWithCommas(player.money)}
+                        </p>
+                        <p className='secondsLeft'>{secondsLeft}</p>
+                    </div>
                     <div className='line' style={{ backgroundColor: player.color }}></div>
-                    <div className={'onlineIndicator ' + (player.isOnline ? 'on' : 'off')}></div>
                 </div>
                 <div className='playerCardButtons'>
                     {/* {!player.isDead && playerID !== gameState.myID && (
@@ -1258,8 +1274,6 @@ function createParamsLineElement(name: string | JSX.Element, value: string | JSX
     )
 }
 
-
-
 async function rollDice(dice: React.RefObject<HTMLElement>, value: number) {
     const cube = dice.current
     if (!cube || value < 1 || value > 6) return
@@ -1317,8 +1331,6 @@ async function rollDice(dice: React.RefObject<HTMLElement>, value: number) {
     await sleep(waitTime)
     globalData.msToWait = 0
 }
-
-
 
 function getNumberedFieldName(num: number) {
     const lastDigit = num % 10

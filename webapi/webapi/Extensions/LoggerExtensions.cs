@@ -13,6 +13,12 @@ public static partial class LoggerExtensions
 
 
 
+	// Games logs
+	[LoggerMessage(EventId = 50, Level = LogLevel.Information, Message = "Player with ID {playerID} forfeits in a game with key {gameKey} for not making a move in {limitSeconds} seconds")]
+	public static partial void PlayerForfeitsDueToTimer(this ILogger logger, string playerID, string gameKey, int limitSeconds);
+
+
+
 	// Database logs
 	[LoggerMessage(EventId = 100, Level = LogLevel.Error, Message = "Could not connect to database. Please configure database and check connection string")]
 	public static partial void CouldNotConnectToDatabase(this ILogger logger);

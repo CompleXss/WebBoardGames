@@ -7,15 +7,18 @@ namespace webapi.Games.Checkers;
 
 public sealed class CheckersGame : PlayableGame
 {
+	protected override int TurnTimer_LIMIT_Seconds => 60;
+
 	public string WhitePlayerID { get; init; }
 	public string BlackPlayerID { get; init; }
 	public bool IsWhiteTurn { get; set; } = true;
 	public CheckersCell[,] Board { get; } = new CheckersCell[8, 8];
+
 	private Point? ongoingMoveFrom;
 	private CheckersMove lastMove;
 
 	public CheckersGame(GameCore gameCore, IHubContext hub, ILogger logger, IReadOnlyList<string> playerIDs)
-		: base(gameCore, hub, logger, playerIDs)
+		: base(gameCore, hub, logger, playerIDs, disableTurnTimer: false)
 	{
 		if (ErrorWhileCreating)
 		{
@@ -51,7 +54,19 @@ public sealed class CheckersGame : PlayableGame
 			{
 				Board[j, i] = new CheckersCell(CheckersCellStates.Black, false);
 			}
+
+		TurnTimerFired += OnTurnTimerFired;
 	}
+
+	private void OnTurnTimerFired()
+	{
+		var playerID = IsWhiteTurn ? WhitePlayerID : BlackPlayerID;
+
+		logger.PlayerForfeitsDueToTimer(playerID, this.Key, TurnTimer_LIMIT_Seconds);
+		this.Surrender(playerID);
+	}
+
+
 
 	public CheckersCellStates GetUserColor(string userID)
 	{
@@ -144,6 +159,7 @@ public sealed class CheckersGame : PlayableGame
 			IsWhiteTurn = !IsWhiteTurn;
 		}
 
+		ResetTurnTimer();
 		CheckForWinner();
 		return true;
 	}

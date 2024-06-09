@@ -7,4 +7,5 @@ public interface IGameHub
 	Task GameClosed(string? winnerID);
 	Task UserReconnected(string userPublicID);
 	Task UserDisconnected(string userPublicID);
+	Task TurnTimerTicked(int secondsLeft);
 }

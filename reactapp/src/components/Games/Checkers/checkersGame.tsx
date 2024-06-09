@@ -40,8 +40,10 @@ export default function CheckersGame() {
     const [gameData, setGameData] = useState<GameData | undefined>()
     const [fromCell, setFromCell] = useState<{ x: number, y: number }>()
     const [showAnimation, setShowAnimation] = useState<boolean>(true)
+    const [enemyIsConnected, setEnemyIsConnected] = useState<boolean>(false)
     const whosTurn = useRef<HTMLHeadingElement>(null)
-    const enemyIsOffline = useRef<HTMLHeadingElement>(null)
+    const whosTurnText = useRef<HTMLSpanElement>(null)
+    const turnTimerSeconds = useRef<HTMLSpanElement>(null)
     const surrenderDialog = useRef<HTMLDialogElement>(null)
     const { showWinner, element: winnerDialog, } = useWinnerDialog()
 
@@ -66,6 +68,7 @@ export default function CheckersGame() {
         connection.on('GameStateChanged', getBoardState)
         connection.on('UserDisconnected', () => setEnemyIsConnected(false))
         connection.on('UserReconnected', () => setEnemyIsConnected(true))
+        connection.on('TurnTimerTicked', turnTimerTicked)
 
         connection.onreconnecting(() => setReloading(true))
         connection.onreconnected(() => getBoardState())
@@ -100,13 +103,13 @@ export default function CheckersGame() {
     useEffect(() => {
         if (!gameData) return
 
-        if (whosTurn.current) {
+        if (whosTurn.current && whosTurnText.current) {
             if (gameData.isMyTurn) {
-                whosTurn.current.textContent = 'Ваш ход'
+                whosTurnText.current.textContent = 'Ваш ход'
                 whosTurn.current.style.backgroundColor = '#005500'
             }
             else {
-                whosTurn.current.textContent = 'Ход противника'
+                whosTurnText.current.textContent = 'Ход противника'
                 whosTurn.current.style.backgroundColor = '#3a3a3a'
             }
         }
@@ -124,16 +127,13 @@ export default function CheckersGame() {
 
 
 
-    function setEnemyIsConnected(state: boolean) {
-        if (!enemyIsOffline.current) return
-
-        if (state) {
-            enemyIsOffline.current.textContent = 'Противник онлайн'
-            enemyIsOffline.current.style.color = 'whitesmoke'
+    function turnTimerTicked(secondsLeft: number) {
+        if (secondsLeft === undefined || secondsLeft === null || !turnTimerSeconds.current) return
+        if (secondsLeft < 20) {
+            turnTimerSeconds.current.textContent = ` (${secondsLeft})`
         }
         else {
-            enemyIsOffline.current.textContent = 'Противник отключён'
-            enemyIsOffline.current.style.color = '#cc0000' // red
+            turnTimerSeconds.current.textContent = ''
         }
     }
 
@@ -272,10 +272,15 @@ export default function CheckersGame() {
         {winnerDialog}
 
         <div className='enemyZone'>
-            <h1 ref={enemyIsOffline}>Противник онлайн</h1>
+            <h1 style={{ color: enemyIsConnected ? 'whitesmoke' : '#cc0000' }}>
+                {enemyIsConnected ? 'Противник онлайн' : 'Противник отключён'}
+            </h1>
         </div>
 
-        <h1 className='whosTurn' ref={whosTurn}>?</h1>
+        <h1 className='whosTurn' ref={whosTurn}>
+            <span ref={whosTurnText}>?</span>
+            <span className='turnTimerSeconds' ref={turnTimerSeconds}></span>
+        </h1>
 
         <div className='boardContainer'>
             <div className="board">
