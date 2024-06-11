@@ -42,7 +42,7 @@ public sealed class MonopolyGame : PlayableGame
 	private readonly int[] playerPositions;
 	private readonly bool[] playersDead;
 	private readonly string[] playerColors;
-	private readonly (bool state, int freeExitTries)[] playersInPrison;
+	private readonly (bool state, int freeExitTries, int lastPositionIndex)[] playersInPrison;
 	private readonly MonopolyCellState?[] cellStates;
 	private readonly MonopolyOfferManager offerManager;
 	private readonly MonopolyLogger chatLogger;
@@ -106,7 +106,7 @@ public sealed class MonopolyGame : PlayableGame
 		playersMoney = Enumerable.Repeat(START_MONEY, playerIDs.Count).ToArray();
 		playerPositions = Enumerable.Repeat(0, playerIDs.Count).ToArray();
 		playersDead = Enumerable.Repeat(false, playerIDs.Count).ToArray();
-		playersInPrison = new (bool, int)[playerIDs.Count];
+		playersInPrison = new (bool, int, int)[playerIDs.Count];
 		playerColors = availablePlayerColors
 			.Shuffle(random)
 			.Take(playerIDs.Count)
@@ -338,7 +338,7 @@ public sealed class MonopolyGame : PlayableGame
 				return false;
 
 			playersMoney[playerIndex] -= PRISON_EXIT_PRICE;
-			playersInPrison[playerIndex] = (false, 0);
+			playersInPrison[playerIndex] = (false, 0, 0);
 
 			chatLogger.PlayerPaysToExitPrison(PlayerIDs[playerIndex], PRISON_EXIT_PRICE);
 
@@ -412,7 +412,7 @@ public sealed class MonopolyGame : PlayableGame
 	{
 		GetRandomDiceRoll();
 
-		var (inPrison, freeExitTries) = playersInPrison[actingPlayerIndex];
+		var (inPrison, freeExitTries, lastPos) = playersInPrison[actingPlayerIndex];
 		if (!inPrison)
 			return false;
 
@@ -423,13 +423,13 @@ public sealed class MonopolyGame : PlayableGame
 		{
 			lastDiceIsDouble = false;
 			doublesInRow = 0;
-			playersInPrison[actingPlayerIndex] = new(false, 0);
+			playersInPrison[actingPlayerIndex] = new(false, 0, 0);
 			MovePlayerForward(actingPlayerIndex, lastDiceSum);
 			chatLogger.PlayerExitedPrisonForFree(PlayerIDs[actingPlayerIndex]);
 		}
 		else
 		{
-			playersInPrison[actingPlayerIndex] = new(true, freeExitTries + 1);
+			playersInPrison[actingPlayerIndex] = new(true, freeExitTries + 1, lastPos);
 			int triesLeft = MAX_PRISON_FREE_TRIES - (freeExitTries + 1);
 			MakeNextPlayerActing();
 			chatLogger.PlayerCouldNotExitPrison(PlayerIDs[actingPlayerIndex], triesLeft);
@@ -998,7 +998,7 @@ public sealed class MonopolyGame : PlayableGame
 
 	private void MovePlayerToPrison(int playerIndex)
 	{
-		playersInPrison[playerIndex] = (true, 0);
+		playersInPrison[playerIndex] = (true, 0, playerPositions[playerIndex]);
 		MovePlayerToCell(playerIndex, PRISON_CELL_INDEX);
 	}
 
@@ -1013,7 +1013,6 @@ public sealed class MonopolyGame : PlayableGame
 		if (playersDead.All(x => x))
 			return;
 
-		doublesInRow = 0;
 		upgradedCellIndexThisTurn = -1;
 		IncrementMovesLeftToLooseCellForAllSold();
 		ResetTurnTimer();
@@ -1037,6 +1036,7 @@ public sealed class MonopolyGame : PlayableGame
 		while (playersDead[playerIndex]);
 
 		actingPlayerIndex = playerIndex;
+		doublesInRow = 0;
 
 		// deside what should next player do
 
@@ -1142,7 +1142,7 @@ public sealed class MonopolyGame : PlayableGame
 			if (position == "prison")
 			{
 				position += playersInPrison[i].state
-					? "_2"
+					? "_2_" + layoutWithCornerCells[playersInPrison[i].lastPositionIndex]
 					: "_1";
 			}
 

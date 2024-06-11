@@ -73,7 +73,8 @@ const DICE_TIME_MS = 1000
 const AFTER_DICE_WAIT_TIME_MS = 500
 
 const globalData = {
-    msToWait: 0,
+    msToWait_dice: 0,
+    msToWait_move: 0,
 }
 
 const gameName = GameNames.monopoly
@@ -87,7 +88,7 @@ export default function MonopolyGame() {
     const [groupInfoParams, setGroupInfoParams] = useState<JSX.Element[]>([])
     const [cardInfoParams, setCardInfoParams] = useState<JSX.Element[]>([])
     const [gridTemplateAreas, setGridTemplateAreas] = useState<string>()
-    const [playerDotPositions, setPlayerDotPositions] = useState<Map<string, { x: number, y: number }>>()
+    const [playerDotPositions, setPlayerDotPositions] = useState<Map<string, { x: number, y: number }>>(new Map())
     const [turnTimerSecondsLeft, setTurnTimerSecondsLeft] = useState<number>(99)
     const chatInput = useRef<HTMLInputElement>(null)
     const clickDialog = useRef<HTMLDialogElement>(null)
@@ -141,7 +142,7 @@ export default function MonopolyGame() {
                 clickDialog.current?.close()
             }
 
-            movePlayerDot_direct(playerID, info.position)
+            movePlayerDot(playerID, info.position)
         }
     }, [gameState])
 
@@ -359,8 +360,6 @@ export default function MonopolyGame() {
 
     function getGameState() {
         if (!connection) return
-
-        setPlayerDotPositions(new Map<string, { x: number, y: number }>())
 
         connection.invoke('GetGameState')
             .then(response => {
@@ -781,7 +780,7 @@ export default function MonopolyGame() {
             !clickDialogNoButton.current
         ) return
 
-        await sleep(globalData.msToWait)
+        await sleep(globalData.msToWait_dice)
 
         clickDialogText.current.textContent = text
         clickDialogSubText.current.textContent = subText
@@ -827,7 +826,7 @@ export default function MonopolyGame() {
 
     function getCellCoordinates(cell: HTMLElement): { x: number, y: number, offsetSignX: number, offsetSignY: number } {
         const cellsInLine = monopolyMap.cardsInLine
-        const totalCellsInLine = monopolyMap.cardsInLine + 4
+        const totalCellsInLine = cellsInLine + 4
         const corner = cell.getAttribute('mnpl-corner')
 
         if (corner) {
@@ -876,27 +875,175 @@ export default function MonopolyGame() {
         return { x: 1, y: totalCellsInLine - 3 - (num - cellsInLine * 3), offsetSignX: -1, offsetSignY: -1 }
     }
 
+    function getCellIDByCords(cords: { x: number, y: number }): string | undefined {
+        const totalCellsInLine = monopolyMap.cardsInLine + 4
+
+        // corner 0
+        if (cords.x === 1 && cords.y === 1) {
+            return document.querySelector('[mnpl-corner="0"]')?.id
+        }
+
+        // corner 1
+        if (cords.x === totalCellsInLine - 1 && cords.y === 1) {
+            return document.querySelector('[mnpl-corner="1"]')?.id
+        }
+
+        // corner 2
+        if (cords.x === totalCellsInLine - 1 && cords.y === totalCellsInLine - 1) {
+            return document.querySelector('[mnpl-corner="2"]')?.id
+        }
+
+        // corner 3
+        if (cords.x === 1 && cords.y === totalCellsInLine - 1) {
+            return document.querySelector('[mnpl-corner="3"]')?.id
+        }
+
+        // line 0
+        if (cords.y === 1) {
+            const cells = [...document.querySelectorAll('[mnpl-line="0"]')]
+            return cells[cords.x - 2]?.id
+        }
+
+        // line 1
+        if (cords.x === totalCellsInLine - 1) {
+            const cells = [...document.querySelectorAll('[mnpl-line="1"]')]
+            return cells[cords.y - 2]?.id
+        }
+
+        // line 2
+        if (cords.y === totalCellsInLine - 1) {
+            const cells = [...document.querySelectorAll('[mnpl-line="2"]')]
+            return cells[totalCellsInLine - cords.x - 3]?.id
+        }
+
+        // line 3
+        if (cords.x === 1) {
+            const cells = [...document.querySelectorAll('[mnpl-line="3"]')]
+            return cells[totalCellsInLine - cords.y - 3]?.id
+        }
+
+        return undefined
+    }
+
+    async function movePlayerDot(playerID: string, cellID: string) {
+        if (!playerDots.current) return
+
+        await sleep(globalData.msToWait_dice)
+        await sleep(globalData.msToWait_move)
+
+        const moveQueue = getMovePlayerQueue(playerID, cellID)
+        console.log(playerID[0] + playerID[1] + playerID[2])
+
+        // move
+        for (const cellID of moveQueue) {
+            await movePlayerDot_direct(playerID, cellID)
+        }
+    }
+
+    function getMovePlayerQueue(playerID: string, cellID: string): string[] {
+        const totalCellsInLine = monopolyMap.cardsInLine + 4
+        const maxLoopIterations = totalCellsInLine * 4 + 1
+
+        const cell = getCellByID(cellID)
+        if (!cell) return []
+
+        const destination = getCellCoordinates(cell)
+        let curPos = playerDotPositions?.get(playerID)
+
+        if (!curPos || (curPos.x === destination.x && curPos.y === destination.y)) {
+            if (cellID.startsWith('prison_2_')) {
+                return ['prison_2']
+            }
+            return [cellID]
+        }
+
+        if (cellID.startsWith('prison_2_')) {
+            const lastCellID = cellID.replace('prison_2_', '')
+            return [...getMovePlayerQueue(playerID, lastCellID), 'prison_2']
+        }
+
+        curPos = { ...curPos } // make a copy
+
+        const moveQueue: string[] = []
+        let iterationCounter = 0
+        let xInc
+        let yInc
+
+        while (curPos.x !== destination.x || curPos.y !== destination.y) {
+            if (curPos.y === 1 && curPos.x !== totalCellsInLine - 1) {
+                // right
+                xInc = 1
+                yInc = 0
+            }
+            else if (curPos.x === totalCellsInLine - 1 && curPos.y !== totalCellsInLine - 1) {
+                // down
+                xInc = 0
+                yInc = 1
+            }
+            else if (curPos.y === totalCellsInLine - 1 && curPos.x !== 1) {
+                // left
+                xInc = -1
+                yInc = 0
+            }
+            else {
+                // up
+                xInc = 0
+                yInc = -1
+            }
+
+            curPos.x += xInc
+            curPos.y += yInc
+
+            if (curPos.x === destination.x && curPos.y === destination.y) {
+                break
+            }
+
+            // if in corner
+            if ((curPos.x === 1 || curPos.x === totalCellsInLine - 1) &&
+                (curPos.y === 1 || curPos.y === totalCellsInLine - 1)) {
+
+                let cell_id = getCellIDByCords(curPos)
+
+                if (cell_id === 'prisonEnter' && cellID === 'prison_2') {
+                    moveQueue.push(cell_id)
+                    break // move to prison straight from prisonEnter
+                }
+
+                if (cell_id === 'prison') cell_id += '_1'
+                if (cell_id) moveQueue.push(cell_id)
+            }
+
+            iterationCounter++
+            if (iterationCounter > maxLoopIterations) {
+                console.log('getMovePlayerQueue loop overflow')
+                break
+            }
+        }
+
+        moveQueue.push(cellID)
+        return moveQueue
+    }
+
     async function movePlayerDot_direct(playerID: string, cellID: string) {
         if (!playerDots.current) return
         const dotSizeCqw = 3
 
-        await sleep(globalData.msToWait)
-
-        let prison_id = undefined
-        if (cellID.includes('prison')) {
-            prison_id = cellID.substring(cellID.indexOf('_') + 1)
-            cellID = 'prison'
-        }
-
-        const cell = document.getElementById(cellID)
+        const prison_id = getPrisonIDFromCellID(cellID)
+        const cell = getCellByID(cellID)
         if (!cell) return
 
         const cords = getCellCoordinates(cell)
-
         const curPos = playerDotPositions?.get(playerID)
-        if (curPos && cords.x === curPos.x && cords.y === curPos.y) return
+        let moveTime = MOVE_TIME_MS
 
-        playerDotPositions?.set(playerID, { x: cords.x, y: cords.y })
+        if (curPos && cords.x === curPos.x && cords.y === curPos.y) {
+            moveTime = 0
+        }
+
+        setPlayerDotPositions(pos => {
+            pos.set(playerID, { x: cords.x, y: cords.y })
+            return new Map(pos)
+        })
 
         for (let i = 0; i < playerDots.current.children.length; i++) {
             const dot = playerDots.current.children.item(i) as HTMLElement
@@ -905,7 +1052,8 @@ export default function MonopolyGame() {
             const dotPlayerID = dot.id.substring(dot.id.indexOf('_') + 1)
             if (dotPlayerID === playerID) {
 
-                dot.style.transition = `top: ${MOVE_TIME_MS}ms, left: ${MOVE_TIME_MS}ms`
+                dot.hidden = false
+                dot.style.transition = `top: ${moveTime}ms, left: ${moveTime}ms`
                 dot.style.width = dotSizeCqw + 'cqw'
 
                 let offsetX = cords.offsetSignX * dotSizeCqw / (cords.offsetSignX === 1 ? 1.5 : 2)
@@ -949,89 +1097,33 @@ export default function MonopolyGame() {
                     offsetY += (Math.random() * 2 - 1) * randomSizeY
                 }
 
-
                 dot.style.left = (getOffsetForCell_cqw(cords.x) + offsetX) + 'cqw'
                 dot.style.top = (getOffsetForCell_cqw(cords.y) - offsetY) + 'cqw'
 
-                await sleep(MOVE_TIME_MS)
+                globalData.msToWait_move = moveTime
+                await sleep(moveTime)
+                globalData.msToWait_move = 0
                 break
             }
         }
     }
 
-    // async function movePlayerDot_direct(playerID: string, cellID: string) {
-    //     const cell = document.getElementById(cellID)
-    //     if (!cell) return
+    function getCellByID(cellID: string) {
+        if (cellID.includes('prison_')) {
+            cellID = 'prison'
+        }
 
-    //     const cords = getCellCoordinates(cell)
-    //     await movePlayerDot_direct_cords(playerID, cords)
-    // }
+        return document.getElementById(cellID)
+    }
 
-    // async function movePlayerDot(playerID: string, cellID: string) {
-    //     const totalCellsInLine = monopolyMap.cardsInLine + 4
+    function getPrisonIDFromCellID(cellID: string) {
+        let prison_id = undefined
+        if (cellID.includes('prison_')) {
+            prison_id = cellID.substring(cellID.indexOf('_') + 1)
+        }
 
-    //     // const curCellID = gameState?.players[playerID].position
-    //     // if (!curCellID) return
-
-    //     if (movingPlayers.get(playerID)) return
-
-    //     const curPos = playerDotPositions?.get(playerID) ?? { x: 0, y: 0 }
-    //     if (!curPos) return
-
-
-    //     // // if in corner
-    //     // if ((curPos.x == 1 || curPos.x == totalCellsInLine - 1) &&
-    //     //     (curPos.y == 1 || curPos.y == totalCellsInLine - 1)) {
-    //     //     movePlayerDot_direct(playerID, cellID)
-    //     // }
-
-    //     const cell = document.getElementById(cellID)
-    //     if (!cell) return
-
-    //     const cords = getCellCoordinates(cell)
-
-    //     console.log(curPos)
-    //     console.log(cords)
-    //     if (cords.x !== curPos.x && cords.y !== curPos.y) {
-
-    //         console.log('inside')
-
-    //         if (curPos.y === 1 && cords.y > 1) {
-    //             console.log(1)
-    //             await movePlayerDot_cords_direct(playerID, { x: totalCellsInLine - 1, y: 1, offsetSignX: -0.75, offsetSignY: 1 })
-    //             await movePlayerDot(playerID, cellID)
-    //             return
-    //         }
-
-    //         if (curPos.x === totalCellsInLine - 1 && cords.x < totalCellsInLine - 1 && curPos.y !== totalCellsInLine - 1) {
-    //             console.log(2)
-    //             await movePlayerDot_cords_direct(playerID, { x: totalCellsInLine - 1, y: totalCellsInLine - 1, offsetSignX: -0.75, offsetSignY: 1 })
-    //             await movePlayerDot(playerID, cellID)
-    //             return
-    //         }
-
-    //         if (curPos.y === totalCellsInLine - 1 && cords.x === 1) {
-    //             console.log(3)
-    //             await movePlayerDot_cords_direct(playerID, { x: 1, y: totalCellsInLine - 1, offsetSignX: -0.75, offsetSignY: 1 })
-    //             await movePlayerDot(playerID, cellID)
-    //             return
-    //         }
-
-    //         if (curPos.x === 1 && cords.x > 1) {
-    //             console.log(4)
-    //             await movePlayerDot_cords_direct(playerID, { x: 1, y: 1, offsetSignX: -0.75, offsetSignY: 1 })
-    //             await movePlayerDot(playerID, cellID)
-    //             return
-    //         }
-
-    //         console.log('direct')
-    //         await movePlayerDot_direct(playerID, cellID)
-    //     }
-    //     else {
-    //         console.log('else')
-    //         await movePlayerDot_direct(playerID, cellID)
-    //     }
-    // }
+        return prison_id
+    }
 
 
 
@@ -1102,6 +1194,7 @@ export default function MonopolyGame() {
                 className='playerDot'
                 key={i}
                 style={{ backgroundColor: info.color }}
+                hidden
             ></div>
         )
     })
@@ -1327,15 +1420,17 @@ async function rollDice(dice: React.RefObject<HTMLElement>, value: number) {
 
     cube.style.transform = 'rotateX(' + xDeg + 'deg) rotateY(' + yDeg + 'deg)'
 
-    dice.current.ontransitionend = async () => {
-        await sleep(AFTER_DICE_WAIT_TIME_MS)
-        cube.hidden = true
-    }
+
+    // dice.current.ontransitionend = async () => {
+    //     await sleep(AFTER_DICE_WAIT_TIME_MS)
+
+    // }
     const waitTime = DICE_TIME_MS + AFTER_DICE_WAIT_TIME_MS
 
-    globalData.msToWait = waitTime
+    globalData.msToWait_dice = waitTime
     await sleep(waitTime)
-    globalData.msToWait = 0
+    cube.hidden = true
+    globalData.msToWait_dice = 0
 }
 
 function getNumberedFieldName(num: number) {
