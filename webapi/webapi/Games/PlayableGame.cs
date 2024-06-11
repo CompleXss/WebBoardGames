@@ -45,7 +45,17 @@ public abstract class PlayableGame : IDisposable
 	protected event Action<int>? PlayerDisconnected;
 
 	protected abstract int TurnTimer_LIMIT_Seconds { get; }
-	protected int TurnTimer_LEFT_Seconds { get; private set; }
+	protected int TurnTimer_LEFT_Seconds
+	{
+		get => turnTimerLeftSeconds;
+		private set
+		{
+			turnTimerLeftSeconds = value;
+			TurnTimerTick?.Invoke(value);
+		}
+	}
+	private int turnTimerLeftSeconds;
+
 	protected event Action? TurnTimerFired = null;
 	public event Action<int>? TurnTimerTick = null;
 
@@ -155,7 +165,6 @@ public abstract class PlayableGame : IDisposable
 					break;
 
 				TurnTimer_LEFT_Seconds--;
-				TurnTimerTick?.Invoke(TurnTimer_LEFT_Seconds);
 
 				lock (this)
 					if (TurnTimer_LEFT_Seconds <= 0)
