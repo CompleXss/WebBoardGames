@@ -17,6 +17,7 @@
 }
 
 .expandable > * {
+    min-height: 0;
     overflow: hidden;
 
     transition:
