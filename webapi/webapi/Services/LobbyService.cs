@@ -62,7 +62,7 @@ public class LobbyService<TGame> : ILobbyService where TGame : PlayableGame
 		lobbies.Add(lobby);
 		await hub.Groups.AddToGroupAsync(hostConnectionID, lobby.Key);
 
-		logger.LogInformation("New {gameName} lobby with key {lobbyKey} was CREATED", lobbyCore.GameName, lobby.Key);
+		logger.LogInformation("{gameName} lobby with key {lobbyKey} was CREATED", lobbyCore.GameName, lobby.Key);
 		return lobby.GetInfo();
 	}
 
