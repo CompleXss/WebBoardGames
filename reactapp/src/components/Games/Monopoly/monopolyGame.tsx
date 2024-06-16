@@ -932,7 +932,6 @@ export default function MonopolyGame() {
         await sleep(globalData.msToWait_move)
 
         const moveQueue = getMovePlayerQueue(playerID, cellID)
-        console.log(playerID[0] + playerID[1] + playerID[2])
 
         // move
         for (const cellID of moveQueue) {
