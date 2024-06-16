@@ -20,7 +20,6 @@ interface LobbyInfo {
 }
 
 const GET_LOBBY_LIST_INTERVAL = 2000
-let interval: string | number | NodeJS.Timeout | undefined = undefined
 
 
 export default function Home() {
@@ -28,6 +27,10 @@ export default function Home() {
     const [playerInfos, setPlayerInfos] = useState<Map<string, PlayerInfo>>(new Map())
     const [gameName, setGameName] = useState<Games>(Games.checkers)
     const [lobbyList, setLobbyList] = useState<LobbyInfo[]>([])
+
+    const { connection, loading, error } = useWebsocketConnection(ENDPOINTS.Hubs.LOBBY_LIST, {
+        whenConnected: () => getLobbyList(connection, gameName)
+    })
 
     useEffect(() => {
         document.title = 'Главная'
@@ -37,16 +40,12 @@ export default function Home() {
 
     useEffect(() => {
         getLobbyList(connection, gameName)
-        clearInterval(interval)
-        interval = setInterval(() => getLobbyList(connection, gameName), GET_LOBBY_LIST_INTERVAL)
-    }, [gameName])
+        const interval = setInterval(() => getLobbyList(connection, gameName), GET_LOBBY_LIST_INTERVAL)
 
-    const { connection, loading, error } = useWebsocketConnection(ENDPOINTS.Hubs.LOBBY_LIST, {
-        whenConnected: () => {
-            getLobbyList(connection, gameName)
-            interval = setInterval(() => getLobbyList(connection, gameName), GET_LOBBY_LIST_INTERVAL)
-        }
-    })
+        return () => clearInterval(interval)
+    }, [gameName, connection])
+
+
 
     async function getLobbyList(connection: HubConnection | undefined, gameName: string) {
         if (!connection) return
