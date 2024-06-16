@@ -222,21 +222,24 @@ export default function Profile() {
         if (errorUsername) return <p>Произошла ошибка!</p>
 
         return <LoadingContent loading={loadingUsername} content={<div>
-            <p>Никнейм (отображаемое имя):</p>
-            <div style={{ display: 'inline-block' }}>
-                <p className='value'>{username}</p>
-                <button onClick={changeName} className='editBtn'>.</button>
-            </div>
-            <br />
-
-            {user?.login && (<>
-                <p>Логин (нужен для входа):</p>
+            <div className='infoLine'>
+                <p>Никнейм (отображаемое имя):</p>
                 <div style={{ display: 'inline-block' }}>
-                    <p className='value'>{user.login}</p>
-                    <button onClick={changeLogin} className='editBtn'>.</button>
+                    <p className='value'>{username}</p>
+                    <button onClick={changeName} className='editBtn'>.</button>
                 </div>
-                <br />
-            </>)}
+            </div>
+
+            {user?.login && (
+                <div className='infoLine'>
+                    <p>Логин (нужен для входа):</p>
+                    <div style={{ display: 'inline-block' }}>
+                        <p className='value'>{user.login}</p>
+                        <button onClick={changeLogin} className='editBtn'>.</button>
+                    </div>
+                    <br />
+                </div>
+            )}
 
         </div>} />
     }

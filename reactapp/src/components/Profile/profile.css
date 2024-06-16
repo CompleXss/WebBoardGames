@@ -159,7 +159,21 @@
     opacity: 0;
 }
 
+
+
+.profileContainer .infoLine {
+    margin-bottom: 10px;
+}
+
+.profileContainer .infoLine p {
+    margin: 0;
+}
+
+
+
 .profileContainer .exitBtn {
+    display: flex;
+    flex-direction: row;
     grid-row: 1;
     grid-column: 2;
 
