@@ -38,6 +38,8 @@
 
 /* Leave lobby button */
 .lobbyWrapper .exitBtn {
+    display: flex;
+    flex-direction: row;
     background-color: var(--white-btn);
     color: black;
 }

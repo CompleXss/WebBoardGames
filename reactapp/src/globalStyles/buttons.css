@@ -7,12 +7,15 @@ button {
 }
 
 .exitBtn .icon {
-    float: right;
     margin: 0;
     margin-left: 16px;
+    margin-top: auto;
+    margin-bottom: auto;
     width: 22px;
     height: 22px;
-
+    flex-shrink: 0;
+    
     background: url(/public/images/logout.svg) no-repeat;
     background-size: contain;
+    background-position: center;
 }

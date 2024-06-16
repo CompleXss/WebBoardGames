@@ -307,7 +307,8 @@ export function useLobby(gameName: string, title: string, publicBackgroundPath: 
                         <p ref={startGameWarningMessage}>Тут будут ошибки</p>
                         {isHost && <button className="startGameBtn" onClick={startGame}>Начать игру</button>}
                         <button className="exitBtn" onClick={isHost ? closeLobby : leaveLobby}>
-                            {isHost ? 'Закрыть комнату' : 'Покинуть комнату'}<span className="icon"></span>
+                            {isHost ? 'Закрыть комнату' : 'Покинуть комнату'}
+                            <span className="icon"></span>
                         </button>
                     </div>
                 </div>
@@ -327,7 +328,7 @@ export function useLobby(gameName: string, title: string, publicBackgroundPath: 
                     <input ref={lobbyKeyInput} onKeyDown={lobbyKeyInputOnKeyDown} type="text" maxLength={KEY_LENGTH} autoFocus placeholder={'x'.repeat(KEY_LENGTH)} />
                     <p id="lobbyKeyWarningMessage" ref={lobbyKeyWarningMessage}></p>
                     <button className="enterLobbyBtn" onClick={showJoinLobbyDialog}>Войти</button>
-                    <button className="exitBtn" onClick={hideJoinDialog}>Отмена</button>
+                    <button className="cancelBtn" onClick={hideJoinDialog}>Отмена</button>
                 </dialog>
             </div>
         )

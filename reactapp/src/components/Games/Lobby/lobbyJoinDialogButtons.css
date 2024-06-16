@@ -25,15 +25,15 @@
 
 
 /* Close button */
-.lobbyWrapper dialog .exitBtn {
+.lobbyWrapper dialog .cancelBtn {
     color: whitesmoke;
     background-color: var(--red-btn);
 }
 
-.lobbyWrapper dialog .exitBtn:hover {
+.lobbyWrapper dialog .cancelBtn:hover {
     background-color: var(--red-btn-hover);
 }
 
-.lobbyWrapper dialog .exitBtn:active {
+.lobbyWrapper dialog .cancelBtn:active {
     background-color: var(--red-btn-active);
 }
