@@ -874,7 +874,7 @@ public sealed class MonopolyGame : PlayableGame
 						}
 						else
 						{
-							lastEventPaySum = amount;
+							lastEventPaySum = -amount;
 							expectedActionTypes.Add(MonopolyPlayerAction.Type.Pay);
 							offerManager.OfferPay(playerIndex, -amount, MonopolyOfferManager.EventRandom);
 							return false;
