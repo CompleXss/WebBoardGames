@@ -17,16 +17,16 @@ public sealed class MonopolyGame : PlayableGame
 	private static readonly IReadOnlyList<(string message, int amount)> randomEvents_Money = [
 		($"находит в зимней куртке {MonopolyLogger.FormatMoney(500)}", 500),
 		($"находит на дороге {MonopolyLogger.FormatMoney(250)} мелочью", 250),
-		($"участвует в лотерее и выигрывает {MonopolyLogger.FormatMoney(1500)}", 1500),
+		($"участвует в лотерее и выигрывает {MonopolyLogger.FormatMoney(750)}", 750),
 		($"участвует в лотерее и выигрывает {MonopolyLogger.FormatMoney(1000)}", 1000),
 		($"занимает второе место в конкурсе красоты и получает {MonopolyLogger.FormatMoney(750)}", 750),
 		($"занимает третье место в конкурсе красоты и получает {MonopolyLogger.FormatMoney(500)}", 500),
 
 		($"играет в казино и проигрывает {MonopolyLogger.FormatMoney(1000)}", -1000),
-		($"тратит в парке развлечений {MonopolyLogger.FormatMoney(250)}", -250),
+		($"тратит в парке развлечений {MonopolyLogger.FormatMoney(500)}", -500),
 		($"забывает выключить утюг и платит {MonopolyLogger.FormatMoney(750)} на ремонт", -750),
-		($"попадает на распродажу и тратит там {MonopolyLogger.FormatMoney(750)}", -750),
-		($"понимает, что любимое авто больше не заводится и платит за ремонт {MonopolyLogger.FormatMoney(500)}", -500),
+		($"попадает на распродажу и тратит там {MonopolyLogger.FormatMoney(1000)}", -1000),
+		($"понимает, что любимое авто больше не заводится и платит за ремонт {MonopolyLogger.FormatMoney(750)}", -750),
 	];
 
 	private static readonly MonopolyMap map;
@@ -52,7 +52,7 @@ public sealed class MonopolyGame : PlayableGame
 	private int lapBonus = GAME_START_LAP_BONUS;
 	private int startBonus = GAME_START_START_BONUS;
 	private int payToPlayerMultiplier = 1;
-	private float positiveMoneyEventChance = 0.5f;
+	private float positiveMoneyEventChance = 0.4f;
 	private int lastEventPaySum;
 	private int lastDiceSum;
 	private int upgradedCellIndexThisTurn;
@@ -295,6 +295,7 @@ public sealed class MonopolyGame : PlayableGame
 			) && (
 				expectedActionTypes.Contains(MonopolyPlayerAction.Type.DiceToMove) ||
 				expectedActionTypes.Contains(MonopolyPlayerAction.Type.Pay) ||
+				expectedActionTypes.Contains(MonopolyPlayerAction.Type.PayToPlayer) ||
 				expectedActionTypes.Contains(MonopolyPlayerAction.Type.BuyCell))
 			)
 			return true;
